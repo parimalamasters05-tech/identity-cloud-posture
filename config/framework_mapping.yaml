@@ -1,0 +1,48 @@
+# NIST Cybersecurity Framework 2.0 subcategory mapping.
+#
+# CSF 2.0 is a US government publication and is freely usable. Commercial
+# control frameworks are not: check the licence before embedding any other
+# framework in a product you sell.
+#
+# This mapping provides context for insurance and grant questionnaires. It is
+# NOT an audit, an assessment against the framework, or an attestation, and the
+# report says so on the same page it appears.
+
+version: "2026.09.1"
+framework: NIST CSF 2.0
+
+subcategories:
+  PR.AA-01:
+    function: Protect
+    category: Identity Management, Authentication, and Access Control
+    text: Identities and credentials for authorized users and services are managed.
+
+  PR.AA-03:
+    function: Protect
+    category: Identity Management, Authentication, and Access Control
+    text: Users, services, and hardware are authenticated.
+
+  PR.AA-05:
+    function: Protect
+    category: Identity Management, Authentication, and Access Control
+    text: Access permissions and authorizations are defined and managed, incorporating least privilege and separation of duties.
+
+  PR.DS-01:
+    function: Protect
+    category: Data Security
+    text: The confidentiality, integrity, and availability of data at rest are protected.
+
+  PR.PS-04:
+    function: Protect
+    category: Platform Security
+    text: Log records are generated and made available for continuous monitoring.
+
+  DE.AE-03:
+    function: Detect
+    category: Adverse Event Analysis
+    text: Information is correlated from multiple sources.
+
+  ID.AM-05:
+    function: Identify
+    category: Asset Management
+    text: Assets are prioritized based on classification, criticality, resources, and impact on the mission.

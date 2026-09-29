@@ -1,0 +1,18 @@
+[
+  {
+    "id": "g001",
+    "email": "all@dev-icp.example",
+    "name": "All Staff",
+    "description": "",
+    "directMembersCount": "32",
+    "adminCreated": true
+  },
+  {
+    "id": "g002",
+    "email": "finance@dev-icp.example",
+    "name": "Finance",
+    "description": "",
+    "directMembersCount": "4",
+    "adminCreated": true
+  }
+]

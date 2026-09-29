@@ -1,0 +1,83 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<title>Identity &amp; Cloud Posture Health Check — {{ client_name }}</title>
+<style>
+  /* Print-first. Assume greyscale in a board packet: severity is never
+     signalled by colour alone -- always by a word and a border weight too. */
+  @page {
+    size: A4;
+    margin: 20mm 18mm 18mm 18mm;
+    @bottom-left { content: "{{ client_name }} — Identity & Cloud Posture Health Check"; font-size: 7.5pt; color: #555; }
+    @bottom-right { content: "Page " counter(page) " of " counter(pages); font-size: 7.5pt; color: #555; }
+  }
+  @page :first { @bottom-left { content: ""; } @bottom-right { content: ""; } }
+
+  html { font-size: 10.5pt; }
+  body {
+    font-family: "Source Serif 4", "Charter", Georgia, serif;
+    color: #16191c; line-height: 1.45; margin: 0;
+  }
+  h1, h2, h3, h4, .ui {
+    font-family: "Source Sans 3", "Inter", "Helvetica Neue", Arial, sans-serif;
+  }
+  h1 { font-size: 22pt; margin: 0 0 4pt; letter-spacing: -0.01em; }
+  h2 { font-size: 14pt; margin: 0 0 10pt; padding-bottom: 4pt; border-bottom: 1.5pt solid #16191c; }
+  h3 { font-size: 11.5pt; margin: 14pt 0 4pt; }
+  h4 { font-size: 10pt; margin: 8pt 0 3pt; text-transform: uppercase; letter-spacing: 0.06em; color: #444; }
+  p { margin: 0 0 8pt; }
+  a { color: #16191c; }
+
+  .page-break { page-break-before: always; }
+  .avoid-break { page-break-inside: avoid; }
+
+  table { width: 100%; border-collapse: collapse; margin: 8pt 0 12pt; font-size: 9pt; }
+  th, td { text-align: left; padding: 4pt 6pt; border-bottom: 0.5pt solid #ccc; vertical-align: top; }
+  th { font-family: "Source Sans 3", Arial, sans-serif; font-size: 8pt; text-transform: uppercase;
+       letter-spacing: 0.05em; color: #444; border-bottom: 1pt solid #888; }
+
+  .sev { font-family: "Source Sans 3", Arial, sans-serif; font-size: 8pt; font-weight: 700;
+         text-transform: uppercase; letter-spacing: 0.06em; padding: 1pt 5pt; border: 1pt solid #16191c;
+         white-space: nowrap; }
+  .sev-critical { background: #16191c; color: #fff; }
+  .sev-high     { background: #55595e; color: #fff; }
+  .sev-medium   { background: #d9dadb; }
+  .sev-low      { background: #fff; }
+  .sev-info     { background: #fff; border-style: dashed; color: #555; }
+
+  .finding { page-break-inside: avoid; margin: 0 0 16pt; padding-left: 8pt; border-left: 2.5pt solid #16191c; }
+  .finding.sevbar-medium { border-left-width: 1.5pt; }
+  .finding.sevbar-low    { border-left-width: 0.75pt; }
+  .meta { font-size: 8.5pt; color: #555; font-family: "Source Sans 3", Arial, sans-serif; }
+  .steps { margin: 4pt 0 4pt 14pt; padding: 0; }
+  .steps li { margin-bottom: 3pt; }
+  code, .mono { font-family: "DejaVu Sans Mono", "SF Mono", Menlo, monospace; font-size: 8.5pt; }
+  .callout { border: 0.75pt solid #888; padding: 7pt 9pt; margin: 10pt 0; background: #f6f6f5; }
+  .muted { color: #555; }
+
+  /* Cover: one page, always, including the coverage box. */
+  .cover h1 { font-size: 20pt; }
+  table.cover-details { margin: 10pt 0 6pt; font-size: 9pt; }
+  table.cover-details th, table.cover-details td { padding: 3pt 6pt; }
+  .cover .callout { margin: 6pt 0; padding: 5pt 9pt; }
+  .cover .callout p { font-size: 9.5pt; }
+  table.scope-columns { margin: 10pt 0 4pt; font-size: 9.5pt; table-layout: fixed; }
+  table.scope-columns td { width: 50%; border-bottom: none; padding: 0 10pt 0 0; }
+  table.scope-columns h3 { margin-top: 0; }
+  table.scope-columns .steps li { margin-bottom: 2pt; }
+</style>
+</head>
+<body>
+
+{% include "partials/cover.html" %}
+{% include "partials/executive_summary.html" %}
+{% include "partials/action_plan.html" %}
+{% include "partials/findings.html" %}
+{% include "partials/applications.html" %}
+{% include "partials/framework_mapping.html" %}
+{% include "partials/methodology.html" %}
+{% include "partials/evidence_appendix.html" %}
+
+</body>
+</html>

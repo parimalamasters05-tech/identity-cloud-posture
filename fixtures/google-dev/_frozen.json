@@ -1,0 +1,32 @@
+{
+  "note": "Frozen, pseudonymized copy of a live snapshot. Regenerate with `icp freeze-fixtures`; never edit by hand.",
+  "source_snapshot_id": "20260929T063729908Z-c43a7bfe",
+  "source_schema_version": "1.2",
+  "tool_version": "0.1.0",
+  "frozen_at": "2026-09-29T06:54:31.809465+00:00",
+  "started_at": "2026-09-29T06:37:13.801383+00:00",
+  "collected_at": "2026-09-29T06:37:29.908944+00:00",
+  "scopes_used": [
+    "https://www.googleapis.com/auth/admin.directory.customer.readonly",
+    "https://www.googleapis.com/auth/admin.directory.domain.readonly",
+    "https://www.googleapis.com/auth/admin.directory.group.readonly",
+    "https://www.googleapis.com/auth/admin.directory.orgunit.readonly",
+    "https://www.googleapis.com/auth/admin.directory.rolemanagement.readonly",
+    "https://www.googleapis.com/auth/admin.directory.user.readonly",
+    "https://www.googleapis.com/auth/admin.directory.user.security",
+    "https://www.googleapis.com/auth/admin.reports.audit.readonly",
+    "https://www.googleapis.com/auth/admin.reports.usage.readonly",
+    "https://www.googleapis.com/auth/cloud-identity.policies.readonly",
+    "https://www.googleapis.com/auth/drive.metadata.readonly"
+  ],
+  "scopes_refused": [],
+  "partial": {
+    "google.public_drive_items": "Public files owned by some accounts were not checked, because suspended or archived accounts cannot be searched: user05@tenant.example, user03@tenant.example. Files those accounts shared publicly can still be open to anyone with the link."
+  },
+  "errors": [],
+  "pseudonymized": {
+    "alias_domain": "tenant.example",
+    "emails": 12,
+    "domains": 1
+  }
+}

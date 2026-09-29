@@ -1,0 +1,65 @@
+{# The implementer. Per-finding traceability and the score arithmetic. #}
+<section class="page-break">
+  <h2>Appendix: evidence and score arithmetic</h2>
+  <p>
+    Every individual check result, with its full affected-entity list and the arithmetic behind
+    its score. This includes results grouped under a single application in the detailed findings.
+    Snapshot reference <span class="mono">{{ snapshot.snapshot_id }}</span>; each pointer locates
+    the exact observation in that snapshot.
+  </p>
+
+  {% for family, entries in appendix_by_family.items() %}
+    {% for entry in entries %}
+    {% set f = entry.finding %}
+    <div class="avoid-break" style="margin-bottom:12pt;">
+      <h4><span class="mono">{{ f.finding_id }}</span> — {{ f.title }}</h4>
+      {% if entry.shown_under %}
+      <p class="meta">Shown in the detailed findings as a further reason under
+        <span class="mono">{{ entry.shown_under.finding_id }}</span> ({{ entry.shown_under.title }}).</p>
+      {% endif %}
+
+      <table>
+        <tr>
+          <th style="width:20%;">Score</th>
+          <td class="mono">
+            {{ entry.score.base }} (base)
+            &times; {{ entry.score.privilege_modifier }} (privilege)
+            &times; {{ entry.score.blast_radius_modifier }} (blast radius)
+            &times; {{ entry.score.confidence_factor }} (confidence)
+            = {{ entry.score.total }}
+          </td>
+        </tr>
+        <tr><th>Rule</th><td class="mono">{{ f.rule_id }}</td></tr>
+        <tr><th>Remediation key</th><td class="mono">{{ f.remediation_key }}</td></tr>
+        <tr><th>First seen</th><td>{{ f.first_seen.strftime('%d %B %Y') }}</td></tr>
+      </table>
+
+      <h4>Affected entities ({{ f.entity_count }})</h4>
+      <table>
+        <thead><tr><th style="width:20%;">Type</th><th>Identifier</th><th style="width:18%;">Privileged</th></tr></thead>
+        <tbody>
+          {% for e in f.affected_entities[:40] %}
+          <tr>
+            <td>{{ e.kind }}</td>
+            <td class="mono">{{ e.label }}</td>
+            <td>{% if e.is_privileged %}Yes{% else %}No{% endif %}</td>
+          </tr>
+          {% endfor %}
+        </tbody>
+      </table>
+      {% if f.entity_count > 40 %}
+      <p class="meta">Showing 40 of {{ f.entity_count }}. The complete list is in the accompanying
+        machine-readable findings file.</p>
+      {% endif %}
+    </div>
+    {% endfor %}
+  {% endfor %}
+
+  <h3>Data handling</h3>
+  <p>
+    The raw snapshot supporting this report is delivered to you alongside it. Our copy is
+    encrypted at rest and destroyed at the end of the retention window agreed in the engagement,
+    with a written deletion attestation issued at that point. We hold no copy of any message or
+    file content, because none was collected.
+  </p>
+</section>

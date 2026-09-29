@@ -1,0 +1,110 @@
+[build-system]
+requires = ["setuptools>=68", "wheel"]
+build-backend = "setuptools.build_meta"
+
+[project]
+name = "identity-cloud-posture"
+version = "0.1.0"
+description = "Read-only identity and cloud posture assessment for Google Workspace"
+readme = "README.md"
+requires-python = ">=3.12"
+license = { text = "Proprietary" }
+
+dependencies = [
+  "pydantic>=2.7,<3",
+  "PyYAML>=6.0",
+  "click>=8.1",
+  "Jinja2>=3.1",
+  "google-api-python-client>=2.130",
+  "google-auth>=2.29",
+  "google-auth-httplib2>=0.2",
+  "httplib2>=0.22",
+  "cryptography>=42.0",
+  "weasyprint>=62.0",
+]
+
+[project.optional-dependencies]
+dev = [
+  "pytest>=8.2",
+  "pytest-cov>=5.0",
+  "ruff>=0.5",
+  "mypy>=1.10",
+  "bandit[toml]>=1.7",
+  "pip-audit>=2.7",
+  "types-PyYAML",
+  "pre-commit>=3.7",
+]
+
+[project.scripts]
+icp = "icp.cli:main"
+
+[tool.setuptools.packages.find]
+where = ["src"]
+
+[tool.setuptools.package-data]
+icp = ["reporting/templates/*.html", "reporting/templates/partials/*.html"]
+
+# --- lint ---------------------------------------------------------------------
+
+[tool.ruff]
+line-length = 108
+target-version = "py312"
+src = ["src", "tests"]
+
+[tool.ruff.lint]
+select = ["E", "F", "W", "I", "N", "UP", "B", "A", "C4", "SIM", "ARG", "PTH", "RUF", "S"]
+ignore = [
+  "S101",    # assert is fine in tests
+  "E501",    # line length handled by the formatter
+  "B008",
+  "ARG002",  # unused args are common in the rule interface
+  # Exception names read better without the suffix at call sites, e.g.
+  # `except WriteAttemptBlocked` / `except ScopeViolation`. These are security
+  # control names first and Python idiom second.
+  "N818",
+  # icp.models.enums.StrEnum predates a hard 3.11+ floor and is the documented
+  # serialization contract for the findings file. Swapping it for enum.StrEnum
+  # is a schema change, not a style fix.
+  "UP042",
+]
+
+[tool.ruff.lint.per-file-ignores]
+"tests/**" = ["S", "ARG", "N"]
+"tools/**" = ["S", "T201"]
+
+# --- types --------------------------------------------------------------------
+
+[tool.mypy]
+python_version = "3.12"
+packages = ["icp"]
+mypy_path = "src"
+strict_optional = true
+warn_unused_ignores = false
+warn_redundant_casts = true
+disallow_untyped_defs = false
+ignore_missing_imports = true
+
+# --- security scanning --------------------------------------------------------
+
+[tool.bandit]
+exclude_dirs = ["tests", "tools", ".venv", "build"]
+# B101 assert_used: asserts here are control checks, not debug leftovers.
+skips = ["B101"]
+
+# --- tests --------------------------------------------------------------------
+
+[tool.pytest.ini_options]
+testpaths = ["tests"]
+addopts = "-q --strict-markers"
+markers = [
+  "security: controls that must never regress",
+  "integration: exercises the full pipeline against fixtures",
+  "acceptance: the project brief's weekly done-when criteria",
+]
+
+[tool.coverage.run]
+source = ["src/icp"]
+branch = true
+
+[tool.coverage.report]
+exclude_lines = ["pragma: no cover", "if TYPE_CHECKING:", "raise NotImplementedError"]

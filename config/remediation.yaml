@@ -1,0 +1,304 @@
+# The remediation content library.
+#
+# This file is where the product actually lives. Two competent engineers can
+# build identical collectors; this is what the client pays for and forwards to
+# their board.
+#
+# Editorial standard, non-negotiable:
+#   * `impact` must be understandable by a non-technical executive director in
+#     one sentence, with no unexplained acronyms.
+#   * `steps` must let a junior IT person finish the job without further
+#     research. Every step names the actual admin console path.
+#   * Never write "consider reviewing your posture".
+
+version: "2026.09.1"
+
+remediations:
+  mfa.enforce_admins:
+    title: Require two-step verification for administrator accounts
+    impact: >
+      An administrator account without a second factor can be taken over with a
+      stolen password alone. Whoever holds it can read every mailbox and file in
+      the organization, and can lock out the real staff.
+    steps:
+      - "Admin console > Security > Authentication > 2-step verification."
+      - "Set Enforcement to 'On' and apply it to the organizational unit containing your administrators."
+      - "Set 'New user enrollment period' to 1 week so new admins cannot sit unenrolled."
+      - "Before enforcing, confirm each administrator has a working second factor and printed backup codes; enforcement locks out anyone unenrolled."
+    verification: "Admin console > Directory > Users, add the filter '2-step verification enrollment: Not enrolled'. No administrator should appear."
+    owner_hint: IT administrator
+    references:
+      - https://support.google.com/a/answer/175197
+
+  mfa.enforce_all_users:
+    title: Require two-step verification for all staff
+    impact: >
+      Password-only accounts are the most common way small organizations are
+      breached. A second factor stops nearly all of it, including password reuse
+      from unrelated breaches.
+    steps:
+      - "Admin console > Security > Authentication > 2-step verification."
+      - "Turn on 'Allow users to turn on 2-step verification' for the whole domain first, and communicate a deadline."
+      - "After the deadline, set Enforcement to 'On' for the root organizational unit."
+      - "Use the exception group only for shared or service accounts, and document why each one is exempt."
+    verification: "Admin console > Directory > Users, add the filter '2-step verification enrollment: Not enrolled'. The list should be empty, apart from documented exceptions."
+    owner_hint: IT administrator
+    references:
+      - https://support.google.com/a/answer/9176657
+
+  mfa.security_keys_for_admins:
+    title: Move administrators to phishing-resistant second factors
+    impact: >
+      Text-message and app codes can be captured by a convincing fake login page
+      in real time. Hardware security keys and passkeys cannot, because they
+      check the website address before they respond.
+    steps:
+      - "Buy two hardware security keys per administrator (one primary, one backup)."
+      - "Each admin: myaccount.google.com > Security > 2-Step Verification > Add security key."
+      - "Admin console > Security > Authentication > 2-step verification > set Methods to 'Only security key' for the admin organizational unit."
+      - "Keep printed backup codes in a physical safe, not in Drive."
+    verification: "Admin console > Reporting > User reports > Security: every administrator shows at least one security key."
+    owner_hint: IT administrator
+    references:
+      - https://support.google.com/a/answer/2537800
+
+  admin.reduce_super_admins:
+    title: Reduce the number of super-administrators
+    impact: >
+      Every super-administrator is a complete copy of the keys to the
+      organization. The more there are, the more chances there are for one to be
+      stolen, and the harder it is to work out who changed what.
+    steps:
+      - "Admin console > Account > Admin roles > Super Admin > Admins."
+      - "For each person listed, decide whether they need full control or a narrower role such as User Management Admin or Help Desk Admin."
+      - "Assign the narrower role first, confirm the person can still do their job, then remove Super Admin."
+      - "Keep two: a named primary and one break-glass account whose credentials are stored offline."
+    verification: "Admin console > Account > Admin roles > Super Admin > Admins lists two people: the named primary and the break-glass account."
+    owner_hint: IT administrator, with the executive director's sign-off
+    references:
+      - https://support.google.com/a/answer/9807615
+
+  admin.remove_dormant_admin_rights:
+    title: Remove administrator rights from accounts nobody is using
+    impact: >
+      An administrator account that nobody signs into is one nobody is watching.
+      It keeps all its power and none of the attention.
+    steps:
+      - "Admin console > Account > Admin roles, and cross-reference the accounts named in this finding."
+      - "Confirm with the person's manager whether they still need the role."
+      - "Remove the role assignment; keep the user account if the person is still employed."
+    verification: "Every account listed under Admin roles > Super Admin > Admins has signed in within the last month (Directory > Users, 'Last sign-in' column)."
+    owner_hint: IT administrator
+
+  accounts.suspend_dormant:
+    title: Suspend accounts that have not been used in months
+    impact: >
+      Unused accounts keep working and keep costing a licence fee. They are
+      attractive to attackers precisely because nobody would notice activity on
+      them.
+    steps:
+      - "Admin console > Directory > Users, and sort by 'Last sign in'."
+      - "For each account named in this finding, confirm with the person's manager that it is no longer needed."
+      - "Suspend rather than delete first; this preserves data while blocking sign-in."
+      - "Important: suspension does NOT revoke applications the account already authorized. Follow the OAuth remediation as well."
+    verification: "Directory > Users, sorted by 'Last sign-in': no active account shows a date more than three months ago."
+    owner_hint: IT administrator
+
+  accounts.remove_never_used:
+    title: Remove accounts that were created but never used
+    impact: >
+      An account created for someone who never started, or for a project that
+      never happened, is a working set of credentials nobody is responsible for.
+    steps:
+      - "Admin console > Directory > Users; filter on 'Never signed in'."
+      - "Confirm each is genuinely unneeded, then delete."
+      - "If the account is a placeholder for a future starter, suspend it until their start date instead."
+    verification: "Directory > Users: no active account older than a month shows 'Never logged in'."
+    owner_hint: IT administrator
+
+  accounts.review_suspended:
+    title: Decide what happens to suspended accounts
+    impact: >
+      Suspended accounts still hold the person's mail and files, and still count
+      toward your licence bill. Leaving them indefinitely is a decision by
+      default rather than a decision.
+    steps:
+      - "Admin console > Directory > Users; filter on 'Suspended'."
+      - "For each: transfer data to a manager (Admin console > Account > Data migration or Tools > Transfer), then delete."
+      - "Where a legal or funder hold applies, record why in writing and set a review date."
+    verification: "Directory > Users, filtered on 'Suspended': every account left has a written reason and a review date."
+    owner_hint: IT administrator with the executive director
+
+  apps.revoke_admin_equivalent:
+    title: Remove administrator-level access from third-party applications
+    impact: >
+      An application with administrator access can do anything an administrator
+      can, without anyone signing in. If that application's own security fails,
+      your organization fails with it.
+    steps:
+      - "Admin console > Security > Access and data control > API controls > Manage Third-Party App Access."
+      - "Find the application named in this finding and review the scopes it holds."
+      - "If it is not business-critical, set it to 'Blocked'. If it is, contact the vendor about a narrower permission set."
+      - "Admin console > Security > API controls > Domain-wide delegation: remove any delegation entry you cannot account for."
+    verification: "Security > API controls > Manage Third-Party App Access: the application is listed as Blocked, or no longer listed."
+    owner_hint: IT administrator with the executive director
+
+  apps.review_admin_authorized:
+    title: Review applications your administrators have connected
+    impact: >
+      When an administrator connects an application to their own account, that
+      application sees everything the administrator sees, which is usually far
+      more than any other member of staff.
+    steps:
+      - "Ask each administrator to open myaccount.google.com > Security > Your connections to third-party apps."
+      - "Remove anything they do not actively use."
+      - "For tools that are needed, prefer connecting them with a dedicated non-admin account."
+    verification: "Security > API controls > Manage Third-Party App Access: each application an administrator connected is marked Trusted on purpose, or Blocked."
+    owner_hint: Each administrator, coordinated by IT
+
+  apps.revoke_developer_tool_logins:
+    title: Sign administrators out of Google's developer tools
+    impact: >
+      An administrator who signed in to Google's command-line tools left a
+      long-lived login on that computer. Anyone who gets that computer, or a
+      copy of its files, inherits the administrator's access without a password
+      or a second sign-in step.
+    steps:
+      - "On the computer where the tools were used, run 'gcloud auth revoke --all' and then 'gcloud auth application-default revoke'."
+      - "Then confirm at myaccount.google.com > Security > Your connections to third-party apps & services: 'Google Cloud SDK' and 'Google Auth Library' should no longer be listed. Remove them there if they are."
+      - "For future setup work, sign in to these tools with a separate account that is not a super-administrator."
+    verification: "At myaccount.google.com > Security > Your connections to third-party apps & services, 'Google Cloud SDK' and 'Google Auth Library' no longer appear for the administrator."
+    owner_hint: The administrator named in the finding
+
+  sharing.restrict_public_links:
+    title: Close public links on files that should not be public
+    impact: >
+      A file shared with "anyone with the link" can be opened by anyone who ever
+      receives that link, including after the person who shared it has left.
+      Search engines sometimes find these links.
+    steps:
+      - "Open each file listed in the evidence appendix."
+      - "Share > General access: change 'Anyone with the link' to 'Restricted', or to your organization if internal sharing is intended."
+      - "Admin console > Apps > Google Workspace > Drive and Docs > Sharing settings: set link sharing default to 'Off' for new files."
+    verification: "Open each file named in the findings: 'General access' shows 'Restricted' or your organization, not 'Anyone with the link'."
+    owner_hint: File owners, coordinated by IT
+
+  sharing.enable_external_warnings:
+    title: Warn staff when they share outside the organization
+    impact: >
+      Most external oversharing is a mistake made in a hurry. A warning at the
+      moment of sharing catches it, and costs nothing.
+    steps:
+      - "Admin console > Apps > Google Workspace > Drive and Docs > Sharing settings."
+      - "Enable 'Warn when files owned by users or shared drives are shared outside of your organization'."
+      - "Consider setting 'Allow users to receive files from outside' to your risk appetite."
+    verification: "Apps > Google Workspace > Drive and Docs > Sharing settings shows 'Warn when files owned by users or shared drives are shared outside' switched on."
+    owner_hint: IT administrator
+
+  logging.enable_audit_streams:
+    title: Make sure audit logs are being recorded
+    impact: >
+      If something goes wrong, audit logs are how you find out what happened and
+      what was taken. Without them, an incident becomes guesswork, and insurers
+      and funders will ask.
+    steps:
+      - "Admin console > Reporting > Audit and investigation, and confirm the Admin, Login and Token logs return recent events."
+      - "If they are empty, check your licence tier: some audit surfaces require Business Plus or Enterprise."
+      - "Admin console > Reporting > Manage reporting rules: set an alert for super-admin role changes."
+    verification: "Reporting > Audit and investigation: the Admin, Login and OAuth log events pages each show recent entries."
+    owner_hint: IT administrator
+
+  logging.verify_audit_coverage:
+    title: Confirm quiet audit logs are genuinely quiet
+    impact: >
+      An empty log is either a very calm month or a broken pipeline. The
+      difference matters only when you need the logs, which is the worst possible
+      time to find out.
+    steps:
+      - "Admin console > Reporting > Audit and investigation > Admin log events; widen the date range to 90 days."
+      - "If still empty, make a harmless administrative change and confirm it appears within an hour."
+      - "If it does not appear, raise a support case with Google referencing the affected log type."
+    verification: "Confirm a test event appears in the log."
+    owner_hint: IT administrator
+
+  oauth.revoke_suspended_user_grants:
+    title: Revoke applications still connected to departed staff
+    impact: >
+      Suspending someone's account stops them signing in. It does not stop the
+      applications they had already connected. Those applications can keep
+      reading that person's mail and files after they have left.
+    steps:
+      - "Admin console > Directory > Users > select the suspended user > Security > Connected applications."
+      - "Remove every application listed."
+      - "Repeat for each account named in this finding."
+      - "Add 'revoke connected applications' to your staff offboarding checklist so this does not recur."
+    verification: "Security > API controls > Manage Third-Party App Access: none of the applications named in the findings lists a suspended person under its users."
+    owner_hint: IT administrator
+    references:
+      - https://support.google.com/a/answer/6328701
+
+  oauth.review_broad_scope_apps:
+    title: Review applications that can read all mail or files
+    impact: >
+      These applications can read everything the people who connected them can
+      read. That access continues whether or not the application is still being
+      used, and it is not affected by password changes.
+    steps:
+      - "Admin console > Security > Access and data control > API controls > Manage Third-Party App Access."
+      - "For each application in this finding, decide: Trusted, Limited, or Blocked."
+      - "Block anything nobody can identify as business-critical."
+      - "Set 'Unconfigured third-party apps' to 'Blocked' so new applications require approval."
+    verification: "Security > API controls > Manage Third-Party App Access: every application that can read mail or files is one you have marked Trusted on purpose."
+    owner_hint: IT administrator with the executive director
+
+  oauth.investigate_unverified_apps:
+    title: Identify applications not registered with Google
+    impact: >
+      These applications are not registered with Google, so nothing identifies
+      who publishes them. Some will be harmless internal scripts. Some will be
+      tools an employee found online and connected without asking.
+    steps:
+      - "Note the client ID from the evidence appendix."
+      - "Ask the affected staff what the application is and why they connected it."
+      - "If nobody can account for it: Admin console > Security > API controls > Manage Third-Party App Access > Block."
+      - "If it is a legitimate internal script, document its owner and purpose."
+    verification: "Every application in this finding has a documented owner, or has been blocked."
+    owner_hint: IT administrator
+
+  oauth.review_shadow_it:
+    title: Review broad-access tools used by only one or two people
+    impact: >
+      Tools adopted by one person and never reviewed are the most common source
+      of forgotten access. The person may have moved on; the access has not.
+    steps:
+      - "Ask the named users whether they still use the tool."
+      - "If not: myaccount.google.com > Security > Your connections to third-party apps > Remove access."
+      - "If it is genuinely useful, put it through whatever approval step you use for software, and add it to your tool inventory."
+    verification: "Security > API controls > Manage Third-Party App Access: each single-user application with wide access is marked Trusted on purpose, or Blocked."
+    owner_hint: The named users, coordinated by IT
+
+  oauth.revoke_dormant_grants:
+    title: Revoke long-lived access nobody is using
+    impact: >
+      These applications still hold access that lets them reconnect at any
+      time without anyone signing in, and Google's audit log shows none of them
+      has used it in months. An unused open door is still an open door.
+    steps:
+      - "Admin console > Security > Access and data control > API controls > Manage Third-Party App Access."
+      - "Block each application listed, or ask the affected users to disconnect it from myaccount.google.com."
+      - "If a user still needs one, they can reconnect it; revoking costs them a single consent screen."
+    verification: "Security > API controls > Manage Third-Party App Access: the applications named in the findings are Blocked, or no longer listed."
+    owner_hint: IT administrator
+
+  coverage.restore_access:
+    title: Restore access so this area can be assessed
+    impact: >
+      This part of your environment could not be examined, so this report says
+      nothing about it either way. It is a gap in the assessment, not a clean
+      result.
+    steps:
+      - "Review the reason recorded in the finding: usually a missing permission or a licence tier that does not expose the data."
+      - "For permission issues, re-run the delegation setup in the client prerequisites checklist."
+      - "For licence issues, note the limitation in your own records; it is not a defect in your configuration."
+    verification: "At the next assessment, this area appears in the findings or in 'areas checked with no issues found', not in the coverage notes."
+    owner_hint: IT administrator with the assessor

@@ -1,0 +1,614 @@
+[
+  {
+    "id": "100000000000000000001",
+    "primaryEmail": "dana.reyes@dev-icp.example",
+    "name": {
+      "fullName": "Dana Reyes"
+    },
+    "suspended": false,
+    "archived": false,
+    "isAdmin": true,
+    "isDelegatedAdmin": false,
+    "isEnrolledIn2Sv": true,
+    "isEnforcedIn2Sv": true,
+    "creationTime": "2025-07-28T12:00:00.000Z",
+    "lastLoginTime": "2026-08-31T12:00:00.000Z",
+    "orgUnitPath": "/",
+    "agreedToTerms": true,
+    "changePasswordAtNextLogin": false
+  },
+  {
+    "id": "100000000000000000002",
+    "primaryEmail": "sam.okafor@dev-icp.example",
+    "name": {
+      "fullName": "Sam Okafor"
+    },
+    "suspended": false,
+    "archived": false,
+    "isAdmin": true,
+    "isDelegatedAdmin": false,
+    "isEnrolledIn2Sv": false,
+    "isEnforcedIn2Sv": false,
+    "creationTime": "2025-07-28T12:00:00.000Z",
+    "lastLoginTime": "2026-08-26T12:00:00.000Z",
+    "orgUnitPath": "/",
+    "agreedToTerms": true,
+    "changePasswordAtNextLogin": false
+  },
+  {
+    "id": "100000000000000000003",
+    "primaryEmail": "former.consultant@dev-icp.example",
+    "name": {
+      "fullName": "Former Consultant"
+    },
+    "suspended": false,
+    "archived": false,
+    "isAdmin": true,
+    "isDelegatedAdmin": false,
+    "isEnrolledIn2Sv": true,
+    "isEnforcedIn2Sv": true,
+    "creationTime": "2025-07-28T12:00:00.000Z",
+    "lastLoginTime": "2026-05-04T12:00:00.000Z",
+    "orgUnitPath": "/",
+    "agreedToTerms": true,
+    "changePasswordAtNextLogin": false
+  },
+  {
+    "id": "100000000000000000004",
+    "primaryEmail": "priya.menon@dev-icp.example",
+    "name": {
+      "fullName": "Priya Menon"
+    },
+    "suspended": false,
+    "archived": false,
+    "isAdmin": false,
+    "isDelegatedAdmin": true,
+    "isEnrolledIn2Sv": true,
+    "isEnforcedIn2Sv": true,
+    "creationTime": "2025-07-28T12:00:00.000Z",
+    "lastLoginTime": "2026-08-30T12:00:00.000Z",
+    "orgUnitPath": "/",
+    "agreedToTerms": true,
+    "changePasswordAtNextLogin": false
+  },
+  {
+    "id": "100000000000000000010",
+    "primaryEmail": "alex.tan@dev-icp.example",
+    "name": {
+      "fullName": "Alex Tan"
+    },
+    "suspended": false,
+    "archived": false,
+    "isAdmin": false,
+    "isDelegatedAdmin": false,
+    "isEnrolledIn2Sv": true,
+    "isEnforcedIn2Sv": true,
+    "creationTime": "2025-07-28T12:00:00.000Z",
+    "lastLoginTime": "2026-08-28T12:00:00.000Z",
+    "orgUnitPath": "/",
+    "agreedToTerms": true,
+    "changePasswordAtNextLogin": false
+  },
+  {
+    "id": "100000000000000000011",
+    "primaryEmail": "bea.novak@dev-icp.example",
+    "name": {
+      "fullName": "Bea Novak"
+    },
+    "suspended": false,
+    "archived": false,
+    "isAdmin": false,
+    "isDelegatedAdmin": false,
+    "isEnrolledIn2Sv": true,
+    "isEnforcedIn2Sv": true,
+    "creationTime": "2025-07-28T12:00:00.000Z",
+    "lastLoginTime": "2026-08-27T12:00:00.000Z",
+    "orgUnitPath": "/",
+    "agreedToTerms": true,
+    "changePasswordAtNextLogin": false
+  },
+  {
+    "id": "100000000000000000012",
+    "primaryEmail": "chris.dube@dev-icp.example",
+    "name": {
+      "fullName": "Chris Dube"
+    },
+    "suspended": false,
+    "archived": false,
+    "isAdmin": false,
+    "isDelegatedAdmin": false,
+    "isEnrolledIn2Sv": true,
+    "isEnforcedIn2Sv": true,
+    "creationTime": "2025-07-28T12:00:00.000Z",
+    "lastLoginTime": "2026-08-26T12:00:00.000Z",
+    "orgUnitPath": "/",
+    "agreedToTerms": true,
+    "changePasswordAtNextLogin": false
+  },
+  {
+    "id": "100000000000000000013",
+    "primaryEmail": "dee.ali@dev-icp.example",
+    "name": {
+      "fullName": "Dee Ali"
+    },
+    "suspended": false,
+    "archived": false,
+    "isAdmin": false,
+    "isDelegatedAdmin": false,
+    "isEnrolledIn2Sv": true,
+    "isEnforcedIn2Sv": true,
+    "creationTime": "2025-07-28T12:00:00.000Z",
+    "lastLoginTime": "2026-08-25T12:00:00.000Z",
+    "orgUnitPath": "/",
+    "agreedToTerms": true,
+    "changePasswordAtNextLogin": false
+  },
+  {
+    "id": "100000000000000000014",
+    "primaryEmail": "eli.park@dev-icp.example",
+    "name": {
+      "fullName": "Eli Park"
+    },
+    "suspended": false,
+    "archived": false,
+    "isAdmin": false,
+    "isDelegatedAdmin": false,
+    "isEnrolledIn2Sv": true,
+    "isEnforcedIn2Sv": true,
+    "creationTime": "2025-07-28T12:00:00.000Z",
+    "lastLoginTime": "2026-08-31T12:00:00.000Z",
+    "orgUnitPath": "/",
+    "agreedToTerms": true,
+    "changePasswordAtNextLogin": false
+  },
+  {
+    "id": "100000000000000000015",
+    "primaryEmail": "fran.mbeki@dev-icp.example",
+    "name": {
+      "fullName": "Fran Mbeki"
+    },
+    "suspended": false,
+    "archived": false,
+    "isAdmin": false,
+    "isDelegatedAdmin": false,
+    "isEnrolledIn2Sv": true,
+    "isEnforcedIn2Sv": true,
+    "creationTime": "2025-07-28T12:00:00.000Z",
+    "lastLoginTime": "2026-08-30T12:00:00.000Z",
+    "orgUnitPath": "/",
+    "agreedToTerms": true,
+    "changePasswordAtNextLogin": false
+  },
+  {
+    "id": "100000000000000000016",
+    "primaryEmail": "gus.iversen@dev-icp.example",
+    "name": {
+      "fullName": "Gus Iversen"
+    },
+    "suspended": false,
+    "archived": false,
+    "isAdmin": false,
+    "isDelegatedAdmin": false,
+    "isEnrolledIn2Sv": true,
+    "isEnforcedIn2Sv": true,
+    "creationTime": "2025-07-28T12:00:00.000Z",
+    "lastLoginTime": "2026-08-29T12:00:00.000Z",
+    "orgUnitPath": "/",
+    "agreedToTerms": true,
+    "changePasswordAtNextLogin": false
+  },
+  {
+    "id": "100000000000000000017",
+    "primaryEmail": "hana.sato@dev-icp.example",
+    "name": {
+      "fullName": "Hana Sato"
+    },
+    "suspended": false,
+    "archived": false,
+    "isAdmin": false,
+    "isDelegatedAdmin": false,
+    "isEnrolledIn2Sv": true,
+    "isEnforcedIn2Sv": true,
+    "creationTime": "2025-07-28T12:00:00.000Z",
+    "lastLoginTime": "2026-08-28T12:00:00.000Z",
+    "orgUnitPath": "/",
+    "agreedToTerms": true,
+    "changePasswordAtNextLogin": false
+  },
+  {
+    "id": "100000000000000000018",
+    "primaryEmail": "ivan.petrov@dev-icp.example",
+    "name": {
+      "fullName": "Ivan Petrov"
+    },
+    "suspended": false,
+    "archived": false,
+    "isAdmin": false,
+    "isDelegatedAdmin": false,
+    "isEnrolledIn2Sv": true,
+    "isEnforcedIn2Sv": true,
+    "creationTime": "2025-07-28T12:00:00.000Z",
+    "lastLoginTime": "2026-08-27T12:00:00.000Z",
+    "orgUnitPath": "/",
+    "agreedToTerms": true,
+    "changePasswordAtNextLogin": false
+  },
+  {
+    "id": "100000000000000000019",
+    "primaryEmail": "jo.kelly@dev-icp.example",
+    "name": {
+      "fullName": "Jo Kelly"
+    },
+    "suspended": false,
+    "archived": false,
+    "isAdmin": false,
+    "isDelegatedAdmin": false,
+    "isEnrolledIn2Sv": true,
+    "isEnforcedIn2Sv": true,
+    "creationTime": "2025-07-28T12:00:00.000Z",
+    "lastLoginTime": "2026-08-26T12:00:00.000Z",
+    "orgUnitPath": "/",
+    "agreedToTerms": true,
+    "changePasswordAtNextLogin": false
+  },
+  {
+    "id": "100000000000000000020",
+    "primaryEmail": "kim.larsen@dev-icp.example",
+    "name": {
+      "fullName": "Kim Larsen"
+    },
+    "suspended": false,
+    "archived": false,
+    "isAdmin": false,
+    "isDelegatedAdmin": false,
+    "isEnrolledIn2Sv": true,
+    "isEnforcedIn2Sv": true,
+    "creationTime": "2025-07-28T12:00:00.000Z",
+    "lastLoginTime": "2026-08-25T12:00:00.000Z",
+    "orgUnitPath": "/",
+    "agreedToTerms": true,
+    "changePasswordAtNextLogin": false
+  },
+  {
+    "id": "100000000000000000021",
+    "primaryEmail": "leo.costa@dev-icp.example",
+    "name": {
+      "fullName": "Leo Costa"
+    },
+    "suspended": false,
+    "archived": false,
+    "isAdmin": false,
+    "isDelegatedAdmin": false,
+    "isEnrolledIn2Sv": true,
+    "isEnforcedIn2Sv": true,
+    "creationTime": "2025-07-28T12:00:00.000Z",
+    "lastLoginTime": "2026-08-31T12:00:00.000Z",
+    "orgUnitPath": "/",
+    "agreedToTerms": true,
+    "changePasswordAtNextLogin": false
+  },
+  {
+    "id": "100000000000000000022",
+    "primaryEmail": "mia.haddad@dev-icp.example",
+    "name": {
+      "fullName": "Mia Haddad"
+    },
+    "suspended": false,
+    "archived": false,
+    "isAdmin": false,
+    "isDelegatedAdmin": false,
+    "isEnrolledIn2Sv": true,
+    "isEnforcedIn2Sv": true,
+    "creationTime": "2025-07-28T12:00:00.000Z",
+    "lastLoginTime": "2026-08-30T12:00:00.000Z",
+    "orgUnitPath": "/",
+    "agreedToTerms": true,
+    "changePasswordAtNextLogin": false
+  },
+  {
+    "id": "100000000000000000023",
+    "primaryEmail": "nina.oyelaran@dev-icp.example",
+    "name": {
+      "fullName": "Nina Oyelaran"
+    },
+    "suspended": false,
+    "archived": false,
+    "isAdmin": false,
+    "isDelegatedAdmin": false,
+    "isEnrolledIn2Sv": true,
+    "isEnforcedIn2Sv": true,
+    "creationTime": "2025-07-28T12:00:00.000Z",
+    "lastLoginTime": "2026-08-29T12:00:00.000Z",
+    "orgUnitPath": "/",
+    "agreedToTerms": true,
+    "changePasswordAtNextLogin": false
+  },
+  {
+    "id": "100000000000000000024",
+    "primaryEmail": "omar.said@dev-icp.example",
+    "name": {
+      "fullName": "Omar Said"
+    },
+    "suspended": false,
+    "archived": false,
+    "isAdmin": false,
+    "isDelegatedAdmin": false,
+    "isEnrolledIn2Sv": true,
+    "isEnforcedIn2Sv": true,
+    "creationTime": "2025-07-28T12:00:00.000Z",
+    "lastLoginTime": "2026-08-28T12:00:00.000Z",
+    "orgUnitPath": "/",
+    "agreedToTerms": true,
+    "changePasswordAtNextLogin": false
+  },
+  {
+    "id": "100000000000000000030",
+    "primaryEmail": "pat.dunne@dev-icp.example",
+    "name": {
+      "fullName": "Pat Dunne"
+    },
+    "suspended": false,
+    "archived": false,
+    "isAdmin": false,
+    "isDelegatedAdmin": false,
+    "isEnrolledIn2Sv": false,
+    "isEnforcedIn2Sv": false,
+    "creationTime": "2025-07-28T12:00:00.000Z",
+    "lastLoginTime": "2026-08-31T12:00:00.000Z",
+    "orgUnitPath": "/",
+    "agreedToTerms": true,
+    "changePasswordAtNextLogin": false
+  },
+  {
+    "id": "100000000000000000031",
+    "primaryEmail": "quinn.reilly@dev-icp.example",
+    "name": {
+      "fullName": "Quinn Reilly"
+    },
+    "suspended": false,
+    "archived": false,
+    "isAdmin": false,
+    "isDelegatedAdmin": false,
+    "isEnrolledIn2Sv": false,
+    "isEnforcedIn2Sv": false,
+    "creationTime": "2025-07-28T12:00:00.000Z",
+    "lastLoginTime": "2026-08-30T12:00:00.000Z",
+    "orgUnitPath": "/",
+    "agreedToTerms": true,
+    "changePasswordAtNextLogin": false
+  },
+  {
+    "id": "100000000000000000032",
+    "primaryEmail": "rosa.mendes@dev-icp.example",
+    "name": {
+      "fullName": "Rosa Mendes"
+    },
+    "suspended": false,
+    "archived": false,
+    "isAdmin": false,
+    "isDelegatedAdmin": false,
+    "isEnrolledIn2Sv": false,
+    "isEnforcedIn2Sv": false,
+    "creationTime": "2025-07-28T12:00:00.000Z",
+    "lastLoginTime": "2026-08-29T12:00:00.000Z",
+    "orgUnitPath": "/",
+    "agreedToTerms": true,
+    "changePasswordAtNextLogin": false
+  },
+  {
+    "id": "100000000000000000033",
+    "primaryEmail": "sean.byrne@dev-icp.example",
+    "name": {
+      "fullName": "Sean Byrne"
+    },
+    "suspended": false,
+    "archived": false,
+    "isAdmin": false,
+    "isDelegatedAdmin": false,
+    "isEnrolledIn2Sv": false,
+    "isEnforcedIn2Sv": false,
+    "creationTime": "2025-07-28T12:00:00.000Z",
+    "lastLoginTime": "2026-08-28T12:00:00.000Z",
+    "orgUnitPath": "/",
+    "agreedToTerms": true,
+    "changePasswordAtNextLogin": false
+  },
+  {
+    "id": "100000000000000000034",
+    "primaryEmail": "tara.singh@dev-icp.example",
+    "name": {
+      "fullName": "Tara Singh"
+    },
+    "suspended": false,
+    "archived": false,
+    "isAdmin": false,
+    "isDelegatedAdmin": false,
+    "isEnrolledIn2Sv": false,
+    "isEnforcedIn2Sv": false,
+    "creationTime": "2025-07-28T12:00:00.000Z",
+    "lastLoginTime": "2026-08-27T12:00:00.000Z",
+    "orgUnitPath": "/",
+    "agreedToTerms": true,
+    "changePasswordAtNextLogin": false
+  },
+  {
+    "id": "100000000000000000035",
+    "primaryEmail": "umar.khan@dev-icp.example",
+    "name": {
+      "fullName": "Umar Khan"
+    },
+    "suspended": false,
+    "archived": false,
+    "isAdmin": false,
+    "isDelegatedAdmin": false,
+    "isEnrolledIn2Sv": false,
+    "isEnforcedIn2Sv": false,
+    "creationTime": "2025-07-28T12:00:00.000Z",
+    "lastLoginTime": "2026-08-31T12:00:00.000Z",
+    "orgUnitPath": "/",
+    "agreedToTerms": true,
+    "changePasswordAtNextLogin": false
+  },
+  {
+    "id": "100000000000000000040",
+    "primaryEmail": "vic.nowak@dev-icp.example",
+    "name": {
+      "fullName": "Vic Nowak"
+    },
+    "suspended": false,
+    "archived": false,
+    "isAdmin": false,
+    "isDelegatedAdmin": false,
+    "isEnrolledIn2Sv": true,
+    "isEnforcedIn2Sv": true,
+    "creationTime": "2025-07-28T12:00:00.000Z",
+    "lastLoginTime": "2026-03-25T12:00:00.000Z",
+    "orgUnitPath": "/",
+    "agreedToTerms": true,
+    "changePasswordAtNextLogin": false
+  },
+  {
+    "id": "100000000000000000041",
+    "primaryEmail": "wes.olsen@dev-icp.example",
+    "name": {
+      "fullName": "Wes Olsen"
+    },
+    "suspended": false,
+    "archived": false,
+    "isAdmin": false,
+    "isDelegatedAdmin": false,
+    "isEnrolledIn2Sv": true,
+    "isEnforcedIn2Sv": true,
+    "creationTime": "2025-07-28T12:00:00.000Z",
+    "lastLoginTime": "2026-03-24T12:00:00.000Z",
+    "orgUnitPath": "/",
+    "agreedToTerms": true,
+    "changePasswordAtNextLogin": false
+  },
+  {
+    "id": "100000000000000000042",
+    "primaryEmail": "xena.abara@dev-icp.example",
+    "name": {
+      "fullName": "Xena Abara"
+    },
+    "suspended": false,
+    "archived": false,
+    "isAdmin": false,
+    "isDelegatedAdmin": false,
+    "isEnrolledIn2Sv": true,
+    "isEnforcedIn2Sv": true,
+    "creationTime": "2025-07-28T12:00:00.000Z",
+    "lastLoginTime": "2026-03-23T12:00:00.000Z",
+    "orgUnitPath": "/",
+    "agreedToTerms": true,
+    "changePasswordAtNextLogin": false
+  },
+  {
+    "id": "100000000000000000043",
+    "primaryEmail": "yuri.baros@dev-icp.example",
+    "name": {
+      "fullName": "Yuri Baros"
+    },
+    "suspended": false,
+    "archived": false,
+    "isAdmin": false,
+    "isDelegatedAdmin": false,
+    "isEnrolledIn2Sv": true,
+    "isEnforcedIn2Sv": true,
+    "creationTime": "2025-07-28T12:00:00.000Z",
+    "lastLoginTime": "2026-03-22T12:00:00.000Z",
+    "orgUnitPath": "/",
+    "agreedToTerms": true,
+    "changePasswordAtNextLogin": false
+  },
+  {
+    "id": "100000000000000000044",
+    "primaryEmail": "zoe.carr@dev-icp.example",
+    "name": {
+      "fullName": "Zoe Carr"
+    },
+    "suspended": false,
+    "archived": false,
+    "isAdmin": false,
+    "isDelegatedAdmin": false,
+    "isEnrolledIn2Sv": true,
+    "isEnforcedIn2Sv": true,
+    "creationTime": "2025-07-28T12:00:00.000Z",
+    "lastLoginTime": "2026-03-21T12:00:00.000Z",
+    "orgUnitPath": "/",
+    "agreedToTerms": true,
+    "changePasswordAtNextLogin": false
+  },
+  {
+    "id": "100000000000000000050",
+    "primaryEmail": "new.starter.a@dev-icp.example",
+    "name": {
+      "fullName": "New Starter A"
+    },
+    "suspended": false,
+    "archived": false,
+    "isAdmin": false,
+    "isDelegatedAdmin": false,
+    "isEnrolledIn2Sv": false,
+    "isEnforcedIn2Sv": false,
+    "creationTime": "2026-02-13T12:00:00.000Z",
+    "lastLoginTime": "1970-01-01T00:00:00.000Z",
+    "orgUnitPath": "/",
+    "agreedToTerms": true,
+    "changePasswordAtNextLogin": false
+  },
+  {
+    "id": "100000000000000000051",
+    "primaryEmail": "project.placeholder@dev-icp.example",
+    "name": {
+      "fullName": "Project Placeholder"
+    },
+    "suspended": false,
+    "archived": false,
+    "isAdmin": false,
+    "isDelegatedAdmin": false,
+    "isEnrolledIn2Sv": false,
+    "isEnforcedIn2Sv": false,
+    "creationTime": "2026-02-03T12:00:00.000Z",
+    "lastLoginTime": "1970-01-01T00:00:00.000Z",
+    "orgUnitPath": "/",
+    "agreedToTerms": true,
+    "changePasswordAtNextLogin": false
+  },
+  {
+    "id": "100000000000000000060",
+    "primaryEmail": "departed.finance@dev-icp.example",
+    "name": {
+      "fullName": "Departed Finance"
+    },
+    "suspended": true,
+    "archived": false,
+    "isAdmin": false,
+    "isDelegatedAdmin": false,
+    "isEnrolledIn2Sv": true,
+    "isEnforcedIn2Sv": true,
+    "creationTime": "2025-07-28T12:00:00.000Z",
+    "lastLoginTime": "2025-12-25T12:00:00.000Z",
+    "orgUnitPath": "/",
+    "agreedToTerms": true,
+    "changePasswordAtNextLogin": false
+  },
+  {
+    "id": "100000000000000000061",
+    "primaryEmail": "departed.ops@dev-icp.example",
+    "name": {
+      "fullName": "Departed Ops"
+    },
+    "suspended": true,
+    "archived": false,
+    "isAdmin": false,
+    "isDelegatedAdmin": false,
+    "isEnrolledIn2Sv": true,
+    "isEnforcedIn2Sv": true,
+    "creationTime": "2025-07-28T12:00:00.000Z",
+    "lastLoginTime": "2025-11-05T12:00:00.000Z",
+    "orgUnitPath": "/",
+    "agreedToTerms": true,
+    "changePasswordAtNextLogin": false
+  }
+]

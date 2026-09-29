@@ -1,0 +1,510 @@
+# OAuth scope -> blast-radius taxonomy
+#
+# This file is the intellectual property of the project. Building it is manual
+# and tedious and there is no shortcut; it is also the reason the OAuth findings
+# are defensible rather than hand-wavy.
+#
+# Tiers, highest blast radius first:
+#   admin_equivalent  the app can administer the tenant, or act as any user
+#   full_data_write   the app can modify all of a user's mail, files or calendar
+#                     -- or act as them (send mail, run code)
+#   full_data_read    the app can read all of a user's mail, files or calendar
+#   scoped_data       access limited to data the app itself created, or one item
+#   metadata_only     names, settings, or listings without content
+#   sign_in_only      identity assertion only
+#
+# Rule of thumb when classifying: tier by the worst thing the scope allows, not
+# the thing the vendor says they use it for. A "readonly" scope never outranks
+# its read-write sibling (tests/risk/test_taxonomy.py enforces this).
+#
+# `match: prefix` entries are longest-prefix matched. Exact entries win.
+# An unmatched scope resolves to `unknown`, which is weighted mid-range and
+# surfaced in the report as requiring manual review -- never treated as safe.
+#
+# Changelog
+#   2026.09.2  gmail.compose, spreadsheets, documents, calendar.events.readonly
+#              re-tiered (they were under-rated); Google Cloud, Apps Script,
+#              Vault, Chat, Keep, Tasks, Forms, Slides and admin read-only
+#              scopes added; offline_access_markers removed (a scope does not
+#              say whether a refresh token exists -- every listed grant is
+#              standing access until revoked).
+
+version: "2026.09.2"
+
+scopes:
+  # --- admin equivalent -----------------------------------------------------
+  - scope: https://www.googleapis.com/auth/admin.directory.user
+    tier: admin_equivalent
+    label: Manage all users
+    description: Create, modify, suspend and delete any account in the organization.
+
+  - scope: https://www.googleapis.com/auth/admin.directory.group
+    tier: admin_equivalent
+    label: Manage all groups
+    description: Change group membership, including groups that control access.
+
+  - scope: https://www.googleapis.com/auth/admin.directory.rolemanagement
+    tier: admin_equivalent
+    label: Manage admin roles
+    description: Grant or revoke administrator privileges, including super-admin.
+
+  - scope: https://www.googleapis.com/auth/admin.datatransfer
+    tier: admin_equivalent
+    label: Transfer user data
+    description: Move any user's data to another account.
+
+  - scope: https://www.googleapis.com/auth/cloud-platform
+    tier: admin_equivalent
+    label: Full Google Cloud access
+    description: Full control of the linked Google Cloud project and its resources.
+
+  - scope: https://www.googleapis.com/auth/apps.groups.settings
+    tier: admin_equivalent
+    label: Manage group settings
+    description: Change who can post to and read organization mailing lists.
+
+  - scope: https://www.googleapis.com/auth/ediscovery
+    tier: admin_equivalent
+    label: Google Vault
+    description: Search, hold and export any user's mail and files across the organization.
+
+  - scope: https://www.googleapis.com/auth/cloud-identity.groups
+    tier: admin_equivalent
+    label: Manage groups (Cloud Identity)
+    description: Change group membership, including groups that control access.
+
+  - scope: https://www.googleapis.com/auth/cloud-identity.policies
+    tier: admin_equivalent
+    label: Manage Workspace settings
+    description: Change organization-wide security and sharing settings.
+
+  - scope: https://www.googleapis.com/auth/admin.
+    match: prefix
+    tier: admin_equivalent
+    label: Administrative API access
+    description: Access to Admin SDK surfaces; treat as administrative unless proven read-only.
+
+  # --- full data write ------------------------------------------------------
+  - scope: https://mail.google.com/
+    tier: full_data_write
+    label: Full mailbox control
+    description: Read, send, modify and permanently delete any mail in the mailbox.
+
+  - scope: https://www.googleapis.com/auth/drive
+    tier: full_data_write
+    label: Full Drive control
+    description: Read, modify, share and delete every file the user can reach.
+
+  - scope: https://www.googleapis.com/auth/gmail.modify
+    tier: full_data_write
+    label: Modify mail
+    description: Read and change any message, including moving and deleting.
+
+  - scope: https://www.googleapis.com/auth/gmail.settings.sharing
+    tier: full_data_write
+    label: Change mail delegation
+    description: Add forwarding addresses and mailbox delegates -- a persistence mechanism.
+
+  - scope: https://www.googleapis.com/auth/gmail.settings.basic
+    tier: full_data_write
+    label: Change mail filters
+    description: Create filters that silently delete, label or forward incoming mail.
+
+  - scope: https://www.googleapis.com/auth/gmail.send
+    tier: full_data_write
+    label: Send mail as user
+    description: Send mail as the user, enabling convincing internal phishing.
+
+  - scope: https://www.googleapis.com/auth/gmail.compose
+    tier: full_data_write
+    label: Send mail and manage drafts
+    description: >-
+      Create drafts and send mail as the user. Previously rated "scoped data";
+      the ability to send as the user is what matters.
+
+  - scope: https://www.googleapis.com/auth/gmail.insert
+    tier: full_data_write
+    label: Insert mail
+    description: Place messages directly into the mailbox, bypassing mail filtering.
+
+  - scope: https://www.googleapis.com/auth/calendar
+    tier: full_data_write
+    label: Full calendar control
+    description: Read and change all calendars, including meeting contents and attendees.
+
+  - scope: https://www.googleapis.com/auth/calendar.events
+    tier: full_data_write
+    label: Manage all events
+    description: Read, create, change and delete events on every calendar the user can reach.
+
+  - scope: https://www.googleapis.com/auth/contacts
+    tier: full_data_write
+    label: Full contacts control
+    description: Read and modify the user's contacts.
+
+  - scope: https://www.googleapis.com/auth/spreadsheets
+    tier: full_data_write
+    label: Read and edit all spreadsheets
+    description: Read, change and delete every spreadsheet the user can open.
+
+  - scope: https://www.googleapis.com/auth/documents
+    tier: full_data_write
+    label: Read and edit all documents
+    description: Read, change and delete every document the user can open.
+
+  - scope: https://www.googleapis.com/auth/presentations
+    tier: full_data_write
+    label: Read and edit all presentations
+    description: Read, change and delete every presentation the user can open.
+
+  - scope: https://www.googleapis.com/auth/forms.body
+    tier: full_data_write
+    label: Edit all forms
+    description: Change any form the user owns, including where responses go.
+
+  - scope: https://www.googleapis.com/auth/tasks
+    tier: full_data_write
+    label: Manage tasks
+    description: Read, change and delete the user's tasks.
+
+  - scope: https://www.googleapis.com/auth/keep
+    tier: full_data_write
+    label: Manage Keep notes
+    description: Read, change and delete every Keep note.
+
+  - scope: https://www.googleapis.com/auth/chat.messages
+    tier: full_data_write
+    label: Read and send chat messages
+    description: Read the user's Chat messages and post as them.
+
+  - scope: https://www.googleapis.com/auth/script.projects
+    tier: full_data_write
+    label: Edit Apps Script projects
+    description: Change script code that runs as the user, with that script's own access.
+
+  - scope: https://www.googleapis.com/auth/script.send_mail
+    tier: full_data_write
+    label: Send mail from a script
+    description: Send mail as the user from Apps Script.
+
+  - scope: https://www.googleapis.com/auth/compute
+    tier: full_data_write
+    label: Manage Compute Engine
+    description: Create, change and delete virtual machines in the user's Google Cloud projects.
+
+  - scope: https://www.googleapis.com/auth/appengine.admin
+    tier: full_data_write
+    label: Manage App Engine
+    description: Deploy and change App Engine applications in the user's Google Cloud projects.
+
+  - scope: https://www.googleapis.com/auth/sqlservice.login
+    tier: full_data_write
+    label: Sign in to Cloud SQL
+    description: Connect to every Cloud SQL database the user can reach, as the user.
+
+  - scope: https://www.googleapis.com/auth/devstorage.full_control
+    tier: full_data_write
+    label: Full Cloud Storage control
+    description: Read, change, delete and re-share every storage bucket the user can reach.
+
+  - scope: https://www.googleapis.com/auth/devstorage.read_write
+    tier: full_data_write
+    label: Read and write Cloud Storage
+    description: Read, change and delete objects in every bucket the user can reach.
+
+  # Only Google's own browsers and devices can obtain this scope. See
+  # google_session_scopes below.
+  - scope: https://www.google.com/accounts/OAuthLogin
+    tier: full_data_write
+    label: Google browser or device session
+    description: A signed-in Chrome browser or Android device, with the user's full account access.
+
+  # --- full data read -------------------------------------------------------
+  - scope: https://www.googleapis.com/auth/gmail.readonly
+    tier: full_data_read
+    label: Read all mail
+    description: Read every message in the mailbox, including historical mail and attachments.
+
+  - scope: https://www.googleapis.com/auth/drive.readonly
+    tier: full_data_read
+    label: Read all Drive files
+    description: Read every file the user can reach, including shared drives.
+
+  - scope: https://www.googleapis.com/auth/drive.photos.readonly
+    tier: full_data_read
+    label: Read all photos
+    description: Read every photo and video in the user's Drive.
+
+  - scope: https://www.googleapis.com/auth/calendar.readonly
+    tier: full_data_read
+    label: Read all calendars
+    description: Read all events, including private ones and attendee lists.
+
+  - scope: https://www.googleapis.com/auth/calendar.events.readonly
+    tier: full_data_read
+    label: Read all events
+    description: >-
+      Read every event on every calendar the user can reach. Previously rated
+      "scoped data"; it is not limited to one calendar.
+
+  - scope: https://www.googleapis.com/auth/contacts.readonly
+    tier: full_data_read
+    label: Read all contacts
+    description: Read the full contact list -- a common precursor to targeted phishing.
+
+  - scope: https://www.googleapis.com/auth/contacts.other.readonly
+    tier: full_data_read
+    label: Read "other contacts"
+    description: Read everyone the user has ever emailed, collected automatically by Gmail.
+
+  - scope: https://www.googleapis.com/auth/gmail.metadata
+    tier: full_data_read
+    label: Read mail metadata
+    description: Read headers and labels for all mail; reveals who talks to whom.
+
+  - scope: https://www.googleapis.com/auth/spreadsheets.readonly
+    tier: full_data_read
+    label: Read all spreadsheets
+    description: Read every spreadsheet the user can open.
+
+  - scope: https://www.googleapis.com/auth/documents.readonly
+    tier: full_data_read
+    label: Read all documents
+    description: Read every document the user can open.
+
+  - scope: https://www.googleapis.com/auth/presentations.readonly
+    tier: full_data_read
+    label: Read all presentations
+    description: Read every presentation the user can open.
+
+  - scope: https://www.googleapis.com/auth/forms.responses.readonly
+    tier: full_data_read
+    label: Read form responses
+    description: Read every response to the user's forms, which often hold personal data.
+
+  - scope: https://www.googleapis.com/auth/tasks.readonly
+    tier: full_data_read
+    label: Read tasks
+    description: Read the user's tasks.
+
+  - scope: https://www.googleapis.com/auth/keep.readonly
+    tier: full_data_read
+    label: Read Keep notes
+    description: Read every Keep note.
+
+  - scope: https://www.googleapis.com/auth/chat.messages.readonly
+    tier: full_data_read
+    label: Read chat messages
+    description: Read the user's Chat messages.
+
+  - scope: https://www.googleapis.com/auth/ediscovery.readonly
+    tier: full_data_read
+    label: View Google Vault
+    description: View Vault matters and exports, which contain other users' mail and files.
+
+  - scope: https://www.googleapis.com/auth/cloud-platform.read-only
+    tier: full_data_read
+    label: Read Google Cloud
+    description: Read data and configuration across the user's Google Cloud projects.
+
+  - scope: https://www.googleapis.com/auth/devstorage.read_only
+    tier: full_data_read
+    label: Read Cloud Storage
+    description: Read objects in every bucket the user can reach.
+
+  # --- scoped data ----------------------------------------------------------
+  - scope: https://www.googleapis.com/auth/drive.file
+    tier: scoped_data
+    label: Files created by this app
+    description: Access limited to files this application created or the user explicitly opened with it.
+
+  - scope: https://www.googleapis.com/auth/drive.appdata
+    tier: scoped_data
+    label: App configuration folder
+    description: Access to a private per-app folder only; no user content.
+
+  - scope: https://www.googleapis.com/auth/drive.install
+    tier: scoped_data
+    label: Drive "Open with" integration
+    description: Appear in Drive's "Open with" menu; files are accessed only when the user opens one.
+
+  - scope: https://www.googleapis.com/auth/gmail.addons.
+    match: prefix
+    tier: scoped_data
+    label: Gmail add-on
+    description: Access only to the message open in the add-on, while it is open.
+
+  - scope: https://www.googleapis.com/auth/script.external_request
+    tier: scoped_data
+    label: Script network access
+    description: Lets an Apps Script call outside services; its data access comes from its other scopes.
+
+  # --- metadata only --------------------------------------------------------
+  - scope: https://www.googleapis.com/auth/drive.metadata.readonly
+    tier: metadata_only
+    label: Read file listings
+    description: File names, owners and structure, without file contents.
+
+  - scope: https://www.googleapis.com/auth/drive.metadata
+    tier: metadata_only
+    label: Manage file details
+    description: Read and change file names and descriptions, without file contents.
+
+  - scope: https://www.googleapis.com/auth/drive.activity.readonly
+    tier: metadata_only
+    label: Read Drive activity
+    description: Who viewed and edited which files, without file contents.
+
+  - scope: https://www.googleapis.com/auth/gmail.labels
+    tier: metadata_only
+    label: Manage mail labels
+    description: Create and change labels; no access to messages.
+
+  - scope: https://www.googleapis.com/auth/calendar.settings.readonly
+    tier: metadata_only
+    label: Read calendar settings
+    description: Time zone and display settings only.
+
+  - scope: https://www.googleapis.com/auth/calendar.calendarlist.readonly
+    tier: metadata_only
+    label: Read calendar list
+    description: Which calendars the user subscribes to, without their events.
+
+  - scope: https://www.googleapis.com/auth/calendar.freebusy
+    tier: metadata_only
+    label: Read free/busy
+    description: When the user is busy, without event details.
+
+  - scope: https://www.googleapis.com/auth/chat.spaces.readonly
+    tier: metadata_only
+    label: Read chat spaces
+    description: Names and membership of Chat spaces, without messages.
+
+  # Reviewer note: org-wide personal data (names, emails, phone numbers of every
+  # employee), but listings, not content -- so metadata. Sales-prospecting tools
+  # request it; a vendor exporting the whole staff list is still worth a look.
+  - scope: https://www.googleapis.com/auth/directory.readonly
+    tier: metadata_only
+    label: Read the staff directory
+    description: Names, email addresses and phone numbers of everyone in the organization.
+
+  - scope: https://www.googleapis.com/auth/admin.directory.user.readonly
+    tier: metadata_only
+    label: Read directory
+    description: Read the user directory; no content access and no ability to change anything.
+
+  - scope: https://www.googleapis.com/auth/admin.directory.group.readonly
+    tier: metadata_only
+    label: Read groups
+    description: Group names and settings; no ability to change them.
+
+  - scope: https://www.googleapis.com/auth/admin.directory.group.member.readonly
+    tier: metadata_only
+    label: Read group membership
+    description: Who is in which group; no ability to change it.
+
+  - scope: https://www.googleapis.com/auth/admin.directory.orgunit.readonly
+    tier: metadata_only
+    label: Read organizational units
+    description: The organization's unit structure; no ability to change it.
+
+  - scope: https://www.googleapis.com/auth/admin.directory.domain.readonly
+    tier: metadata_only
+    label: Read domains
+    description: The organization's domains; no ability to change them.
+
+  - scope: https://www.googleapis.com/auth/admin.directory.rolemanagement.readonly
+    tier: metadata_only
+    label: Read admin roles
+    description: Who holds which administrator role; no ability to change it.
+
+  - scope: https://www.googleapis.com/auth/admin.reports.audit.readonly
+    tier: metadata_only
+    label: Read audit logs
+    description: Organization-wide activity records (who did what, when); no content.
+
+  - scope: https://www.googleapis.com/auth/admin.reports.usage.readonly
+    tier: metadata_only
+    label: Read usage reports
+    description: Aggregate usage and security statistics per user.
+
+  - scope: https://www.googleapis.com/auth/cloud-identity.groups.readonly
+    tier: metadata_only
+    label: Read groups (Cloud Identity)
+    description: Group names and membership; no ability to change them.
+
+  - scope: https://www.googleapis.com/auth/cloud-identity.policies.readonly
+    tier: metadata_only
+    label: Read Workspace settings
+    description: Organization-wide security and sharing settings; no ability to change them.
+
+  # --- sign-in only ---------------------------------------------------------
+  - scope: openid
+    tier: sign_in_only
+    label: Sign in
+    description: Confirms identity only.
+
+  - scope: https://www.googleapis.com/auth/userinfo.email
+    tier: sign_in_only
+    label: Read email address
+    description: Reads the signed-in user's address.
+
+  - scope: https://www.googleapis.com/auth/userinfo.profile
+    tier: sign_in_only
+    label: Read basic profile
+    description: Reads name and profile picture.
+
+  - scope: email
+    tier: sign_in_only
+    label: Read email address
+    description: Reads the signed-in user's address.
+
+  - scope: profile
+    tier: sign_in_only
+    label: Read basic profile
+    description: Reads name and profile picture.
+
+  - scope: https://www.googleapis.com/auth/plus.me
+    tier: sign_in_only
+    label: Sign in (legacy)
+    description: Legacy identity scope; confirms identity only.
+
+  - scope: https://www.googleapis.com/auth/accounts.reauth
+    tier: sign_in_only
+    label: Re-confirm identity
+    description: Asks the user to re-enter their password; grants no data access.
+
+# Google's own tools, identified by OAuth client ID -- never by display name,
+# which any developer can set to "Google Cloud SDK". Grants to these are not
+# third-party vendor risk and are reported separately (GWS-SVC-003), because
+# they are still a live credential: a command-line login with cloud-platform
+# scope on an administrator's laptop is full project access if the laptop is lost.
+#
+# Add an entry only with a primary source for the client ID. A wrong entry here
+# hides a real third-party app from the report.
+#
+# kind: developer_tool  -> reported by GWS-SVC-003
+#       device_sign_in  -> listed in the application inventory, not a finding
+first_party_clients:
+  - client_id: 32555940559.apps.googleusercontent.com
+    name: Google Cloud SDK
+    kind: developer_tool
+    description: The gcloud command-line tool, signed in with `gcloud auth login`.
+  - client_id: 764086051850-6qr4p6gpi6hn506pt8ejuq83di341hur.apps.googleusercontent.com
+    name: Google Auth Library
+    kind: developer_tool
+    description: >-
+      Local developer credentials created by `gcloud auth application-default login`,
+      used by scripts and SDKs on that machine.
+
+# Scopes Google issues only to its own browsers and devices (Chrome sign-in,
+# Android account setup). A grant holding nothing but these is a Google session,
+# not an outside vendor, whatever its client ID. Listed in the inventory as a
+# device sign-in; never a third-party finding. Suspended users' sessions are
+# still reported by GWS-OAU-001.
+#
+# Reviewer note: this rests on Google not issuing OAuthLogin to third-party
+# clients. If that ever changes, remove this block and those grants fall back
+# to ordinary third-party handling (flagged, not hidden).
+google_session_scopes:
+  - https://www.google.com/accounts/OAuthLogin

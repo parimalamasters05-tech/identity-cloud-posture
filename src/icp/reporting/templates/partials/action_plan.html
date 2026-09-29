@@ -1,0 +1,61 @@
+{# Pages 3–4 — whoever will do the work. Most serious first; quickest first within a severity. #}
+<section class="page-break">
+  <h2>Priority action plan</h2>
+  <p>
+    The most serious items come first. Among items that are equally serious, the quickest come
+    first, so a short piece of work that removes a lot of risk is never left waiting behind a
+    long one. Each item names who should own it and roughly how long it takes.
+  </p>
+
+  <table>
+    <thead>
+      <tr>
+        <th style="width:5%;">#</th>
+        <th style="width:50%;">Action</th>
+        <th style="width:13%;">Severity</th>
+        <th style="width:19%;">Owner</th>
+        <th style="width:13%;">Time needed</th>
+      </tr>
+    </thead>
+    <tbody>
+      {% for item in action_plan %}
+      <tr>
+        <td>{{ item.rank }}</td>
+        <td>
+          <strong>{{ item.remediation.title }}</strong><br>
+          <span class="meta">{{ item.finding.title }}{% if item.covers > 1 %}
+            &mdash; and {{ item.covers - 1 }} further finding{{ 's' if item.covers > 2 else '' }}
+            resolved by the same action{% endif %}</span>
+        </td>
+        <td><span class="sev sev-{{ item.finding.severity }}">{{ item.finding.severity | severity_label }}</span></td>
+        <td>{{ item.remediation.owner_hint or 'IT administrator' }}</td>
+        <td>{{ item.finding.effort_hours | duration | replace('about ', '') | replace('an hour', '1 hour') }}</td>
+      </tr>
+      {% endfor %}
+    </tbody>
+  </table>
+  <p class="meta">
+    Times are estimates for someone familiar with the Google Admin console. The scoring behind the
+    order is set out in the methodology section.
+  </p>
+
+  <h3>How to do each one</h3>
+  {% for item in action_plan %}
+  <div class="avoid-break" style="margin-bottom:12pt;">
+    <h4>{{ item.rank }}. {{ item.remediation.title }}</h4>
+    <p class="meta">{{ item.finding.entity_count }} affected &middot; {{ item.finding.effort_hours | duration }}
+      &middot; reference <span class="mono">{{ item.finding.finding_id }}</span></p>
+    {% if item.also_resolves %}
+    <p class="meta">Also fixes:
+      {% for other in item.also_resolves %}{{ other.title }}{% if not loop.last %}; {% endif %}{% endfor %}
+    </p>
+    {% endif %}
+    <ol class="steps">
+      {% for step in item.remediation.steps %}<li>{{ step }}</li>{% endfor %}
+    </ol>
+    {% if item.remediation.verification %}
+    <p class="meta"><strong>How to check it worked:</strong> {{ item.remediation.verification }}</p>
+    {% endif %}
+  </div>
+  {% endfor %}
+</section>

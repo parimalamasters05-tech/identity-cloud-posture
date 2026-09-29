@@ -1,0 +1,43 @@
+{# Compliance and insurance reader. Context, explicitly not an attestation. #}
+<section class="page-break">
+  <h2>Framework mapping</h2>
+  <p>
+    Findings mapped to {{ framework.framework }} subcategories, for use when completing insurance
+    or grant questionnaires that reference the framework.
+  </p>
+
+  <div class="callout">
+    <p style="margin-bottom:0;">
+      <strong>This is context, not an attestation.</strong> This assessment covers identity and
+      cloud configuration only. It does not evaluate every subcategory of the framework, and it
+      must not be presented as a certification, an audit, or a statement of compliance.
+    </p>
+  </div>
+
+  <table>
+    <thead>
+      <tr>
+        <th style="width:11%;">Subcategory</th>
+        <th style="width:11%;">Function</th>
+        <th style="width:52%;">Outcome</th>
+        <th style="width:12%;">Findings</th>
+        <th style="width:14%;">Worst severity</th>
+      </tr>
+    </thead>
+    <tbody>
+      {% for row in framework_rows %}
+      <tr>
+        <td class="mono">{{ row.ref }}</td>
+        <td>{{ row.function }}</td>
+        <td>{{ row.text }}</td>
+        <td>{{ row.finding_count }}</td>
+        <td>
+          {% if row.worst_severity %}
+          <span class="sev sev-{{ row.worst_severity }}">{{ row.worst_severity | severity_label }}</span>
+          {% else %}<span class="muted">None found</span>{% endif %}
+        </td>
+      </tr>
+      {% endfor %}
+    </tbody>
+  </table>
+</section>

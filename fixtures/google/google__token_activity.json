@@ -1,0 +1,152 @@
+{
+  "window_days": 180,
+  "window_start": "2026-03-05T12:00:00+00:00",
+  "events_read": 18,
+  "oldest_event": "2026-03-15T12:00:00.000Z",
+  "newest_event": "2026-09-01T12:00:00.000Z",
+  "truncated": false,
+  "event_names": {
+    "activity": 15,
+    "authorize": 2,
+    "revoke": 1
+  },
+  "activity_recorded": true,
+  "apps": [
+    {
+      "client_id": "100000000000000000099",
+      "app_name": "Posture assessment",
+      "user": "dana.reyes@dev-icp.example",
+      "last_authorized": "2026-09-01T12:00:00.000Z",
+      "last_revoked": null,
+      "last_activity": null
+    },
+    {
+      "client_id": "333444555666.apps.googleusercontent.com",
+      "app_name": "OldSurveyTool",
+      "user": "bea.novak@dev-icp.example",
+      "last_authorized": null,
+      "last_revoked": "2026-07-03T12:00:00.000Z",
+      "last_activity": null
+    },
+    {
+      "client_id": "555666777888.apps.googleusercontent.com",
+      "app_name": "LegacySync Connector",
+      "user": "dana.reyes@dev-icp.example",
+      "last_authorized": null,
+      "last_revoked": null,
+      "last_activity": "2026-08-31T12:00:00.000Z"
+    },
+    {
+      "client_id": "777888999000.apps.googleusercontent.com",
+      "app_name": "InboxCleaner Pro",
+      "user": "kim.larsen@dev-icp.example",
+      "last_authorized": "2026-03-15T12:00:00.000Z",
+      "last_revoked": null,
+      "last_activity": "2026-04-04T12:00:00.000Z"
+    },
+    {
+      "client_id": "884411223344.apps.googleusercontent.com",
+      "app_name": "NoteTaker AI",
+      "user": "alex.tan@dev-icp.example",
+      "last_authorized": null,
+      "last_revoked": null,
+      "last_activity": "2026-08-30T12:00:00.000Z"
+    },
+    {
+      "client_id": "884411223344.apps.googleusercontent.com",
+      "app_name": "NoteTaker AI",
+      "user": "bea.novak@dev-icp.example",
+      "last_authorized": null,
+      "last_revoked": null,
+      "last_activity": "2026-08-30T12:00:00.000Z"
+    },
+    {
+      "client_id": "884411223344.apps.googleusercontent.com",
+      "app_name": "NoteTaker AI",
+      "user": "chris.dube@dev-icp.example",
+      "last_authorized": null,
+      "last_revoked": null,
+      "last_activity": "2026-08-30T12:00:00.000Z"
+    },
+    {
+      "client_id": "884411223344.apps.googleusercontent.com",
+      "app_name": "NoteTaker AI",
+      "user": "dee.ali@dev-icp.example",
+      "last_authorized": null,
+      "last_revoked": null,
+      "last_activity": "2026-08-30T12:00:00.000Z"
+    },
+    {
+      "client_id": "884411223344.apps.googleusercontent.com",
+      "app_name": "NoteTaker AI",
+      "user": "eli.park@dev-icp.example",
+      "last_authorized": null,
+      "last_revoked": null,
+      "last_activity": "2026-08-30T12:00:00.000Z"
+    },
+    {
+      "client_id": "884411223344.apps.googleusercontent.com",
+      "app_name": "NoteTaker AI",
+      "user": "fran.mbeki@dev-icp.example",
+      "last_authorized": null,
+      "last_revoked": null,
+      "last_activity": "2026-08-30T12:00:00.000Z"
+    },
+    {
+      "client_id": "884411223344.apps.googleusercontent.com",
+      "app_name": "NoteTaker AI",
+      "user": "gus.iversen@dev-icp.example",
+      "last_authorized": null,
+      "last_revoked": null,
+      "last_activity": "2026-08-30T12:00:00.000Z"
+    },
+    {
+      "client_id": "884411223344.apps.googleusercontent.com",
+      "app_name": "NoteTaker AI",
+      "user": "hana.sato@dev-icp.example",
+      "last_authorized": null,
+      "last_revoked": null,
+      "last_activity": "2026-08-30T12:00:00.000Z"
+    },
+    {
+      "client_id": "884411223344.apps.googleusercontent.com",
+      "app_name": "NoteTaker AI",
+      "user": "ivan.petrov@dev-icp.example",
+      "last_authorized": null,
+      "last_revoked": null,
+      "last_activity": "2026-08-30T12:00:00.000Z"
+    },
+    {
+      "client_id": "884411223344.apps.googleusercontent.com",
+      "app_name": "NoteTaker AI",
+      "user": "jo.kelly@dev-icp.example",
+      "last_authorized": null,
+      "last_revoked": null,
+      "last_activity": "2026-08-30T12:00:00.000Z"
+    },
+    {
+      "client_id": "884411223344.apps.googleusercontent.com",
+      "app_name": "NoteTaker AI",
+      "user": "kim.larsen@dev-icp.example",
+      "last_authorized": null,
+      "last_revoked": null,
+      "last_activity": "2026-08-30T12:00:00.000Z"
+    },
+    {
+      "client_id": "884411223344.apps.googleusercontent.com",
+      "app_name": "NoteTaker AI",
+      "user": "leo.costa@dev-icp.example",
+      "last_authorized": null,
+      "last_revoked": null,
+      "last_activity": "2026-08-30T12:00:00.000Z"
+    },
+    {
+      "client_id": "999000111222.apps.googleusercontent.com",
+      "app_name": "",
+      "user": "ivan.petrov@dev-icp.example",
+      "last_authorized": null,
+      "last_revoked": null,
+      "last_activity": "2026-08-27T12:00:00.000Z"
+    }
+  ]
+}

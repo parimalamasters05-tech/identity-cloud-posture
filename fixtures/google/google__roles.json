@@ -1,0 +1,28 @@
+[
+  {
+    "roleId": "10001",
+    "roleName": "_SEED_ADMIN_ROLE",
+    "roleDescription": "Google Workspace Super Admin",
+    "isSuperAdminRole": true,
+    "isSystemRole": true,
+    "rolePrivileges": [
+      {
+        "privilegeName": "ROOT_APP_ADMIN",
+        "serviceId": "01"
+      }
+    ]
+  },
+  {
+    "roleId": "10002",
+    "roleName": "User Management Admin",
+    "roleDescription": "Manage users",
+    "isSuperAdminRole": false,
+    "isSystemRole": true,
+    "rolePrivileges": [
+      {
+        "privilegeName": "USERS_ALL",
+        "serviceId": "01"
+      }
+    ]
+  }
+]

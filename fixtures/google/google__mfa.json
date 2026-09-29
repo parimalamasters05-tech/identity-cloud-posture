@@ -1,0 +1,209 @@
+{
+  "report_date": "2026-08-30",
+  "entries": [
+    {
+      "profile_id": "100000000000000000001",
+      "email": "dana.reyes@dev-icp.example",
+      "num_security_keys": 2,
+      "num_passkeys_enrolled": 0
+    },
+    {
+      "profile_id": "100000000000000000002",
+      "email": "sam.okafor@dev-icp.example",
+      "num_security_keys": 0,
+      "num_passkeys_enrolled": 0
+    },
+    {
+      "profile_id": "100000000000000000003",
+      "email": "former.consultant@dev-icp.example",
+      "num_security_keys": 0,
+      "num_passkeys_enrolled": 0
+    },
+    {
+      "profile_id": "100000000000000000004",
+      "email": "priya.menon@dev-icp.example",
+      "num_security_keys": 0,
+      "num_passkeys_enrolled": 0
+    },
+    {
+      "profile_id": "100000000000000000010",
+      "email": "alex.tan@dev-icp.example",
+      "num_security_keys": 0,
+      "num_passkeys_enrolled": 0
+    },
+    {
+      "profile_id": "100000000000000000011",
+      "email": "bea.novak@dev-icp.example",
+      "num_security_keys": 0,
+      "num_passkeys_enrolled": 0
+    },
+    {
+      "profile_id": "100000000000000000012",
+      "email": "chris.dube@dev-icp.example",
+      "num_security_keys": 0,
+      "num_passkeys_enrolled": 0
+    },
+    {
+      "profile_id": "100000000000000000013",
+      "email": "dee.ali@dev-icp.example",
+      "num_security_keys": 0,
+      "num_passkeys_enrolled": 0
+    },
+    {
+      "profile_id": "100000000000000000014",
+      "email": "eli.park@dev-icp.example",
+      "num_security_keys": 0,
+      "num_passkeys_enrolled": 0
+    },
+    {
+      "profile_id": "100000000000000000015",
+      "email": "fran.mbeki@dev-icp.example",
+      "num_security_keys": 0,
+      "num_passkeys_enrolled": 0
+    },
+    {
+      "profile_id": "100000000000000000016",
+      "email": "gus.iversen@dev-icp.example",
+      "num_security_keys": 0,
+      "num_passkeys_enrolled": 0
+    },
+    {
+      "profile_id": "100000000000000000017",
+      "email": "hana.sato@dev-icp.example",
+      "num_security_keys": 0,
+      "num_passkeys_enrolled": 0
+    },
+    {
+      "profile_id": "100000000000000000018",
+      "email": "ivan.petrov@dev-icp.example",
+      "num_security_keys": 0,
+      "num_passkeys_enrolled": 0
+    },
+    {
+      "profile_id": "100000000000000000019",
+      "email": "jo.kelly@dev-icp.example",
+      "num_security_keys": 0,
+      "num_passkeys_enrolled": 0
+    },
+    {
+      "profile_id": "100000000000000000020",
+      "email": "kim.larsen@dev-icp.example",
+      "num_security_keys": 0,
+      "num_passkeys_enrolled": 0
+    },
+    {
+      "profile_id": "100000000000000000021",
+      "email": "leo.costa@dev-icp.example",
+      "num_security_keys": 0,
+      "num_passkeys_enrolled": 0
+    },
+    {
+      "profile_id": "100000000000000000022",
+      "email": "mia.haddad@dev-icp.example",
+      "num_security_keys": 0,
+      "num_passkeys_enrolled": 0
+    },
+    {
+      "profile_id": "100000000000000000023",
+      "email": "nina.oyelaran@dev-icp.example",
+      "num_security_keys": 0,
+      "num_passkeys_enrolled": 0
+    },
+    {
+      "profile_id": "100000000000000000024",
+      "email": "omar.said@dev-icp.example",
+      "num_security_keys": 0,
+      "num_passkeys_enrolled": 0
+    },
+    {
+      "profile_id": "100000000000000000030",
+      "email": "pat.dunne@dev-icp.example",
+      "num_security_keys": 0,
+      "num_passkeys_enrolled": 0
+    },
+    {
+      "profile_id": "100000000000000000031",
+      "email": "quinn.reilly@dev-icp.example",
+      "num_security_keys": 0,
+      "num_passkeys_enrolled": 0
+    },
+    {
+      "profile_id": "100000000000000000032",
+      "email": "rosa.mendes@dev-icp.example",
+      "num_security_keys": 0,
+      "num_passkeys_enrolled": 0
+    },
+    {
+      "profile_id": "100000000000000000033",
+      "email": "sean.byrne@dev-icp.example",
+      "num_security_keys": 0,
+      "num_passkeys_enrolled": 0
+    },
+    {
+      "profile_id": "100000000000000000034",
+      "email": "tara.singh@dev-icp.example",
+      "num_security_keys": 0,
+      "num_passkeys_enrolled": 0
+    },
+    {
+      "profile_id": "100000000000000000035",
+      "email": "umar.khan@dev-icp.example",
+      "num_security_keys": 0,
+      "num_passkeys_enrolled": 0
+    },
+    {
+      "profile_id": "100000000000000000040",
+      "email": "vic.nowak@dev-icp.example",
+      "num_security_keys": 0,
+      "num_passkeys_enrolled": 0
+    },
+    {
+      "profile_id": "100000000000000000041",
+      "email": "wes.olsen@dev-icp.example",
+      "num_security_keys": 0,
+      "num_passkeys_enrolled": 0
+    },
+    {
+      "profile_id": "100000000000000000042",
+      "email": "xena.abara@dev-icp.example",
+      "num_security_keys": 0,
+      "num_passkeys_enrolled": 0
+    },
+    {
+      "profile_id": "100000000000000000043",
+      "email": "yuri.baros@dev-icp.example",
+      "num_security_keys": 0,
+      "num_passkeys_enrolled": 0
+    },
+    {
+      "profile_id": "100000000000000000044",
+      "email": "zoe.carr@dev-icp.example",
+      "num_security_keys": 0,
+      "num_passkeys_enrolled": 0
+    },
+    {
+      "profile_id": "100000000000000000050",
+      "email": "new.starter.a@dev-icp.example",
+      "num_security_keys": 0,
+      "num_passkeys_enrolled": 0
+    },
+    {
+      "profile_id": "100000000000000000051",
+      "email": "project.placeholder@dev-icp.example",
+      "num_security_keys": 0,
+      "num_passkeys_enrolled": 0
+    },
+    {
+      "profile_id": "100000000000000000060",
+      "email": "departed.finance@dev-icp.example",
+      "num_security_keys": 0,
+      "num_passkeys_enrolled": 0
+    },
+    {
+      "profile_id": "100000000000000000061",
+      "email": "departed.ops@dev-icp.example",
+      "num_security_keys": 0,
+      "num_passkeys_enrolled": 0
+    }
+  ]
+}

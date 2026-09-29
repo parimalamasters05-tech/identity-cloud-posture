@@ -1,0 +1,40 @@
+# Client data must never enter a build context, let alone an image layer.
+snapshots/
+output/
+evidence/
+private/
+notes/
+reference/
+brief/
+*.json.enc
+*.apicalls.jsonl
+*__findings.json
+*.private.md
+*sensitive*.md
+
+# Credentials
+.env
+.env.*
+!.env.example
+*.key
+*-key.json
+service-account*.json
+credentials.json
+*.pem
+*.p12
+
+# Build noise
+.git/
+.github/
+.venv/
+venv/
+__pycache__/
+*.pyc
+.pytest_cache/
+.mypy_cache/
+.ruff_cache/
+*.egg-info/
+build/
+dist/
+htmlcov/
+.coverage

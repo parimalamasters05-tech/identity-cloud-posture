@@ -1,0 +1,9 @@
+{
+  "domains": [
+    {
+      "domainName": "dev-icp.example",
+      "isPrimary": true,
+      "verified": true
+    }
+  ]
+}

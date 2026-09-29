@@ -1,0 +1,71 @@
+{
+  "policies": [
+    {
+      "name": "policies/policy01",
+      "policy_type": "ADMIN",
+      "setting_type": "drive_and_docs.external_sharing",
+      "org_unit": "orgUnits/unit01",
+      "group": "",
+      "sort_order": 202.00002,
+      "value": {
+        "externalSharingMode": "DISALLOWED",
+        "allowReceivingExternalFiles": true,
+        "warnForSharingOutsideAllowlistedDomains": true,
+        "allowReceivingFilesOutsideAllowlistedDomains": true,
+        "allowNonGoogleInvitesInAllowlistedDomains": false,
+        "warnForExternalSharing": true,
+        "allowNonGoogleInvites": true,
+        "allowPublishingFiles": true,
+        "accessCheckerSuggestions": "RECIPIENTS_OR_AUDIENCE_OR_PUBLIC",
+        "allowedPartiesForDistributingContent": "ALL_ELIGIBLE_USERS"
+      }
+    },
+    {
+      "name": "policies/policy02",
+      "policy_type": "ADMIN",
+      "setting_type": "drive_and_docs.external_sharing",
+      "org_unit": "orgUnits/unit03",
+      "group": "",
+      "sort_order": 202.00001,
+      "value": {
+        "externalSharingMode": "ALLOWED",
+        "allowReceivingExternalFiles": true,
+        "warnForSharingOutsideAllowlistedDomains": true,
+        "allowReceivingFilesOutsideAllowlistedDomains": true,
+        "allowNonGoogleInvitesInAllowlistedDomains": false,
+        "warnForExternalSharing": true,
+        "allowNonGoogleInvites": true,
+        "allowPublishingFiles": true,
+        "accessCheckerSuggestions": "RECIPIENTS_OR_AUDIENCE_OR_PUBLIC",
+        "allowedPartiesForDistributingContent": "ALL_ELIGIBLE_USERS"
+      }
+    },
+    {
+      "name": "policies/policy03",
+      "policy_type": "ADMIN",
+      "setting_type": "security.two_step_verification_enforcement",
+      "org_unit": "orgUnits/unit02",
+      "group": "",
+      "sort_order": 201.00298,
+      "value": {
+        "enforcedFrom": "1970-01-01T00:00:00Z"
+      }
+    },
+    {
+      "name": "policies/policy04",
+      "policy_type": "ADMIN",
+      "setting_type": "security.two_step_verification_enrollment",
+      "org_unit": "orgUnits/unit02",
+      "group": "",
+      "sort_order": 201.00298,
+      "value": {
+        "allowEnrollment": true
+      }
+    }
+  ],
+  "setting_types_found": [
+    "drive_and_docs.external_sharing",
+    "security.two_step_verification_enforcement",
+    "security.two_step_verification_enrollment"
+  ]
+}

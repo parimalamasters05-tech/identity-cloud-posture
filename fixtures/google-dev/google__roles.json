@@ -1,0 +1,734 @@
+[
+  {
+    "roleId": "85006639652880962",
+    "roleName": "_SERVICE_ADMIN_ROLE",
+    "roleDescription": "Services Administrator",
+    "isSuperAdminRole": false,
+    "isSystemRole": true,
+    "rolePrivileges": [
+      {
+        "privilegeName": "APP_ADMIN",
+        "serviceId": "04i7ojhp4kgosur"
+      },
+      {
+        "privilegeName": "APPS_INCIDENTS_FULL_ACCESS",
+        "serviceId": "02pta16n3efhw69"
+      },
+      {
+        "privilegeName": "APP_ADMIN",
+        "serviceId": "00nmf14n14wtgcf"
+      },
+      {
+        "privilegeName": "APP_ADMIN",
+        "serviceId": "044sinio4cntx2o"
+      },
+      {
+        "privilegeName": "APP_ACCESS",
+        "serviceId": "03cqmetx1vygwki"
+      },
+      {
+        "privilegeName": "APP_ADMIN",
+        "serviceId": "037m2jsg3ckz96v"
+      },
+      {
+        "privilegeName": "APP_ADMIN",
+        "serviceId": "03hv69ve4bjwe54"
+      },
+      {
+        "privilegeName": "REMOTE_DESKTOP_ADMIN",
+        "serviceId": "03tbugp135xcxz0"
+      },
+      {
+        "privilegeName": "APP_ADMIN",
+        "serviceId": "019c6y1840fzfkt"
+      },
+      {
+        "privilegeName": "DATATRANSFER_API_PRIVILEGE_GROUP",
+        "serviceId": "00haapch16h1ysv"
+      },
+      {
+        "privilegeName": "ORGANIZATION_UNITS_RETRIEVE",
+        "serviceId": "00haapch16h1ysv"
+      },
+      {
+        "privilegeName": "APP_ADMIN",
+        "serviceId": "00sqyw642iersp7"
+      },
+      {
+        "privilegeName": "APP_ADMIN",
+        "serviceId": "01ci93xb43sd8me"
+      },
+      {
+        "privilegeName": "ADMIN_DASHBOARD",
+        "serviceId": "01ci93xb3tmzyin"
+      },
+      {
+        "privilegeName": "SERVICES",
+        "serviceId": "01ci93xb3tmzyin"
+      },
+      {
+        "privilegeName": "MANAGE_CSE_SETTINGS",
+        "serviceId": "02pta16n4hxgyp2"
+      },
+      {
+        "privilegeName": "MANAGE_SERVICE_ON_OFF",
+        "serviceId": "04iylrwe1ih2v48"
+      },
+      {
+        "privilegeName": "MANAGE_LABELS",
+        "serviceId": "034g0dwd19r1crs"
+      },
+      {
+        "privilegeName": "APP_ADMIN",
+        "serviceId": "02afmg282jiquyg"
+      },
+      {
+        "privilegeName": "APP_ADMIN",
+        "serviceId": "01yyy98l4k9lq4l"
+      },
+      {
+        "privilegeName": "MANAGE_DIRECTORY_SYNC_SETTINGS",
+        "serviceId": "0147n2zr1ynkkmf"
+      },
+      {
+        "privilegeName": "APP_ADMIN",
+        "serviceId": "02szc72q1edmbug"
+      },
+      {
+        "privilegeName": "APP_ADMIN",
+        "serviceId": "03dy6vkm2sk0pzo"
+      },
+      {
+        "privilegeName": "MANAGE_DYNAMITE_SETTINGS",
+        "serviceId": "03whwml44f3n4vd"
+      },
+      {
+        "privilegeName": "APP_ADMIN",
+        "serviceId": "01baon6m1wv6b0p"
+      },
+      {
+        "privilegeName": "APP_ADMIN",
+        "serviceId": "02et92p02l9sq0n"
+      },
+      {
+        "privilegeName": "MANAGE_EXTERNAL_COLLABORATION_SETTINGS",
+        "serviceId": "026in1rg3ha8yde"
+      },
+      {
+        "privilegeName": "MANAGE_GEMINI_ENTERPRISE",
+        "serviceId": "00ihv63610768u4"
+      },
+      {
+        "privilegeName": "APP_ADMIN",
+        "serviceId": "039kk8xu49mji9t"
+      },
+      {
+        "privilegeName": "APP_ADMIN",
+        "serviceId": "02afmg283v5nmx6"
+      },
+      {
+        "privilegeName": "APP_ADMIN",
+        "serviceId": "01tuee744837sjz"
+      },
+      {
+        "privilegeName": "APP_ADMIN",
+        "serviceId": "0279ka651l5iy5q"
+      },
+      {
+        "privilegeName": "VIEW_DLP_RULE",
+        "serviceId": "02250f4o3hg8pg8"
+      },
+      {
+        "privilegeName": "APP_ADMIN",
+        "serviceId": "03o7alnk1m8m15l"
+      },
+      {
+        "privilegeName": "LOGO_PRIVILEGE_GROUP",
+        "serviceId": "03j2qqm31d4j55e"
+      },
+      {
+        "privilegeName": "APP_ADMIN",
+        "serviceId": "03as4poj2zjehv7"
+      },
+      {
+        "privilegeName": "APP_ADMIN",
+        "serviceId": "03oy7u290lj7dci"
+      },
+      {
+        "privilegeName": "APP_ADMIN",
+        "serviceId": "01ksv4uv2d2noaq"
+      },
+      {
+        "privilegeName": "APP_ADMIN",
+        "serviceId": "00upglbi0qz687j"
+      },
+      {
+        "privilegeName": "APP_ADMIN",
+        "serviceId": "03fwokq01e2ht7x"
+      },
+      {
+        "privilegeName": "APP_ADMIN",
+        "serviceId": "03as4poj1culyev"
+      },
+      {
+        "privilegeName": "APP_ADMIN",
+        "serviceId": "02zbgiuw2wdxo5p"
+      }
+    ]
+  },
+  {
+    "roleId": "85006639652880963",
+    "roleName": "_STORAGE_ADMIN_ROLE",
+    "roleDescription": "Storage Admin Role",
+    "isSuperAdminRole": false,
+    "isSystemRole": true,
+    "rolePrivileges": [
+      {
+        "privilegeName": "GROUPS_RETRIEVE",
+        "serviceId": "00haapch16h1ysv"
+      },
+      {
+        "privilegeName": "ORGANIZATION_UNITS_RETRIEVE",
+        "serviceId": "00haapch16h1ysv"
+      },
+      {
+        "privilegeName": "ADMIN_REPORTING_ACCESS",
+        "serviceId": "00haapch16h1ysv"
+      },
+      {
+        "privilegeName": "USERS_RETRIEVE",
+        "serviceId": "00haapch16h1ysv"
+      },
+      {
+        "privilegeName": "APP_ADMIN",
+        "serviceId": "03dy6vkm2sk0pzo"
+      },
+      {
+        "privilegeName": "APP_ADMIN",
+        "serviceId": "01baon6m1wv6b0p"
+      },
+      {
+        "privilegeName": "MANAGE_GSC_RULE",
+        "serviceId": "01egqt2p2p8gvae"
+      },
+      {
+        "privilegeName": "VIEW_GSC_RULE",
+        "serviceId": "01egqt2p2p8gvae"
+      },
+      {
+        "privilegeName": "SIT_VIEW_METADATA",
+        "serviceId": "01egqt2p2p8gvae"
+      }
+    ]
+  },
+  {
+    "roleId": "85006639652880964",
+    "roleName": "_USER_MANAGEMENT_ADMIN_ROLE",
+    "roleDescription": "User Management Administrator",
+    "isSuperAdminRole": false,
+    "isSystemRole": true,
+    "rolePrivileges": [
+      {
+        "privilegeName": "ORGANIZATION_UNITS_RETRIEVE",
+        "serviceId": "00haapch16h1ysv"
+      },
+      {
+        "privilegeName": "USER_SECURITY_ALL",
+        "serviceId": "00haapch16h1ysv"
+      },
+      {
+        "privilegeName": "USERS_ALL",
+        "serviceId": "00haapch16h1ysv"
+      },
+      {
+        "privilegeName": "ADMIN_DASHBOARD",
+        "serviceId": "01ci93xb3tmzyin"
+      }
+    ]
+  },
+  {
+    "roleId": "85006639652880965",
+    "roleName": "_MULTI_PARTY_APPROVAL_ADMIN_ROLE",
+    "roleDescription": "Multi-Party Approval Admin Role",
+    "isSuperAdminRole": false,
+    "isSystemRole": true,
+    "rolePrivileges": [
+      {
+        "privilegeName": "REVIEW_ALL_SENSITIVE_ACTIONS",
+        "serviceId": "035nkun23a65bz3"
+      }
+    ]
+  },
+  {
+    "roleId": "85006639652880966",
+    "roleName": "_GROUPS_EDITOR_ROLE",
+    "roleDescription": "Groups Editor",
+    "isSuperAdminRole": false,
+    "isSystemRole": true,
+    "rolePrivileges": [
+      {
+        "privilegeName": "GROUPS_ALL",
+        "serviceId": "00haapch16h1ysv"
+      }
+    ]
+  },
+  {
+    "roleId": "85006639652880967",
+    "roleName": "_SEED_ADMIN_ROLE",
+    "roleDescription": "Google Workspace Administrator Seed Role",
+    "isSuperAdminRole": true,
+    "isSystemRole": true,
+    "rolePrivileges": [
+      {
+        "privilegeName": "ROOT_APP_ADMIN",
+        "serviceId": "00sqyw6436d5zn1"
+      },
+      {
+        "privilegeName": "ROOT_APP_ADMIN",
+        "serviceId": "04i7ojhp4kgosur"
+      },
+      {
+        "privilegeName": "ROOT_APP_ADMIN",
+        "serviceId": "02pta16n3efhw69"
+      },
+      {
+        "privilegeName": "ROOT_APP_ADMIN",
+        "serviceId": "00nmf14n14wtgcf"
+      },
+      {
+        "privilegeName": "ROOT_APP_ADMIN",
+        "serviceId": "044sinio4cntx2o"
+      },
+      {
+        "privilegeName": "ROOT_APP_ADMIN",
+        "serviceId": "03cqmetx1vygwki"
+      },
+      {
+        "privilegeName": "ROOT_APP_ADMIN",
+        "serviceId": "02szc72q136h7dm"
+      },
+      {
+        "privilegeName": "ROOT_APP_ADMIN",
+        "serviceId": "037m2jsg3ckz96v"
+      },
+      {
+        "privilegeName": "ROOT_APP_ADMIN",
+        "serviceId": "03hv69ve4bjwe54"
+      },
+      {
+        "privilegeName": "ROOT_APP_ADMIN",
+        "serviceId": "03tbugp135xcxz0"
+      },
+      {
+        "privilegeName": "ROOT_APP_ADMIN",
+        "serviceId": "019c6y1840fzfkt"
+      },
+      {
+        "privilegeName": "ROOT_APP_ADMIN",
+        "serviceId": "00haapch16h1ysv"
+      },
+      {
+        "privilegeName": "ROOT_APP_ADMIN",
+        "serviceId": "00sqyw642iersp7"
+      },
+      {
+        "privilegeName": "ROOT_APP_ADMIN",
+        "serviceId": "01ci93xb43sd8me"
+      },
+      {
+        "privilegeName": "ROOT_APP_ADMIN",
+        "serviceId": "01rvwp1q4axizdr"
+      },
+      {
+        "privilegeName": "SUPER_ADMIN",
+        "serviceId": "01ci93xb3tmzyin"
+      },
+      {
+        "privilegeName": "ROOT_APP_ADMIN",
+        "serviceId": "02pta16n4hxgyp2"
+      },
+      {
+        "privilegeName": "ROOT_APP_ADMIN",
+        "serviceId": "01egqt2p4ez7mib"
+      },
+      {
+        "privilegeName": "ROOT_APP_ADMIN",
+        "serviceId": "04iylrwe1ih2v48"
+      },
+      {
+        "privilegeName": "ROOT_APP_ADMIN",
+        "serviceId": "034g0dwd19r1crs"
+      },
+      {
+        "privilegeName": "ROOT_APP_ADMIN",
+        "serviceId": "02jxsxqh0hucks4"
+      },
+      {
+        "privilegeName": "ROOT_APP_ADMIN",
+        "serviceId": "0319y80a15kueje"
+      },
+      {
+        "privilegeName": "ROOT_APP_ADMIN",
+        "serviceId": "02afmg282jiquyg"
+      },
+      {
+        "privilegeName": "ROOT_APP_ADMIN",
+        "serviceId": "01yyy98l4k9lq4l"
+      },
+      {
+        "privilegeName": "ROOT_APP_ADMIN",
+        "serviceId": "0147n2zr1ynkkmf"
+      },
+      {
+        "privilegeName": "ROOT_APP_ADMIN",
+        "serviceId": "02szc72q1edmbug"
+      },
+      {
+        "privilegeName": "ROOT_APP_ADMIN",
+        "serviceId": "03dy6vkm2sk0pzo"
+      },
+      {
+        "privilegeName": "ROOT_APP_ADMIN",
+        "serviceId": "03whwml44f3n4vd"
+      },
+      {
+        "privilegeName": "ROOT_APP_ADMIN",
+        "serviceId": "01baon6m1wv6b0p"
+      },
+      {
+        "privilegeName": "ROOT_APP_ADMIN",
+        "serviceId": "02et92p02l9sq0n"
+      },
+      {
+        "privilegeName": "ROOT_APP_ADMIN",
+        "serviceId": "026in1rg3ha8yde"
+      },
+      {
+        "privilegeName": "ROOT_APP_ADMIN",
+        "serviceId": "00meukdy0whjvor"
+      },
+      {
+        "privilegeName": "ROOT_APP_ADMIN",
+        "serviceId": "00ihv63610768u4"
+      },
+      {
+        "privilegeName": "ROOT_APP_ADMIN",
+        "serviceId": "039kk8xu49mji9t"
+      },
+      {
+        "privilegeName": "ROOT_APP_ADMIN",
+        "serviceId": "02afmg283v5nmx6"
+      },
+      {
+        "privilegeName": "ROOT_APP_ADMIN",
+        "serviceId": "03ep43zb1rsf0wh"
+      },
+      {
+        "privilegeName": "ROOT_APP_ADMIN",
+        "serviceId": "01tuee744837sjz"
+      },
+      {
+        "privilegeName": "ROOT_APP_ADMIN",
+        "serviceId": "0279ka651l5iy5q"
+      },
+      {
+        "privilegeName": "ROOT_APP_ADMIN",
+        "serviceId": "02250f4o3hg8pg8"
+      },
+      {
+        "privilegeName": "ROOT_APP_ADMIN",
+        "serviceId": "02u6wntf2pha1iq"
+      },
+      {
+        "privilegeName": "ROOT_APP_ADMIN",
+        "serviceId": "04du1wux1mx8g4m"
+      },
+      {
+        "privilegeName": "ROOT_APP_ADMIN",
+        "serviceId": "01egqt2p2p8gvae"
+      },
+      {
+        "privilegeName": "ROOT_APP_ADMIN",
+        "serviceId": "01664s550kmxmin"
+      },
+      {
+        "privilegeName": "ROOT_APP_ADMIN",
+        "serviceId": "03o7alnk1m8m15l"
+      },
+      {
+        "privilegeName": "ROOT_APP_ADMIN",
+        "serviceId": "02u6wntf0p1to75"
+      },
+      {
+        "privilegeName": "ROOT_APP_ADMIN",
+        "serviceId": "03j2qqm31d4j55e"
+      },
+      {
+        "privilegeName": "ROOT_APP_ADMIN",
+        "serviceId": "02w5ecyt3pkeyqi"
+      },
+      {
+        "privilegeName": "ROOT_APP_ADMIN",
+        "serviceId": "034g0dwd247ctst"
+      },
+      {
+        "privilegeName": "ROOT_APP_ADMIN",
+        "serviceId": "03tbugp12newe5s"
+      },
+      {
+        "privilegeName": "ROOT_APP_ADMIN",
+        "serviceId": "04h042r03kcfi82"
+      },
+      {
+        "privilegeName": "ROOT_APP_ADMIN",
+        "serviceId": "01fob9te41qviqp"
+      },
+      {
+        "privilegeName": "ROOT_APP_ADMIN",
+        "serviceId": "03as4poj2zjehv7"
+      },
+      {
+        "privilegeName": "ROOT_APP_ADMIN",
+        "serviceId": "00tyjcwt49hs5nq"
+      },
+      {
+        "privilegeName": "ROOT_APP_ADMIN",
+        "serviceId": "02szc72q20usrb6"
+      },
+      {
+        "privilegeName": "ROOT_APP_ADMIN",
+        "serviceId": "03vac5uf22bm853"
+      },
+      {
+        "privilegeName": "ROOT_APP_ADMIN",
+        "serviceId": "02lwamvv18la4iw"
+      },
+      {
+        "privilegeName": "ROOT_APP_ADMIN",
+        "serviceId": "00vx122734tbite"
+      },
+      {
+        "privilegeName": "ROOT_APP_ADMIN",
+        "serviceId": "02nusc191vimzq9"
+      },
+      {
+        "privilegeName": "ROOT_APP_ADMIN",
+        "serviceId": "03oy7u290lj7dci"
+      },
+      {
+        "privilegeName": "ROOT_APP_ADMIN",
+        "serviceId": "01ksv4uv2d2noaq"
+      },
+      {
+        "privilegeName": "ROOT_APP_ADMIN",
+        "serviceId": "01fob9te2rj6rw9"
+      },
+      {
+        "privilegeName": "ROOT_APP_ADMIN",
+        "serviceId": "00upglbi0qz687j"
+      },
+      {
+        "privilegeName": "ROOT_APP_ADMIN",
+        "serviceId": "03fwokq01e2ht7x"
+      },
+      {
+        "privilegeName": "ROOT_APP_ADMIN",
+        "serviceId": "03l18frh45c63dw"
+      },
+      {
+        "privilegeName": "ROOT_APP_ADMIN",
+        "serviceId": "03znysh70xi7xn7"
+      },
+      {
+        "privilegeName": "ROOT_APP_ADMIN",
+        "serviceId": "03as4poj1culyev"
+      },
+      {
+        "privilegeName": "ROOT_APP_ADMIN",
+        "serviceId": "00tyjcwt30rsnw6"
+      },
+      {
+        "privilegeName": "ROOT_APP_ADMIN",
+        "serviceId": "02250f4o31a8q9a"
+      },
+      {
+        "privilegeName": "ROOT_APP_ADMIN",
+        "serviceId": "034g0dwd213wymo"
+      },
+      {
+        "privilegeName": "ROOT_APP_ADMIN",
+        "serviceId": "02zbgiuw2wdxo5p"
+      }
+    ]
+  },
+  {
+    "roleId": "85006639652880968",
+    "roleName": "_MIGRATION_DRIVE_ADMIN_ROLE",
+    "isSuperAdminRole": false,
+    "isSystemRole": true,
+    "rolePrivileges": [
+      {
+        "privilegeName": "DRIVE_UPDATE_DELETE",
+        "serviceId": "03dy6vkm2sk0pzo"
+      },
+      {
+        "privilegeName": "APP_ADMIN",
+        "serviceId": "03dy6vkm2sk0pzo"
+      }
+    ]
+  },
+  {
+    "roleId": "85006639652880969",
+    "roleName": "_DIRECTORY_SYNC_ADMIN_ROLE",
+    "roleDescription": "Directory Sync Admin Role",
+    "isSuperAdminRole": false,
+    "isSystemRole": true,
+    "rolePrivileges": [
+      {
+        "privilegeName": "DOMAIN_MANAGEMENT_READ",
+        "serviceId": "00haapch16h1ysv"
+      },
+      {
+        "privilegeName": "ORGANIZATION_UNITS_RETRIEVE",
+        "serviceId": "00haapch16h1ysv"
+      },
+      {
+        "privilegeName": "SCHEMA_RETRIEVE",
+        "serviceId": "00haapch16h1ysv"
+      },
+      {
+        "privilegeName": "MANAGE_DIRECTORY_SYNC_SETTINGS",
+        "serviceId": "0147n2zr1ynkkmf"
+      },
+      {
+        "privilegeName": "SCIM_DIRECTORY_CONFIG_READWRITE",
+        "serviceId": "02w5ecyt3h0uv9z"
+      }
+    ]
+  },
+  {
+    "roleId": "85006639652880970",
+    "roleName": "_INVENTORY_REPORTING_ADMIN_ROLE",
+    "roleDescription": "Admin for Inventory Reporting",
+    "isSuperAdminRole": false,
+    "isSystemRole": true,
+    "rolePrivileges": [
+      {
+        "privilegeName": "GROUPS_RETRIEVE",
+        "serviceId": "00haapch16h1ysv"
+      },
+      {
+        "privilegeName": "VIEW_LABELS",
+        "serviceId": "034g0dwd19r1crs"
+      },
+      {
+        "privilegeName": "DRIVE_UPDATE_DELETE",
+        "serviceId": "03dy6vkm2sk0pzo"
+      },
+      {
+        "privilegeName": "APP_ADMIN",
+        "serviceId": "03dy6vkm2sk0pzo"
+      }
+    ]
+  },
+  {
+    "roleId": "85006639652880971",
+    "roleName": "_GROUPS_READER_ROLE",
+    "roleDescription": "Groups Reader",
+    "isSuperAdminRole": false,
+    "isSystemRole": true,
+    "rolePrivileges": [
+      {
+        "privilegeName": "GROUPS_RETRIEVE",
+        "serviceId": "00haapch16h1ysv"
+      }
+    ]
+  },
+  {
+    "roleId": "85006639652880972",
+    "roleName": "_MOBILE_ADMIN_ROLE",
+    "roleDescription": "Mobile Administrator",
+    "isSuperAdminRole": false,
+    "isSystemRole": true,
+    "rolePrivileges": [
+      {
+        "privilegeName": "GROUPS_RETRIEVE",
+        "serviceId": "00haapch16h1ysv"
+      },
+      {
+        "privilegeName": "ORGANIZATION_UNITS_RETRIEVE",
+        "serviceId": "00haapch16h1ysv"
+      },
+      {
+        "privilegeName": "USERS_RETRIEVE",
+        "serviceId": "00haapch16h1ysv"
+      },
+      {
+        "privilegeName": "ADMIN_DASHBOARD",
+        "serviceId": "01ci93xb3tmzyin"
+      },
+      {
+        "privilegeName": "APP_ADMIN",
+        "serviceId": "02afmg282jiquyg"
+      }
+    ]
+  },
+  {
+    "roleId": "85006639652880973",
+    "roleName": "_HELP_DESK_ADMIN_ROLE",
+    "roleDescription": "Help Desk Administrator",
+    "isSuperAdminRole": false,
+    "isSystemRole": true,
+    "rolePrivileges": [
+      {
+        "privilegeName": "ORGANIZATION_UNITS_RETRIEVE",
+        "serviceId": "00haapch16h1ysv"
+      },
+      {
+        "privilegeName": "USERS_RETRIEVE",
+        "serviceId": "00haapch16h1ysv"
+      },
+      {
+        "privilegeName": "USERS_RESET_PASSWORD",
+        "serviceId": "00haapch16h1ysv"
+      },
+      {
+        "privilegeName": "ADMIN_DASHBOARD",
+        "serviceId": "01ci93xb3tmzyin"
+      }
+    ]
+  },
+  {
+    "roleId": "85006639652880974",
+    "roleName": "_GROUPS_ADMIN_ROLE",
+    "roleDescription": "Groups Administrator",
+    "isSuperAdminRole": false,
+    "isSystemRole": true,
+    "rolePrivileges": [
+      {
+        "privilegeName": "GROUPS_ALL",
+        "serviceId": "00haapch16h1ysv"
+      },
+      {
+        "privilegeName": "GROUPS_MANAGE_LOCKED_LABEL",
+        "serviceId": "00haapch16h1ysv"
+      },
+      {
+        "privilegeName": "GROUPS_MANAGE_SECURITY_LABEL",
+        "serviceId": "00haapch16h1ysv"
+      },
+      {
+        "privilegeName": "ORGANIZATION_UNITS_RETRIEVE",
+        "serviceId": "00haapch16h1ysv"
+      },
+      {
+        "privilegeName": "USERS_RETRIEVE",
+        "serviceId": "00haapch16h1ysv"
+      },
+      {
+        "privilegeName": "ADMIN_DASHBOARD",
+        "serviceId": "01ci93xb3tmzyin"
+      }
+    ]
+  }
+]

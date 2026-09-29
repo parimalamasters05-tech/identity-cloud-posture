@@ -1,0 +1,32 @@
+[
+  {
+    "id": "dr001",
+    "name": "Board Pack 2026 (DRAFT)",
+    "mimeType": "application/vnd.google-apps.folder",
+    "shared": true,
+    "modifiedTime": "2026-08-02T12:00:00.000Z",
+    "owners": [
+      "dana.reyes@dev-icp.example"
+    ]
+  },
+  {
+    "id": "dr002",
+    "name": "Donor List - master",
+    "mimeType": "application/vnd.google-apps.spreadsheet",
+    "shared": true,
+    "modifiedTime": "2026-06-18T12:00:00.000Z",
+    "owners": [
+      "fran.mbeki@dev-icp.example"
+    ]
+  },
+  {
+    "id": "dr003",
+    "name": "Grant application scans",
+    "mimeType": "application/vnd.google-apps.folder",
+    "shared": true,
+    "modifiedTime": "2026-05-04T12:00:00.000Z",
+    "owners": [
+      "priya.menon@dev-icp.example"
+    ]
+  }
+]

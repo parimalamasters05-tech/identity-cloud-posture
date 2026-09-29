@@ -1,0 +1,42 @@
+{
+  "policies": [
+    {
+      "name": "policies/fixture-sharing-root",
+      "policy_type": "ADMIN",
+      "setting_type": "drive_and_docs.external_sharing",
+      "org_unit": "orgUnits/fixture-root",
+      "group": "",
+      "sort_order": 1.0,
+      "value": {
+        "externalSharingMode": "ALLOWED",
+        "warnForExternalSharing": false
+      }
+    },
+    {
+      "name": "policies/fixture-sharing-finance",
+      "policy_type": "ADMIN",
+      "setting_type": "drive_and_docs.external_sharing",
+      "org_unit": "orgUnits/fixture-finance",
+      "group": "",
+      "sort_order": 2.0,
+      "value": {
+        "externalSharingMode": "DISALLOWED"
+      }
+    },
+    {
+      "name": "policies/fixture-2sv-enrollment",
+      "policy_type": "SYSTEM",
+      "setting_type": "security.two_step_verification_enrollment",
+      "org_unit": "orgUnits/fixture-root",
+      "group": "",
+      "sort_order": 1.0,
+      "value": {
+        "allowEnrollment": true
+      }
+    }
+  ],
+  "setting_types_found": [
+    "drive_and_docs.external_sharing",
+    "security.two_step_verification_enrollment"
+  ]
+}

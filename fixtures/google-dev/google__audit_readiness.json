@@ -1,0 +1,29 @@
+{
+  "probe_window_days": 30,
+  "streams": {
+    "admin": {
+      "available": true,
+      "event_count_sampled": 50,
+      "oldest_sampled": "2026-09-22T09:30:37.437Z",
+      "newest_sampled": "2026-09-29T06:09:50.011Z"
+    },
+    "login": {
+      "available": true,
+      "event_count_sampled": 50,
+      "oldest_sampled": "2026-09-29T04:14:42.298Z",
+      "newest_sampled": "2026-09-29T06:09:40.968Z"
+    },
+    "token": {
+      "available": true,
+      "event_count_sampled": 50,
+      "oldest_sampled": "2026-09-29T05:44:31.521Z",
+      "newest_sampled": "2026-09-29T06:26:06.215Z"
+    },
+    "drive": {
+      "available": true,
+      "event_count_sampled": 22,
+      "oldest_sampled": "2026-09-27T22:58:24.879Z",
+      "newest_sampled": "2026-09-29T06:12:50.113Z"
+    }
+  }
+}

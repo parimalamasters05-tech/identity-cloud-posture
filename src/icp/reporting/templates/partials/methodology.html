@@ -1,0 +1,101 @@
+{# The skeptic. Show the arithmetic. #}
+<section class="page-break">
+  <h2>Methodology and scoring</h2>
+
+  <h3>How the assessment ran</h3>
+  <p>
+    Configuration was retrieved through Google's official administrative APIs, using delegated
+    credentials limited to the scopes listed below.
+    {% if write_capable_scopes %}All but {{ 'one are' if write_capable_scopes | length == 1 else (write_capable_scopes | length) ~ ' are' }}
+    read-only scopes; the exception{{ 's are' if write_capable_scopes | length > 1 else ' is' }} explained
+    below.{% else %}All are read-only scopes.{% endif %}
+    The tool performs read and list operations only: state-changing requests are blocked before
+    they leave the tool, and every request is logged.
+    Responses were written to a timestamped snapshot, and every finding in this report was
+    produced by analysing that snapshot — not by querying your environment repeatedly. That is
+    what makes each finding traceable to a specific observation, and what allows a future
+    assessment to show exactly what changed.
+  </p>
+
+  <h4>Scopes used</h4>
+  <ul class="steps">
+    {% for scope in snapshot.scopes_used %}<li class="mono">{{ scope }}</li>{% endfor %}
+    {% if not snapshot.scopes_used %}<li class="muted">Offline run against frozen fixtures.</li>{% endif %}
+  </ul>
+  {% for scope, reason in write_capable_scopes %}
+  <p class="meta"><strong>Not a read-only scope:</strong> <span class="mono">{{ scope }}</span> is
+    {{ reason }}</p>
+  {% endfor %}
+  {% if snapshot.scopes_refused %}
+  <p class="meta">Requested but not granted by your domain-wide delegation settings, so the checks
+    that need them are listed as coverage notes:</p>
+  <ul class="steps">
+    {% for scope in snapshot.scopes_refused %}<li class="mono">{{ scope }}</li>{% endfor %}
+  </ul>
+  {% endif %}
+
+  <h4>Read-only verification</h4>
+  <p>
+    {{ snapshot.api_calls | length }} API requests were made during collection{% if read_request_count == snapshot.api_calls | length and read_request_count %}, all of them reads{% endif %}.
+    The tool blocks state-changing requests (POST, PUT, PATCH, DELETE) at the transport layer,
+    refuses any scope outside a fixed, reviewed allowlist, and asserts after every run that no
+    unsafe request was made. We recommend you
+    confirm this independently in your own admin audit log for the collection window{% if snapshot.started_at %},
+    <strong>{{ snapshot.started_at.strftime('%d %B %Y, %H:%M:%S') }} to
+    {{ snapshot.collected_at.strftime('%H:%M:%S') }} UTC</strong>{% endif %}.
+  </p>
+
+  <h3>How findings are scored</h3>
+  <p>
+    Severity comes from an explicit impact &times; exposure matrix, then three modifiers.
+    Nothing here is a proprietary score — the arithmetic for every finding is in the evidence
+    appendix, and we expect you to check it.
+  </p>
+  <p class="mono">risk score = base(severity) &times; privilege &times; blast radius &times; confidence</p>
+
+  <table>
+    <thead><tr><th>Term</th><th>Meaning</th></tr></thead>
+    <tbody>
+      <tr><td>Impact (1–5)</td><td>How much damage this enables if exploited, from negligible to organization-wide compromise.</td></tr>
+      <tr><td>Exposure (1–5)</td><td>How reachable the weakness is, from requiring local access to reachable from the internet with no sign-in.</td></tr>
+      <tr><td>Privilege</td><td>&times;{{ matrix.modifier('privileged_entity') }} when any affected account holds administrative rights. The same gap on a super-administrator outranks it on a contractor.</td></tr>
+      <tr><td>Blast radius</td><td>Grows with the number of affected accounts, but sub-linearly and capped at &times;{{ matrix.modifier('blast_radius_cap') }}. A gap affecting forty people is worse than one affecting four, not ten times worse.</td></tr>
+      <tr><td>Confidence</td><td>Reduces the score where a finding is inferred rather than read directly from an authoritative field.</td></tr>
+    </tbody>
+  </table>
+
+  <h4>Impact &times; exposure matrix (version {{ matrix.version }})</h4>
+  <table>
+    <thead>
+      <tr><th>Impact \ Exposure</th><th>1</th><th>2</th><th>3</th><th>4</th><th>5</th></tr>
+    </thead>
+    <tbody>
+      {% for impact in [5, 4, 3, 2, 1] %}
+      <tr>
+        <th>{{ impact }}</th>
+        {% for exposure in [1, 2, 3, 4, 5] %}
+        <td>{{ matrix.severity(impact, exposure) | severity_label }}</td>
+        {% endfor %}
+      </tr>
+      {% endfor %}
+    </tbody>
+  </table>
+
+  <h3>Ordering of the action plan</h3>
+  <p>
+    The priority action plan lists critical items first, then high, then medium and low. Within
+    each severity, items are ordered by risk removed per hour of effort, so the cheap, high-value
+    fixes come first — in a small team the work that actually gets done is the work that fits in
+    an afternoon. A quick fix never jumps ahead of a more severe problem. Effort estimates scale
+    with the number of accounts or files involved where the fix is done one at a time.
+  </p>
+
+  <h3>Limitations</h3>
+  <ul class="steps">
+    <li>Point-in-time. Configuration captured {{ scope_statement.point_in_time.strftime('%d %B %Y') }}; anything changed since is not reflected.</li>
+    {% if tenant.mfa_report_date %}<li>Which second factors each person uses (security keys and passkeys) comes from Google's daily security report, which Google publishes one to three days late. This assessment used the report for {{ tenant.mfa_report_date | long_date }}, so a key or passkey added after that date is not reflected.</li>{% endif %}
+    <li>Configuration and metadata only. No message or file content was accessed, so this report cannot say anything about what your data contains.</li>
+    <li>Some Google reporting surfaces depend on your licence tier. Where data was unavailable, it is recorded as a coverage note rather than omitted.</li>
+    <li>Findings marked medium or low confidence are inferred from indirect signals and should be confirmed before acting.</li>
+  </ul>
+</section>

@@ -1,0 +1,100 @@
+{# Pages 5+ — the IT contact. What, why it matters, evidence, exact fix. #}
+<section class="page-break">
+  <h2>Detailed findings</h2>
+  <p>
+    Grouped by area. Each finding states what we observed, why it matters in business terms, the
+    evidence it rests on, and the exact steps to fix it. Every finding refers to specific accounts
+    or items in your own environment — nothing here is generic advice.
+  </p>
+
+  {% for family, entries in findings_by_family.items() %}
+  <h3>{{ family }}</h3>
+    {% for entry in entries %}
+    {% set f = entry.finding %}
+    <div class="finding sevbar-{{ f.severity }}">
+      <h4 style="margin-top:0;">
+        <span class="sev sev-{{ f.severity }}">{{ f.severity | severity_label }}</span>
+        &nbsp;{{ f.title }}
+      </h4>
+      <p class="meta">
+        <span class="mono">{{ f.finding_id }}</span> &middot; rule {{ f.rule_id }} &middot;
+        confidence: {{ f.confidence }} &middot; risk score {{ f.risk_score }} &middot;
+        {{ f.entity_count }} affected{% if f.privileged_entity_count %} ({{ f.privileged_entity_count }} privileged){% endif %}
+      </p>
+
+      <p><strong>Why this matters.</strong> {{ entry.remediation.impact }}</p>
+
+      {% if f.confidence.value in ('medium', 'low') %}
+      <p class="meta"><em>Confidence note: this finding is inferred rather than read directly from
+        an authoritative field. Confirm it with your IT contact before acting.</em></p>
+      {% endif %}
+
+      <h4>Evidence</h4>
+      <ul class="steps">
+        {% for ev in f.evidence[:6] %}
+        <li>{{ ev.summary }}
+          <span class="meta mono">[{{ ev.pointer.lstrip('/') }}]</span></li>
+        {% endfor %}
+        {% if f.evidence | length > 6 %}
+        <li class="meta">…and {{ (f.evidence | length) - 6 }} more, listed in the evidence appendix.</li>
+        {% endif %}
+      </ul>
+
+      {% if entry.related %}
+      <h4>Also flagged for this application</h4>
+      <p class="meta">These are further reasons to act on the same application, not separate
+        problems. The fix below addresses all of them.</p>
+      <ul class="steps">
+        {% for r in entry.related %}
+        <li><span class="sev sev-{{ r.severity }}">{{ r.severity | severity_label }}</span>
+          &nbsp;{{ r.title }} <span class="meta mono">[{{ r.finding_id }} &middot; rule {{ r.rule_id }}]</span></li>
+        {% endfor %}
+      </ul>
+      {% endif %}
+
+      <h4>How to fix it</h4>
+      <ol class="steps">
+        {% for step in entry.remediation.steps %}<li>{{ step }}</li>{% endfor %}
+      </ol>
+      {% if entry.remediation.verification %}
+      <p class="meta"><strong>How to check it worked:</strong> {{ entry.remediation.verification }}</p>
+      {% endif %}
+      {% if f.framework_refs %}
+      <p class="meta">NIST CSF 2.0: {{ f.framework_refs | join(', ') }}</p>
+      {% endif %}
+    </div>
+    {% endfor %}
+  {% endfor %}
+
+  {% if passed_areas %}
+  <h3>Areas checked with no issues found</h3>
+  <p>
+    These areas were examined in full and nothing needed action. They are listed so that a clean
+    result is visible, rather than being indistinguishable from an area we did not look at.
+  </p>
+    {% for area in passed_areas %}
+    <div class="finding sevbar-low">
+      <h4 style="margin-top:0;">{{ area.title }} — no issues found</h4>
+      <p class="meta">We looked for: {{ area.checks | map('lower') | join('; ') }}. None was found.</p>
+    </div>
+    {% endfor %}
+  {% endif %}
+
+  {% if coverage_notes %}
+  <h3>Coverage notes — areas not fully assessed</h3>
+  <p>
+    The following checks could not be completed, or ran on incomplete data. A missing or clean
+    result in these areas is <strong>not</strong> a pass; it means we cannot say either way.
+  </p>
+    {% for entry in coverage_notes %}
+    <div class="finding sevbar-low">
+      <h4 style="margin-top:0;"><span class="sev sev-info">Coverage note</span>&nbsp;{{ entry.finding.title }}</h4>
+      {% for ev in entry.finding.evidence %}<p>{{ ev.summary }}</p>{% endfor %}
+      {% set missed = entry.finding.affected_entities | selectattr('kind', 'equalto', 'user') | list %}
+      {% if missed %}
+      <p class="meta">Not read for: {{ missed[:25] | map(attribute='label') | join(', ') }}{% if missed | length > 25 %}, and {{ missed | length - 25 }} more{% endif %}.</p>
+      {% endif %}
+    </div>
+    {% endfor %}
+  {% endif %}
+</section>

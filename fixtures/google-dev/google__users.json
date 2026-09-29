@@ -1,0 +1,200 @@
+[
+  {
+    "id": "900000000000000000008",
+    "primaryEmail": "user08@tenant.example",
+    "name": {
+      "fullName": "User 08"
+    },
+    "suspended": false,
+    "archived": false,
+    "isAdmin": false,
+    "isDelegatedAdmin": true,
+    "isEnrolledIn2Sv": true,
+    "isEnforcedIn2Sv": false,
+    "creationTime": "2026-09-22T08:49:56.000Z",
+    "lastLoginTime": "2026-09-29T05:54:05.000Z",
+    "orgUnitPath": "/",
+    "agreedToTerms": true,
+    "changePasswordAtNextLogin": false
+  },
+  {
+    "id": "900000000000000000010",
+    "primaryEmail": "admin02@tenant.example",
+    "name": {
+      "fullName": "Admin 02"
+    },
+    "suspended": false,
+    "archived": false,
+    "isAdmin": true,
+    "isDelegatedAdmin": false,
+    "isEnrolledIn2Sv": false,
+    "isEnforcedIn2Sv": false,
+    "creationTime": "2026-09-22T08:49:57.000Z",
+    "lastLoginTime": "1970-01-01T00:00:00.000Z",
+    "orgUnitPath": "/",
+    "agreedToTerms": false,
+    "changePasswordAtNextLogin": true
+  },
+  {
+    "id": "900000000000000000011",
+    "primaryEmail": "user09@tenant.example",
+    "name": {
+      "fullName": "User 09"
+    },
+    "suspended": false,
+    "archived": false,
+    "isAdmin": false,
+    "isDelegatedAdmin": true,
+    "isEnrolledIn2Sv": true,
+    "isEnforcedIn2Sv": false,
+    "creationTime": "2026-09-22T08:49:59.000Z",
+    "lastLoginTime": "2026-09-29T05:37:22.000Z",
+    "orgUnitPath": "/",
+    "agreedToTerms": true,
+    "changePasswordAtNextLogin": false
+  },
+  {
+    "id": "900000000000000000005",
+    "primaryEmail": "user05@tenant.example",
+    "name": {
+      "fullName": "User 05"
+    },
+    "suspended": true,
+    "archived": false,
+    "isAdmin": false,
+    "isDelegatedAdmin": false,
+    "isEnrolledIn2Sv": false,
+    "isEnforcedIn2Sv": false,
+    "creationTime": "2026-09-22T08:50:01.000Z",
+    "lastLoginTime": "1970-01-01T00:00:00.000Z",
+    "orgUnitPath": "/",
+    "agreedToTerms": false,
+    "changePasswordAtNextLogin": true
+  },
+  {
+    "id": "900000000000000000009",
+    "primaryEmail": "admin01@tenant.example",
+    "name": {
+      "fullName": "Admin 01"
+    },
+    "suspended": false,
+    "archived": false,
+    "isAdmin": true,
+    "isDelegatedAdmin": false,
+    "isEnrolledIn2Sv": true,
+    "isEnforcedIn2Sv": false,
+    "creationTime": "2026-06-21T21:48:57.000Z",
+    "lastLoginTime": "2026-09-28T05:07:34.000Z",
+    "orgUnitPath": "/",
+    "agreedToTerms": true,
+    "changePasswordAtNextLogin": false
+  },
+  {
+    "id": "900000000000000000004",
+    "primaryEmail": "user04@tenant.example",
+    "name": {
+      "fullName": "User 04"
+    },
+    "suspended": false,
+    "archived": false,
+    "isAdmin": false,
+    "isDelegatedAdmin": false,
+    "isEnrolledIn2Sv": false,
+    "isEnforcedIn2Sv": false,
+    "creationTime": "2026-09-23T14:17:40.000Z",
+    "lastLoginTime": "1970-01-01T00:00:00.000Z",
+    "orgUnitPath": "/unit02",
+    "agreedToTerms": false,
+    "changePasswordAtNextLogin": true
+  },
+  {
+    "id": "900000000000000000007",
+    "primaryEmail": "user07@tenant.example",
+    "name": {
+      "fullName": "User 07"
+    },
+    "suspended": false,
+    "archived": false,
+    "isAdmin": false,
+    "isDelegatedAdmin": false,
+    "isEnrolledIn2Sv": false,
+    "isEnforcedIn2Sv": false,
+    "creationTime": "2026-09-23T14:17:42.000Z",
+    "lastLoginTime": "1970-01-01T00:00:00.000Z",
+    "orgUnitPath": "/unit01",
+    "agreedToTerms": false,
+    "changePasswordAtNextLogin": true
+  },
+  {
+    "id": "900000000000000000006",
+    "primaryEmail": "user06@tenant.example",
+    "name": {
+      "fullName": "User 06"
+    },
+    "suspended": false,
+    "archived": false,
+    "isAdmin": false,
+    "isDelegatedAdmin": false,
+    "isEnrolledIn2Sv": false,
+    "isEnforcedIn2Sv": false,
+    "creationTime": "2026-09-23T14:17:44.000Z",
+    "lastLoginTime": "1970-01-01T00:00:00.000Z",
+    "orgUnitPath": "/",
+    "agreedToTerms": false,
+    "changePasswordAtNextLogin": true
+  },
+  {
+    "id": "900000000000000000002",
+    "primaryEmail": "user02@tenant.example",
+    "name": {
+      "fullName": "User 02"
+    },
+    "suspended": false,
+    "archived": false,
+    "isAdmin": false,
+    "isDelegatedAdmin": false,
+    "isEnrolledIn2Sv": false,
+    "isEnforcedIn2Sv": false,
+    "creationTime": "2026-09-23T14:17:46.000Z",
+    "lastLoginTime": "1970-01-01T00:00:00.000Z",
+    "orgUnitPath": "/",
+    "agreedToTerms": false,
+    "changePasswordAtNextLogin": true
+  },
+  {
+    "id": "900000000000000000003",
+    "primaryEmail": "user03@tenant.example",
+    "name": {
+      "fullName": "User 03"
+    },
+    "suspended": true,
+    "archived": false,
+    "isAdmin": false,
+    "isDelegatedAdmin": false,
+    "isEnrolledIn2Sv": false,
+    "isEnforcedIn2Sv": false,
+    "creationTime": "2026-09-23T14:17:48.000Z",
+    "lastLoginTime": "1970-01-01T00:00:00.000Z",
+    "orgUnitPath": "/",
+    "agreedToTerms": false,
+    "changePasswordAtNextLogin": true
+  },
+  {
+    "id": "900000000000000000001",
+    "primaryEmail": "user01@tenant.example",
+    "name": {
+      "fullName": "User 01"
+    },
+    "suspended": false,
+    "archived": false,
+    "isAdmin": false,
+    "isDelegatedAdmin": true,
+    "isEnrolledIn2Sv": false,
+    "isEnforcedIn2Sv": false,
+    "creationTime": "2026-09-22T09:05:53.000Z",
+    "lastLoginTime": "1970-01-01T00:00:00.000Z",
+    "orgUnitPath": "/",
+    "agreedToTerms": false,
+    "changePasswordAtNextLogin": true
+  }
+]

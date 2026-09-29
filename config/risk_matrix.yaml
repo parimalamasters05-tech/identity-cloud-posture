@@ -1,0 +1,86 @@
+# Impact x exposure -> base severity.
+#
+# Printed verbatim in the report's methodology appendix. Clients challenge
+# rankings; being able to show the arithmetic is what wins that conversation.
+#
+#   impact   1 negligible .. 5 organization-wide compromise
+#   exposure 1 requires local access .. 5 reachable from the internet, no auth
+#
+# When a ranking looks wrong, change this file and say so in the report's
+# version history. Do not add an unexplained adjustment in code.
+
+# 2026.09.2  action plan ordered by severity first; per-item effort scaling.
+version: "2026.09.2"
+
+matrix:
+  - {impact: 5, exposure: 5, severity: critical}
+  - {impact: 5, exposure: 4, severity: critical}
+  - {impact: 5, exposure: 3, severity: high}
+  - {impact: 5, exposure: 2, severity: high}
+  - {impact: 5, exposure: 1, severity: medium}
+
+  - {impact: 4, exposure: 5, severity: critical}
+  - {impact: 4, exposure: 4, severity: high}
+  - {impact: 4, exposure: 3, severity: high}
+  - {impact: 4, exposure: 2, severity: medium}
+  - {impact: 4, exposure: 1, severity: medium}
+
+  - {impact: 3, exposure: 5, severity: high}
+  - {impact: 3, exposure: 4, severity: medium}
+  - {impact: 3, exposure: 3, severity: medium}
+  - {impact: 3, exposure: 2, severity: medium}
+  - {impact: 3, exposure: 1, severity: low}
+
+  - {impact: 2, exposure: 5, severity: medium}
+  - {impact: 2, exposure: 4, severity: medium}
+  - {impact: 2, exposure: 3, severity: low}
+  - {impact: 2, exposure: 2, severity: low}
+  - {impact: 2, exposure: 1, severity: low}
+
+  - {impact: 1, exposure: 5, severity: low}
+  - {impact: 1, exposure: 4, severity: low}
+  - {impact: 1, exposure: 3, severity: info}
+  - {impact: 1, exposure: 2, severity: info}
+  - {impact: 1, exposure: 1, severity: info}
+
+modifiers:
+  # A gap on a privileged account outranks the same gap elsewhere.
+  privileged_entity: 1.6
+  # Blast radius grows with affected entities, but sub-linearly: a gap hitting
+  # 40 users is worse than one hitting 4, not ten times worse.
+  blast_radius_per_decade: 0.35
+  blast_radius_cap: 2.0
+
+# Effort estimates in hours, keyed by remediation content key. These order the
+# action plan *within* a severity band (severity always comes first -- see
+# docs/scoring-rubric.md). Replace them with measured values once you have
+# delivery data from real engagements.
+#
+# A number is a flat estimate. {base, per_item, cap} scales with the number of
+# affected items, for fixes done one account or one file at a time:
+#   hours = min(base + per_item * items, cap)
+effort_hours:
+  # Turning the policy on is quick; helping each person enroll is the work.
+  mfa.enforce_admins: {base: 0.5, per_item: 0.25, cap: 3.0}
+  mfa.enforce_all_users: {base: 1.0, per_item: 0.1, cap: 8.0}
+  # Buying and registering a key per administrator.
+  mfa.security_keys_for_admins: {base: 1.0, per_item: 0.5, cap: 6.0}
+  admin.reduce_super_admins: 2.0
+  admin.remove_dormant_admin_rights: {base: 0.5, per_item: 0.25, cap: 3.0}
+  accounts.suspend_dormant: {base: 0.5, per_item: 0.25, cap: 8.0}
+  accounts.remove_never_used: {base: 0.25, per_item: 0.1, cap: 4.0}
+  accounts.review_suspended: {base: 0.5, per_item: 0.1, cap: 4.0}
+  apps.revoke_admin_equivalent: 2.0
+  apps.review_admin_authorized: 1.5
+  apps.revoke_developer_tool_logins: 0.5
+  # Changing one file's link sharing is a minute or two; finding its owner more.
+  sharing.restrict_public_links: {base: 0.25, per_item: 0.1, cap: 8.0}
+  sharing.enable_external_warnings: 0.5
+  logging.enable_audit_streams: 2.0
+  logging.verify_audit_coverage: 1.0
+  oauth.revoke_suspended_user_grants: {base: 0.5, per_item: 0.1, cap: 3.0}
+  oauth.review_broad_scope_apps: 1.0
+  oauth.investigate_unverified_apps: 1.5
+  oauth.review_shadow_it: 1.0
+  oauth.revoke_dormant_grants: 1.0
+  coverage.restore_access: 0.5

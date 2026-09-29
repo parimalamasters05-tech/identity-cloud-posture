@@ -1,0 +1,10 @@
+[
+  {
+    "id": "group-id-01",
+    "email": "group01@tenant.example",
+    "name": "Group 01",
+    "description": "",
+    "directMembersCount": "2",
+    "adminCreated": true
+  }
+]

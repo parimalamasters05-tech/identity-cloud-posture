@@ -1,0 +1,37 @@
+[
+  {
+    "roleAssignmentId": "85006639652880970",
+    "roleId": "85006639652880973",
+    "assignedTo": "900000000000000000011",
+    "scopeType": "CUSTOMER",
+    "assigneeType": "user"
+  },
+  {
+    "roleAssignmentId": "85006639652880969",
+    "roleId": "85006639652880962",
+    "assignedTo": "900000000000000000001",
+    "scopeType": "CUSTOMER",
+    "assigneeType": "user"
+  },
+  {
+    "roleAssignmentId": "85006639652880962",
+    "roleId": "85006639652880967",
+    "assignedTo": "900000000000000000009",
+    "scopeType": "CUSTOMER",
+    "assigneeType": "user"
+  },
+  {
+    "roleAssignmentId": "85006639652880968",
+    "roleId": "85006639652880967",
+    "assignedTo": "900000000000000000010",
+    "scopeType": "CUSTOMER",
+    "assigneeType": "user"
+  },
+  {
+    "roleAssignmentId": "85006639652880971",
+    "roleId": "85006639652880964",
+    "assignedTo": "900000000000000000008",
+    "scopeType": "CUSTOMER",
+    "assigneeType": "user"
+  }
+]

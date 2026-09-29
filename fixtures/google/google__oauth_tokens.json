@@ -1,0 +1,589 @@
+{
+  "grants": [
+    {
+      "clientId": "884411223344.apps.googleusercontent.com",
+      "displayText": "NoteTaker AI",
+      "anonymous": false,
+      "nativeApp": false,
+      "scopes": [
+        "https://mail.google.com/",
+        "https://www.googleapis.com/auth/drive.readonly",
+        "https://www.googleapis.com/auth/calendar.readonly"
+      ],
+      "userKey": "alex.tan@dev-icp.example",
+      "userId": "100000000000000000010",
+      "userSuspended": false,
+      "userArchived": false,
+      "kind": "admin#directory#token"
+    },
+    {
+      "clientId": "884411223344.apps.googleusercontent.com",
+      "displayText": "NoteTaker AI",
+      "anonymous": false,
+      "nativeApp": false,
+      "scopes": [
+        "https://mail.google.com/",
+        "https://www.googleapis.com/auth/drive.readonly",
+        "https://www.googleapis.com/auth/calendar.readonly"
+      ],
+      "userKey": "bea.novak@dev-icp.example",
+      "userId": "100000000000000000011",
+      "userSuspended": false,
+      "userArchived": false,
+      "kind": "admin#directory#token"
+    },
+    {
+      "clientId": "884411223344.apps.googleusercontent.com",
+      "displayText": "NoteTaker AI",
+      "anonymous": false,
+      "nativeApp": false,
+      "scopes": [
+        "https://mail.google.com/",
+        "https://www.googleapis.com/auth/drive.readonly",
+        "https://www.googleapis.com/auth/calendar.readonly"
+      ],
+      "userKey": "chris.dube@dev-icp.example",
+      "userId": "100000000000000000012",
+      "userSuspended": false,
+      "userArchived": false,
+      "kind": "admin#directory#token"
+    },
+    {
+      "clientId": "884411223344.apps.googleusercontent.com",
+      "displayText": "NoteTaker AI",
+      "anonymous": false,
+      "nativeApp": false,
+      "scopes": [
+        "https://mail.google.com/",
+        "https://www.googleapis.com/auth/drive.readonly",
+        "https://www.googleapis.com/auth/calendar.readonly"
+      ],
+      "userKey": "dee.ali@dev-icp.example",
+      "userId": "100000000000000000013",
+      "userSuspended": false,
+      "userArchived": false,
+      "kind": "admin#directory#token"
+    },
+    {
+      "clientId": "884411223344.apps.googleusercontent.com",
+      "displayText": "NoteTaker AI",
+      "anonymous": false,
+      "nativeApp": false,
+      "scopes": [
+        "https://mail.google.com/",
+        "https://www.googleapis.com/auth/drive.readonly",
+        "https://www.googleapis.com/auth/calendar.readonly"
+      ],
+      "userKey": "eli.park@dev-icp.example",
+      "userId": "100000000000000000014",
+      "userSuspended": false,
+      "userArchived": false,
+      "kind": "admin#directory#token"
+    },
+    {
+      "clientId": "884411223344.apps.googleusercontent.com",
+      "displayText": "NoteTaker AI",
+      "anonymous": false,
+      "nativeApp": false,
+      "scopes": [
+        "https://mail.google.com/",
+        "https://www.googleapis.com/auth/drive.readonly",
+        "https://www.googleapis.com/auth/calendar.readonly"
+      ],
+      "userKey": "fran.mbeki@dev-icp.example",
+      "userId": "100000000000000000015",
+      "userSuspended": false,
+      "userArchived": false,
+      "kind": "admin#directory#token"
+    },
+    {
+      "clientId": "884411223344.apps.googleusercontent.com",
+      "displayText": "NoteTaker AI",
+      "anonymous": false,
+      "nativeApp": false,
+      "scopes": [
+        "https://mail.google.com/",
+        "https://www.googleapis.com/auth/drive.readonly",
+        "https://www.googleapis.com/auth/calendar.readonly"
+      ],
+      "userKey": "gus.iversen@dev-icp.example",
+      "userId": "100000000000000000016",
+      "userSuspended": false,
+      "userArchived": false,
+      "kind": "admin#directory#token"
+    },
+    {
+      "clientId": "884411223344.apps.googleusercontent.com",
+      "displayText": "NoteTaker AI",
+      "anonymous": false,
+      "nativeApp": false,
+      "scopes": [
+        "https://mail.google.com/",
+        "https://www.googleapis.com/auth/drive.readonly",
+        "https://www.googleapis.com/auth/calendar.readonly"
+      ],
+      "userKey": "hana.sato@dev-icp.example",
+      "userId": "100000000000000000017",
+      "userSuspended": false,
+      "userArchived": false,
+      "kind": "admin#directory#token"
+    },
+    {
+      "clientId": "884411223344.apps.googleusercontent.com",
+      "displayText": "NoteTaker AI",
+      "anonymous": false,
+      "nativeApp": false,
+      "scopes": [
+        "https://mail.google.com/",
+        "https://www.googleapis.com/auth/drive.readonly",
+        "https://www.googleapis.com/auth/calendar.readonly"
+      ],
+      "userKey": "ivan.petrov@dev-icp.example",
+      "userId": "100000000000000000018",
+      "userSuspended": false,
+      "userArchived": false,
+      "kind": "admin#directory#token"
+    },
+    {
+      "clientId": "884411223344.apps.googleusercontent.com",
+      "displayText": "NoteTaker AI",
+      "anonymous": false,
+      "nativeApp": false,
+      "scopes": [
+        "https://mail.google.com/",
+        "https://www.googleapis.com/auth/drive.readonly",
+        "https://www.googleapis.com/auth/calendar.readonly"
+      ],
+      "userKey": "jo.kelly@dev-icp.example",
+      "userId": "100000000000000000019",
+      "userSuspended": false,
+      "userArchived": false,
+      "kind": "admin#directory#token"
+    },
+    {
+      "clientId": "884411223344.apps.googleusercontent.com",
+      "displayText": "NoteTaker AI",
+      "anonymous": false,
+      "nativeApp": false,
+      "scopes": [
+        "https://mail.google.com/",
+        "https://www.googleapis.com/auth/drive.readonly",
+        "https://www.googleapis.com/auth/calendar.readonly"
+      ],
+      "userKey": "kim.larsen@dev-icp.example",
+      "userId": "100000000000000000020",
+      "userSuspended": false,
+      "userArchived": false,
+      "kind": "admin#directory#token"
+    },
+    {
+      "clientId": "884411223344.apps.googleusercontent.com",
+      "displayText": "NoteTaker AI",
+      "anonymous": false,
+      "nativeApp": false,
+      "scopes": [
+        "https://mail.google.com/",
+        "https://www.googleapis.com/auth/drive.readonly",
+        "https://www.googleapis.com/auth/calendar.readonly"
+      ],
+      "userKey": "leo.costa@dev-icp.example",
+      "userId": "100000000000000000021",
+      "userSuspended": false,
+      "userArchived": false,
+      "kind": "admin#directory#token"
+    },
+    {
+      "clientId": "111222333444.apps.googleusercontent.com",
+      "displayText": "Payroll Portal",
+      "anonymous": false,
+      "nativeApp": false,
+      "scopes": [
+        "openid",
+        "https://www.googleapis.com/auth/userinfo.email"
+      ],
+      "userKey": "dana.reyes@dev-icp.example",
+      "userId": "100000000000000000001",
+      "userSuspended": false,
+      "userArchived": false,
+      "kind": "admin#directory#token"
+    },
+    {
+      "clientId": "111222333444.apps.googleusercontent.com",
+      "displayText": "Payroll Portal",
+      "anonymous": false,
+      "nativeApp": false,
+      "scopes": [
+        "openid",
+        "https://www.googleapis.com/auth/userinfo.email"
+      ],
+      "userKey": "sam.okafor@dev-icp.example",
+      "userId": "100000000000000000002",
+      "userSuspended": false,
+      "userArchived": false,
+      "kind": "admin#directory#token"
+    },
+    {
+      "clientId": "111222333444.apps.googleusercontent.com",
+      "displayText": "Payroll Portal",
+      "anonymous": false,
+      "nativeApp": false,
+      "scopes": [
+        "openid",
+        "https://www.googleapis.com/auth/userinfo.email"
+      ],
+      "userKey": "former.consultant@dev-icp.example",
+      "userId": "100000000000000000003",
+      "userSuspended": false,
+      "userArchived": false,
+      "kind": "admin#directory#token"
+    },
+    {
+      "clientId": "111222333444.apps.googleusercontent.com",
+      "displayText": "Payroll Portal",
+      "anonymous": false,
+      "nativeApp": false,
+      "scopes": [
+        "openid",
+        "https://www.googleapis.com/auth/userinfo.email"
+      ],
+      "userKey": "priya.menon@dev-icp.example",
+      "userId": "100000000000000000004",
+      "userSuspended": false,
+      "userArchived": false,
+      "kind": "admin#directory#token"
+    },
+    {
+      "clientId": "111222333444.apps.googleusercontent.com",
+      "displayText": "Payroll Portal",
+      "anonymous": false,
+      "nativeApp": false,
+      "scopes": [
+        "openid",
+        "https://www.googleapis.com/auth/userinfo.email"
+      ],
+      "userKey": "alex.tan@dev-icp.example",
+      "userId": "100000000000000000010",
+      "userSuspended": false,
+      "userArchived": false,
+      "kind": "admin#directory#token"
+    },
+    {
+      "clientId": "111222333444.apps.googleusercontent.com",
+      "displayText": "Payroll Portal",
+      "anonymous": false,
+      "nativeApp": false,
+      "scopes": [
+        "openid",
+        "https://www.googleapis.com/auth/userinfo.email"
+      ],
+      "userKey": "bea.novak@dev-icp.example",
+      "userId": "100000000000000000011",
+      "userSuspended": false,
+      "userArchived": false,
+      "kind": "admin#directory#token"
+    },
+    {
+      "clientId": "111222333444.apps.googleusercontent.com",
+      "displayText": "Payroll Portal",
+      "anonymous": false,
+      "nativeApp": false,
+      "scopes": [
+        "openid",
+        "https://www.googleapis.com/auth/userinfo.email"
+      ],
+      "userKey": "chris.dube@dev-icp.example",
+      "userId": "100000000000000000012",
+      "userSuspended": false,
+      "userArchived": false,
+      "kind": "admin#directory#token"
+    },
+    {
+      "clientId": "111222333444.apps.googleusercontent.com",
+      "displayText": "Payroll Portal",
+      "anonymous": false,
+      "nativeApp": false,
+      "scopes": [
+        "openid",
+        "https://www.googleapis.com/auth/userinfo.email"
+      ],
+      "userKey": "dee.ali@dev-icp.example",
+      "userId": "100000000000000000013",
+      "userSuspended": false,
+      "userArchived": false,
+      "kind": "admin#directory#token"
+    },
+    {
+      "clientId": "111222333444.apps.googleusercontent.com",
+      "displayText": "Payroll Portal",
+      "anonymous": false,
+      "nativeApp": false,
+      "scopes": [
+        "openid",
+        "https://www.googleapis.com/auth/userinfo.email"
+      ],
+      "userKey": "eli.park@dev-icp.example",
+      "userId": "100000000000000000014",
+      "userSuspended": false,
+      "userArchived": false,
+      "kind": "admin#directory#token"
+    },
+    {
+      "clientId": "111222333444.apps.googleusercontent.com",
+      "displayText": "Payroll Portal",
+      "anonymous": false,
+      "nativeApp": false,
+      "scopes": [
+        "openid",
+        "https://www.googleapis.com/auth/userinfo.email"
+      ],
+      "userKey": "fran.mbeki@dev-icp.example",
+      "userId": "100000000000000000015",
+      "userSuspended": false,
+      "userArchived": false,
+      "kind": "admin#directory#token"
+    },
+    {
+      "clientId": "111222333444.apps.googleusercontent.com",
+      "displayText": "Payroll Portal",
+      "anonymous": false,
+      "nativeApp": false,
+      "scopes": [
+        "openid",
+        "https://www.googleapis.com/auth/userinfo.email"
+      ],
+      "userKey": "gus.iversen@dev-icp.example",
+      "userId": "100000000000000000016",
+      "userSuspended": false,
+      "userArchived": false,
+      "kind": "admin#directory#token"
+    },
+    {
+      "clientId": "111222333444.apps.googleusercontent.com",
+      "displayText": "Payroll Portal",
+      "anonymous": false,
+      "nativeApp": false,
+      "scopes": [
+        "openid",
+        "https://www.googleapis.com/auth/userinfo.email"
+      ],
+      "userKey": "hana.sato@dev-icp.example",
+      "userId": "100000000000000000017",
+      "userSuspended": false,
+      "userArchived": false,
+      "kind": "admin#directory#token"
+    },
+    {
+      "clientId": "111222333444.apps.googleusercontent.com",
+      "displayText": "Payroll Portal",
+      "anonymous": false,
+      "nativeApp": false,
+      "scopes": [
+        "openid",
+        "https://www.googleapis.com/auth/userinfo.email"
+      ],
+      "userKey": "ivan.petrov@dev-icp.example",
+      "userId": "100000000000000000018",
+      "userSuspended": false,
+      "userArchived": false,
+      "kind": "admin#directory#token"
+    },
+    {
+      "clientId": "111222333444.apps.googleusercontent.com",
+      "displayText": "Payroll Portal",
+      "anonymous": false,
+      "nativeApp": false,
+      "scopes": [
+        "openid",
+        "https://www.googleapis.com/auth/userinfo.email"
+      ],
+      "userKey": "jo.kelly@dev-icp.example",
+      "userId": "100000000000000000019",
+      "userSuspended": false,
+      "userArchived": false,
+      "kind": "admin#directory#token"
+    },
+    {
+      "clientId": "111222333444.apps.googleusercontent.com",
+      "displayText": "Payroll Portal",
+      "anonymous": false,
+      "nativeApp": false,
+      "scopes": [
+        "openid",
+        "https://www.googleapis.com/auth/userinfo.email"
+      ],
+      "userKey": "kim.larsen@dev-icp.example",
+      "userId": "100000000000000000020",
+      "userSuspended": false,
+      "userArchived": false,
+      "kind": "admin#directory#token"
+    },
+    {
+      "clientId": "111222333444.apps.googleusercontent.com",
+      "displayText": "Payroll Portal",
+      "anonymous": false,
+      "nativeApp": false,
+      "scopes": [
+        "openid",
+        "https://www.googleapis.com/auth/userinfo.email"
+      ],
+      "userKey": "leo.costa@dev-icp.example",
+      "userId": "100000000000000000021",
+      "userSuspended": false,
+      "userArchived": false,
+      "kind": "admin#directory#token"
+    },
+    {
+      "clientId": "111222333444.apps.googleusercontent.com",
+      "displayText": "Payroll Portal",
+      "anonymous": false,
+      "nativeApp": false,
+      "scopes": [
+        "openid",
+        "https://www.googleapis.com/auth/userinfo.email"
+      ],
+      "userKey": "mia.haddad@dev-icp.example",
+      "userId": "100000000000000000022",
+      "userSuspended": false,
+      "userArchived": false,
+      "kind": "admin#directory#token"
+    },
+    {
+      "clientId": "111222333444.apps.googleusercontent.com",
+      "displayText": "Payroll Portal",
+      "anonymous": false,
+      "nativeApp": false,
+      "scopes": [
+        "openid",
+        "https://www.googleapis.com/auth/userinfo.email"
+      ],
+      "userKey": "nina.oyelaran@dev-icp.example",
+      "userId": "100000000000000000023",
+      "userSuspended": false,
+      "userArchived": false,
+      "kind": "admin#directory#token"
+    },
+    {
+      "clientId": "111222333444.apps.googleusercontent.com",
+      "displayText": "Payroll Portal",
+      "anonymous": false,
+      "nativeApp": false,
+      "scopes": [
+        "openid",
+        "https://www.googleapis.com/auth/userinfo.email"
+      ],
+      "userKey": "omar.said@dev-icp.example",
+      "userId": "100000000000000000024",
+      "userSuspended": false,
+      "userArchived": false,
+      "kind": "admin#directory#token"
+    },
+    {
+      "clientId": "111222333444.apps.googleusercontent.com",
+      "displayText": "Payroll Portal",
+      "anonymous": false,
+      "nativeApp": false,
+      "scopes": [
+        "openid",
+        "https://www.googleapis.com/auth/userinfo.email"
+      ],
+      "userKey": "pat.dunne@dev-icp.example",
+      "userId": "100000000000000000030",
+      "userSuspended": false,
+      "userArchived": false,
+      "kind": "admin#directory#token"
+    },
+    {
+      "clientId": "555666777888.apps.googleusercontent.com",
+      "displayText": "LegacySync Connector",
+      "anonymous": false,
+      "nativeApp": false,
+      "scopes": [
+        "https://www.googleapis.com/auth/admin.directory.user",
+        "https://www.googleapis.com/auth/drive.readonly"
+      ],
+      "userKey": "dana.reyes@dev-icp.example",
+      "userId": "100000000000000000001",
+      "userSuspended": false,
+      "userArchived": false,
+      "kind": "admin#directory#token"
+    },
+    {
+      "clientId": "999000111222.apps.googleusercontent.com",
+      "displayText": "",
+      "anonymous": true,
+      "nativeApp": false,
+      "scopes": [
+        "https://www.googleapis.com/auth/gmail.readonly"
+      ],
+      "userKey": "ivan.petrov@dev-icp.example",
+      "userId": "100000000000000000018",
+      "userSuspended": false,
+      "userArchived": false,
+      "kind": "admin#directory#token"
+    },
+    {
+      "clientId": "777888999000.apps.googleusercontent.com",
+      "displayText": "InboxCleaner Pro",
+      "anonymous": false,
+      "nativeApp": false,
+      "scopes": [
+        "https://mail.google.com/"
+      ],
+      "userKey": "kim.larsen@dev-icp.example",
+      "userId": "100000000000000000020",
+      "userSuspended": false,
+      "userArchived": false,
+      "kind": "admin#directory#token"
+    },
+    {
+      "clientId": "884411223344.apps.googleusercontent.com",
+      "displayText": "NoteTaker AI",
+      "anonymous": false,
+      "nativeApp": false,
+      "scopes": [
+        "https://mail.google.com/",
+        "https://www.googleapis.com/auth/drive.readonly"
+      ],
+      "userKey": "departed.finance@dev-icp.example",
+      "userId": "100000000000000000060",
+      "userSuspended": true,
+      "userArchived": false,
+      "kind": "admin#directory#token"
+    },
+    {
+      "clientId": "222333444555.apps.googleusercontent.com",
+      "displayText": "ExpenseTracker",
+      "anonymous": false,
+      "nativeApp": false,
+      "scopes": [
+        "https://www.googleapis.com/auth/gmail.readonly",
+        "https://mail.google.com/"
+      ],
+      "userKey": "departed.ops@dev-icp.example",
+      "userId": "100000000000000000061",
+      "userSuspended": true,
+      "userArchived": false,
+      "kind": "admin#directory#token"
+    },
+    {
+      "clientId": "32555940559.apps.googleusercontent.com",
+      "displayText": "Google Cloud SDK",
+      "anonymous": false,
+      "nativeApp": false,
+      "scopes": [
+        "openid",
+        "https://www.googleapis.com/auth/userinfo.email",
+        "https://www.googleapis.com/auth/cloud-platform",
+        "https://www.googleapis.com/auth/compute"
+      ],
+      "userKey": "priya.menon@dev-icp.example",
+      "userId": "100000000000000000004",
+      "userSuspended": false,
+      "userArchived": false,
+      "kind": "admin#directory#token"
+    }
+  ],
+  "failed_users": [],
+  "users_enumerated": 34,
+  "users_total": 34
+}

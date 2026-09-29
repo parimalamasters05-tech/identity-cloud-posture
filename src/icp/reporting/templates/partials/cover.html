@@ -1,0 +1,62 @@
+{# Page 1 — read by everyone. What was and was not examined, stated plainly.
+   Must fit on one page with the coverage box showing: it once overflowed by
+   two lines, leaving page 2 blank but for those lines. The two scope lists sit
+   side by side for that reason. #}
+<section class="cover">
+  <p class="ui meta" style="letter-spacing:0.12em; text-transform:uppercase; font-size:8pt;">
+    Confidential — prepared for {{ client_name }}
+  </p>
+  <h1>Identity &amp; Cloud Posture Health Check</h1>
+  <p class="ui" style="font-size:12pt; color:#444; margin-top:0;">
+    Google Workspace &middot; point-in-time review
+  </p>
+
+  <table class="cover-details">
+    <tr><th style="width:26%;">Organization</th><td>{{ client_name }}</td></tr>
+    <tr><th>Assessed by</th><td>{{ assessor }}</td></tr>
+    {% if engagement_ref %}
+    <tr><th>Engagement reference</th><td class="mono">{{ engagement_ref }}</td></tr>
+    {% endif %}
+    <tr><th>Configuration captured</th><td>{{ scope_statement.point_in_time.strftime('%d %B %Y, %H:%M UTC') }}</td></tr>
+    <tr><th>Report generated</th><td>{{ generated_at.strftime('%d %B %Y') }}</td></tr>
+    <tr><th>Snapshot reference</th><td class="mono">{{ snapshot.snapshot_id }}</td></tr>
+  </table>
+
+  <table class="scope-columns">
+    <tr>
+      <td>
+        <h3>What we examined</h3>
+        <ul class="steps">
+          {% for item in scope_statement.examined %}<li>{{ item }}</li>{% endfor %}
+        </ul>
+      </td>
+      <td>
+        <h3>What we did not examine</h3>
+        <ul class="steps">
+          {% for item in scope_statement.not_examined %}<li>{{ item }}</li>{% endfor %}
+        </ul>
+      </td>
+    </tr>
+  </table>
+
+  <div class="callout">
+    <h4 style="margin-top:0;">Method</h4>
+    <p style="margin-bottom:0;">{{ scope_statement.method }}</p>
+  </div>
+
+  {% if degraded_areas %}
+  <div class="callout">
+    <h4 style="margin-top:0;">Incomplete coverage</h4>
+    <p style="margin-bottom:0;">
+      Some data could not be retrieved during this assessment, so parts of your environment were
+      not examined. These areas are listed in the coverage notes and must not be read as having
+      passed. Not fully read: {{ degraded_areas | join('; ') }}.
+    </p>
+  </div>
+  {% endif %}
+
+  <p class="meta" style="margin-top:6pt;">
+    This report is a technical configuration review. It is not an audit, a certification, or an
+    attestation against any framework, and it is not legal advice.
+  </p>
+</section>

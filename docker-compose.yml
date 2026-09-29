@@ -1,0 +1,129 @@
+# Common flows, so nobody has to remember a twelve-flag `docker run`.
+#
+#   docker compose run --rm demo            # offline, fixtures, no credentials
+#   docker compose run --rm collect         # the ONLY service that touches a tenant
+#   docker compose run --rm assess
+#   docker compose run --rm report
+#   docker compose run --rm purge
+#   docker compose run --rm icp list-rules  # anything else
+#
+# Every service is hardened the same way: read-only root filesystem, all
+# capabilities dropped, no privilege escalation. A tool that tells clients to
+# apply least privilege should be visibly running that way itself.
+
+x-hardening: &hardening
+  image: icp:local
+  build:
+    context: .
+  read_only: true
+  cap_drop: [ALL]
+  security_opt:
+    - no-new-privileges:true
+  tmpfs:
+    # WeasyPrint writes font caches; the root filesystem is read-only.
+    - /tmp:size=64m,mode=1777
+  volumes:
+    - ./snapshots:/work/snapshots
+    - ./output:/work/output
+    # Config is baked into the image. Mount it read-only to iterate on the
+    # remediation wording without rebuilding.
+    - ./config:/work/config:ro
+
+services:
+  # --------------------------------------------------------------------------
+  # Offline demo. Proves the whole pipeline with no tenant and no credentials.
+  # network_mode: none is the point -- it cannot reach anything even if it tried.
+  # --------------------------------------------------------------------------
+  demo:
+    <<: *hardening
+    network_mode: none
+    environment:
+      ICP_TENANT_ID: dev-fixture
+      ICP_ENCRYPT_AT_REST: "false"
+    command:
+      - run
+      - --fixtures
+      - --client-name=Riverside Community Trust
+      - --assessor=Demo
+
+  # --------------------------------------------------------------------------
+  # Credential and delegation check. Run this before `collect`, every time.
+  # Seconds, seven reads, and it names the exact scope if one is missing.
+  # --------------------------------------------------------------------------
+  preflight:
+    <<: *hardening
+    env_file: [.env]
+    environment:
+      ICP_GOOGLE_KEY_FILE: /run/secrets/sa-key.json
+    volumes:
+      - ./snapshots:/work/snapshots
+      - ./output:/work/output
+      - ./config:/work/config:ro
+      - ${ICP_HOST_KEY_FILE:?set ICP_HOST_KEY_FILE in .env to the absolute host path of your service-account key}:/run/secrets/sa-key.json:ro
+    command: [preflight]
+
+  # --------------------------------------------------------------------------
+  # Live collection. The only service that contacts a client environment.
+  #
+  # The service-account key is mounted read-only from a path you set in .env as
+  # ICP_HOST_KEY_FILE. It is never copied into the image.
+  # --------------------------------------------------------------------------
+  collect:
+    <<: *hardening
+    env_file: [.env]
+    environment:
+      ICP_GOOGLE_KEY_FILE: /run/secrets/sa-key.json
+    volumes:
+      - ./snapshots:/work/snapshots
+      - ./output:/work/output
+      - ./config:/work/config:ro
+      - ${ICP_HOST_KEY_FILE:?set ICP_HOST_KEY_FILE in .env to the absolute host path of your service-account key}:/run/secrets/sa-key.json:ro
+    command: [collect]
+
+  # --------------------------------------------------------------------------
+  # Everything downstream of the snapshot. No network: these stages work on
+  # local files only, and enforcing that at the container level makes the
+  # architecture's central claim checkable rather than merely stated.
+  # --------------------------------------------------------------------------
+  assess:
+    <<: *hardening
+    network_mode: none
+    env_file: [.env]
+    command: [assess]
+
+  report:
+    <<: *hardening
+    network_mode: none
+    env_file: [.env]
+    command:
+      - report
+      # The client's name comes from their Google Workspace profile (or primary
+      # domain), not from configuration. The assessor is you, so it is config;
+      # with it missing, `icp report` stops and says what to set.
+      - --assessor=${ICP_ASSESSOR:-}
+
+  purge:
+    <<: *hardening
+    network_mode: none
+    env_file: [.env]
+    command: [purge]
+
+  # Freeze the latest dev-tenant snapshot into fixtures/google-dev, pseudonymized.
+  # Offline; the only service that writes to ./fixtures.
+  freeze-fixtures:
+    <<: *hardening
+    network_mode: none
+    env_file: [.env]
+    volumes:
+      - ./snapshots:/work/snapshots
+      - ./output:/work/output
+      - ./config:/work/config:ro
+      - ./fixtures:/work/fixtures
+    command: [freeze-fixtures]
+
+  # Escape hatch: `docker compose run --rm icp <any command>`
+  icp:
+    <<: *hardening
+    network_mode: none
+    env_file: [.env]
+    command: [--help]

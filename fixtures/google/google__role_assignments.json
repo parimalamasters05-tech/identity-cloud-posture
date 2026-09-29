@@ -1,0 +1,30 @@
+[
+  {
+    "roleAssignmentId": "9001",
+    "roleId": "10001",
+    "assignedTo": "100000000000000000001",
+    "scopeType": "CUSTOMER",
+    "assigneeType": "user"
+  },
+  {
+    "roleAssignmentId": "9002",
+    "roleId": "10001",
+    "assignedTo": "100000000000000000002",
+    "scopeType": "CUSTOMER",
+    "assigneeType": "user"
+  },
+  {
+    "roleAssignmentId": "9003",
+    "roleId": "10001",
+    "assignedTo": "100000000000000000003",
+    "scopeType": "CUSTOMER",
+    "assigneeType": "user"
+  },
+  {
+    "roleAssignmentId": "9004",
+    "roleId": "10002",
+    "assignedTo": "100000000000000000004",
+    "scopeType": "CUSTOMER",
+    "assigneeType": "user"
+  }
+]

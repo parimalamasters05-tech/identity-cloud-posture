@@ -1,0 +1,83 @@
+# ---------------------------------------------------------------------------
+# Client data. Nothing in these directories may ever be committed.
+#
+# Snapshots and reports contain a complete map of a client's identity
+# configuration. A single accidental commit is a breach notification.
+# The .gitkeep exception keeps the directory structure without its contents.
+# ---------------------------------------------------------------------------
+snapshots/*
+!snapshots/.gitkeep
+output/*
+!output/.gitkeep
+
+# The same client data by file type, wherever it lands -- a report saved to the
+# wrong folder, a snapshot copied for debugging. The directory rules above are
+# the intent; these are the net under them.
+*.json.enc
+*.apicalls.jsonl
+*.apicalls.manifest.json
+*__findings.json
+delta.json
+deletion-attestation-*.json
+/*.html
+/*.pdf
+
+# Evidence captured from a live tenant (screenshots, preflight and collect
+# output, audit-log exports) -- see docs/dev-tenant-test-plan.md.
+evidence/
+
+# ---------------------------------------------------------------------------
+# Private notes and reference material. Anything describing a real client or
+# tenant, or that we were given rather than wrote (the project brief, a
+# client's own documents), stays out of the repository.
+# ---------------------------------------------------------------------------
+private/
+notes/
+reference/
+brief/
+*.private.md
+*sensitive*.md
+*sensitive*.txt
+CLAUDE.local.md
+.claude/settings.local.json
+# The working test plan for our own dev tenant names its domain and accounts.
+docs/dev-tenant-test-plan.md
+
+# ---------------------------------------------------------------------------
+# Credentials and secrets.
+# ---------------------------------------------------------------------------
+.env
+.env.*
+!.env.example
+*.key
+*-key.json
+service-account*.json
+credentials.json
+client_secret*.json
+*.pem
+*.p12
+
+# ---------------------------------------------------------------------------
+# Python
+# ---------------------------------------------------------------------------
+__pycache__/
+*.py[cod]
+*.egg-info/
+.eggs/
+build/
+dist/
+.venv/
+venv/
+.mypy_cache/
+.ruff_cache/
+.pytest_cache/
+.coverage
+coverage.xml
+htmlcov/
+
+# ---------------------------------------------------------------------------
+# Editors and OS
+# ---------------------------------------------------------------------------
+.idea/
+.vscode/
+.DS_Store

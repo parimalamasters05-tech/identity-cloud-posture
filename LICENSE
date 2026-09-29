@@ -1,0 +1,17 @@
+Copyright (c) 2026. All rights reserved.
+
+This software is proprietary and confidential. It is not open source and is not
+licensed for redistribution.
+
+Permission is granted to the copyright holder and to authorised employees and
+contractors of the copyright holder to use this software to deliver assessment
+engagements to clients.
+
+The findings, reports, and other outputs produced by this software for a client
+belong to that client under the terms of the relevant engagement letter. This
+software itself, including the OAuth scope severity taxonomy in
+config/scope_severity_taxonomy.yaml and the remediation content library in
+config/remediation.yaml, does not.
+
+THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR
+IMPLIED.

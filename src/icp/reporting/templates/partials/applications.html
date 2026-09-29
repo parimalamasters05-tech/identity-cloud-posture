@@ -1,0 +1,43 @@
+{# Every connected application, flagged or not. The findings say what is wrong;
+   this says what is there, so the client can spot the app nobody recognizes. #}
+{% if applications %}
+<section class="page-break">
+  <h2>Connected applications</h2>
+  <p>
+    Every application that staff have connected to organization accounts, {{ applications | length }}
+    in total, ordered by how much each can reach. Applications with no finding are listed too:
+    a harmless-looking name is worth a second look if nobody recognizes it.
+  </p>
+  <table>
+    <thead>
+      <tr><th>Application</th><th>Type</th><th>Users</th><th>Highest access</th><th>Last authorized</th><th>Last used</th></tr>
+    </thead>
+    <tbody>
+      {% for app in applications %}
+      <tr class="avoid-break">
+        <td>{{ app.name }}{% if app.is_anonymous %}<br><span class="meta">not registered with Google</span>{% endif %}</td>
+        <td class="meta">{{ app_kind(app) }}</td>
+        <td>{{ app.active_users }}{% if app.suspended_users %}<br><span class="meta">+ {{ app.suspended_users }} suspended</span>{% endif %}</td>
+        <td>{{ tier_label(app.max_tier) }}</td>
+        <td class="meta">{{ app.last_authorized_at.strftime('%d %b %Y') if app.last_authorized_at else '—' }}</td>
+        <td class="meta">{{ app.last_used_at.strftime('%d %b %Y') if app.last_used_at else '—' }}</td>
+      </tr>
+      {% endfor %}
+    </tbody>
+  </table>
+  <p class="meta">
+    {% if token_log %}
+    Dates come from Google's token audit log, read back to {{ token_log.covered_since.strftime('%d %B %Y') }};
+    "—" means no such event in that period.
+    {% if not token_log.activity_recorded %}
+    For this organization the log records when applications were authorized and revoked, but not
+    when they were used, so "Last used" is unavailable and unused access could not be assessed.
+    {% endif %}
+    {% else %}
+    Authorization and usage dates were not collected for this assessment.
+    {% endif %}
+    Google does not publish whether an application has passed its verification review through
+    this interface; "not registered with Google" marks applications with no registered publisher at all.
+  </p>
+</section>
+{% endif %}

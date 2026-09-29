@@ -1,0 +1,71 @@
+{
+  "report_date": "2026-09-27",
+  "entries": [
+    {
+      "profile_id": "900000000000000000008",
+      "email": "user08@tenant.example",
+      "num_security_keys": "0",
+      "num_passkeys_enrolled": "0"
+    },
+    {
+      "profile_id": "900000000000000000010",
+      "email": "admin02@tenant.example",
+      "num_security_keys": "0",
+      "num_passkeys_enrolled": "0"
+    },
+    {
+      "profile_id": "900000000000000000011",
+      "email": "user09@tenant.example",
+      "num_security_keys": "0",
+      "num_passkeys_enrolled": "0"
+    },
+    {
+      "profile_id": "900000000000000000005",
+      "email": "user05@tenant.example",
+      "num_security_keys": "0",
+      "num_passkeys_enrolled": "0"
+    },
+    {
+      "profile_id": "900000000000000000009",
+      "email": "admin01@tenant.example",
+      "num_security_keys": "0",
+      "num_passkeys_enrolled": "2"
+    },
+    {
+      "profile_id": "900000000000000000004",
+      "email": "user04@tenant.example",
+      "num_security_keys": "0",
+      "num_passkeys_enrolled": "0"
+    },
+    {
+      "profile_id": "900000000000000000007",
+      "email": "user07@tenant.example",
+      "num_security_keys": "0",
+      "num_passkeys_enrolled": "0"
+    },
+    {
+      "profile_id": "900000000000000000006",
+      "email": "user06@tenant.example",
+      "num_security_keys": "0",
+      "num_passkeys_enrolled": "0"
+    },
+    {
+      "profile_id": "900000000000000000002",
+      "email": "user02@tenant.example",
+      "num_security_keys": "0",
+      "num_passkeys_enrolled": "0"
+    },
+    {
+      "profile_id": "900000000000000000003",
+      "email": "user03@tenant.example",
+      "num_security_keys": "0",
+      "num_passkeys_enrolled": "0"
+    },
+    {
+      "profile_id": "900000000000000000001",
+      "email": "user01@tenant.example",
+      "num_security_keys": "0",
+      "num_passkeys_enrolled": "0"
+    }
+  ]
+}

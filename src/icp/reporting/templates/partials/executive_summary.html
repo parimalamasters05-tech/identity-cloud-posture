@@ -1,0 +1,36 @@
+{# Page 2 — director and board. Prose, one page, no acronyms. #}
+<section class="page-break">
+  <h2>Executive summary</h2>
+
+  <table style="margin-bottom:14pt;">
+    <tr>
+      <th style="width:26%;">Overall position</th>
+      <td><strong class="ui" style="font-size:12pt;">{{ summary.rating }}</strong> —
+        {{ summary.rating_explanation }}</td>
+    </tr>
+    <tr>
+      <th>Findings</th>
+      <td>
+        {{ total_findings }} issue{{ 's' if total_findings != 1 else '' }}:
+        {{ counts.critical }} critical, {{ counts.high }} high,
+        {{ counts.medium }} medium, {{ counts.low }} low.
+        {% if total_checks_flagged > total_findings %}
+        <span class="meta">Some issues were flagged by more than one check; all
+          {{ total_checks_flagged }} individual results are listed in the appendix.</span>
+        {% endif %}
+      </td>
+    </tr>
+  </table>
+
+  <p>{{ summary.opening }}</p>
+
+  <h3>The three things that matter most</h3>
+  {% for risk in summary.headline_risks %}
+  <div class="avoid-break" style="margin-bottom:10pt;">
+    <h4>{{ loop.index }}. {{ risk.heading }}</h4>
+    <p>{{ risk.paragraph }}</p>
+  </div>
+  {% endfor %}
+
+  <p>{{ summary.closing }}</p>
+</section>

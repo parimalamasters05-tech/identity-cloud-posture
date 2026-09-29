@@ -1,0 +1,9 @@
+{
+  "domains": [
+    {
+      "domainName": "tenant.example",
+      "isPrimary": true,
+      "verified": true
+    }
+  ]
+}
