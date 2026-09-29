@@ -141,7 +141,10 @@ def assess(ctx: click.Context, snapshot_path: Path | None, tenant: str | None) -
 
     snapshot = _load_snapshot(store, snapshot_path, tenant or settings.tenant_id)
     tenant_view = normalize(snapshot)
-    result = run_rules(tenant_view)
+    # Judged as of collection, not as of today: re-assessing a months-old
+    # snapshot must give the findings it gave then ("dormant 90 days" is 90
+    # days before the snapshot), or a delta against it compares two clocks.
+    result = run_rules(tenant_view, now=snapshot.collected_at)
 
     findings_path = FindingStore(settings.output_dir).save(
         result, tenant_id=snapshot.tenant_id, snapshot_id=snapshot.snapshot_id
@@ -296,6 +299,57 @@ def delta(ctx: click.Context, previous: Path, current: Path) -> None:
     out = settings.output_dir / "delta.json"
     out.write_text(json.dumps(summary, indent=2), encoding="utf-8")
     click.secho(f"Written: {out}", fg="green")
+
+
+@cli.command(name="validate-delta")
+@click.option(
+    "--previous", required=True, type=click.Path(exists=True, path_type=Path), help="Earlier snapshot file."
+)
+@click.option(
+    "--current", required=True, type=click.Path(exists=True, path_type=Path), help="Later snapshot file."
+)
+@click.pass_context
+def validate_delta(ctx: click.Context, previous: Path, current: Path) -> None:
+    """Re-derive a delta from its two snapshots and check it matches the saved one.
+
+    Offline. Proves the saved findings files are exactly what the snapshots
+    produce, so a before/after comparison shown to a client rests on the raw
+    data, not on files that could be stale or edited.
+    """
+    from icp.delta.validate import validate
+    from icp.storage.finding_store import FindingStore, IncompatibleFindings
+    from icp.storage.snapshot_store import SnapshotStore
+
+    settings = _settings(ctx)
+    snapshots = SnapshotStore(settings.snapshot_dir, encrypt=False)
+    findings = FindingStore(settings.output_dir)
+
+    before, after = snapshots.load(previous), snapshots.load(current)
+    saved = []
+    for snap in (before, after):
+        path = findings.path_for(snap.tenant_id, snap.snapshot_id)
+        if not path.exists():
+            _fail(f"No saved findings for snapshot {snap.snapshot_id}. Run: icp assess --snapshot <file>")
+        try:
+            saved.append(findings.load(path))
+        except IncompatibleFindings as exc:
+            _fail(str(exc))
+
+    checks, summary = validate(before, after, saved[0], saved[1])
+
+    click.secho(
+        f"Validating delta {before.snapshot_id} -> {after.snapshot_id} from the snapshots", bold=True
+    )
+    for check in checks:
+        mark = click.style("PASS", fg="green") if check.passed else click.style("FAIL", fg="red")
+        click.echo(f"  [{mark}] {check.label}" + (f": {check.detail}" if check.detail else ""))
+    click.echo(
+        f"  resolved {summary['resolved']}  new {summary['new']}  improved {summary['improved']}  "
+        f"regressed {summary['regressed']}  persisting {summary['persisting']}"
+    )
+    if not all(c.passed for c in checks):
+        _fail("Delta validation failed: the saved findings do not match what the snapshots produce.")
+    click.secho("All checks passed.", fg="green")
 
 
 # -- fixtures ------------------------------------------------------------------
