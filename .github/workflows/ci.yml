@@ -155,8 +155,10 @@ jobs:
         # snapshots/ and output/ must be empty in the image. A snapshot in a
         # layer is a breach waiting to be pushed to a registry.
         run: |
-          contents=$(docker run --rm --entrypoint sh icp:ci -c \
-            'ls -A /work/snapshots /work/output 2>/dev/null' || true)
+          # `find -mindepth 1` lists only real entries. (`ls` on two folders
+          # prints their names as headers, so it never came back empty.)
+          contents=$(docker run --rm --entrypoint find icp:ci \
+            /work/snapshots /work/output -mindepth 1 -print 2>/dev/null || true)
           if [ -n "$contents" ]; then
             echo "::error::image contains data under /work/snapshots or /work/output:"
             echo "$contents"
