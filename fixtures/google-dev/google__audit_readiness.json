@@ -4,26 +4,26 @@
     "admin": {
       "available": true,
       "event_count_sampled": 50,
-      "oldest_sampled": "2026-09-22T09:30:37.437Z",
-      "newest_sampled": "2026-09-29T06:09:50.011Z"
+      "oldest_sampled": "2026-09-23T14:17:48.378Z",
+      "newest_sampled": "2026-09-29T08:17:09.772Z"
     },
     "login": {
       "available": true,
       "event_count_sampled": 50,
-      "oldest_sampled": "2026-09-29T04:14:42.298Z",
-      "newest_sampled": "2026-09-29T06:09:40.968Z"
+      "oldest_sampled": "2026-09-29T04:23:12.132Z",
+      "newest_sampled": "2026-09-29T08:16:11.743Z"
     },
     "token": {
       "available": true,
       "event_count_sampled": 50,
-      "oldest_sampled": "2026-09-29T05:44:31.521Z",
-      "newest_sampled": "2026-09-29T06:26:06.215Z"
+      "oldest_sampled": "2026-09-29T07:35:50.986Z",
+      "newest_sampled": "2026-09-29T08:24:50.992Z"
     },
     "drive": {
       "available": true,
-      "event_count_sampled": 22,
+      "event_count_sampled": 31,
       "oldest_sampled": "2026-09-27T22:58:24.879Z",
-      "newest_sampled": "2026-09-29T06:12:50.113Z"
+      "newest_sampled": "2026-09-29T08:16:50.821Z"
     }
   }
 }

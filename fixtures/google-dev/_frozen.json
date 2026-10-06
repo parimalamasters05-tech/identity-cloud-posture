@@ -1,11 +1,11 @@
 {
   "note": "Frozen, pseudonymized copy of a live snapshot. Regenerate with `icp freeze-fixtures`; never edit by hand.",
-  "source_snapshot_id": "20260929T063729908Z-c43a7bfe",
+  "source_snapshot_id": "20260929T082517155Z-686ca914",
   "source_schema_version": "1.2",
   "tool_version": "0.1.0",
-  "frozen_at": "2026-09-29T06:54:31.809465+00:00",
-  "started_at": "2026-09-29T06:37:13.801383+00:00",
-  "collected_at": "2026-09-29T06:37:29.908944+00:00",
+  "frozen_at": "2026-10-06T17:42:14.977663+00:00",
+  "started_at": "2026-09-29T08:24:50.072988+00:00",
+  "collected_at": "2026-09-29T08:25:17.155381+00:00",
   "scopes_used": [
     "https://www.googleapis.com/auth/admin.directory.customer.readonly",
     "https://www.googleapis.com/auth/admin.directory.domain.readonly",
@@ -21,7 +21,7 @@
   ],
   "scopes_refused": [],
   "partial": {
-    "google.public_drive_items": "Public files owned by some accounts were not checked, because suspended or archived accounts cannot be searched: user05@tenant.example, user03@tenant.example. Files those accounts shared publicly can still be open to anyone with the link."
+    "google.public_drive_items": "Some accounts' Drive could not be searched directly (suspended or archived: user08@tenant.example, user05@tenant.example, user03@tenant.example). Their files made public in the last 180 days were found from Google's Drive audit log instead; files they made public before that could not be checked and may still be open to anyone with the link."
   },
   "errors": [],
   "pseudonymized": {

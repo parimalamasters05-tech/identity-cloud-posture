@@ -1,0 +1,729 @@
+{
+  "frozen-dev": [
+    {
+      "affected": [
+        "900000000000000000001",
+        "900000000000000000010"
+      ],
+      "confidence": "confirmed",
+      "effort_hours": 1.0,
+      "evidence": [
+        "admin02@tenant.example is an administrator and has not enrolled in two-step verification.",
+        "user01@tenant.example is an administrator and has not enrolled in two-step verification."
+      ],
+      "finding_id": "073f920daa2b3fd5",
+      "framework_refs": [
+        "PR.AA-03",
+        "PR.AA-05"
+      ],
+      "remediation_key": "mfa.enforce_admins",
+      "risk_score": 70.74,
+      "rule_id": "GWS-MFA-001",
+      "severity": "critical",
+      "title": "2 administrator accounts with no second factor enrolled"
+    },
+    {
+      "affected": [
+        "900000000000000000002",
+        "900000000000000000004",
+        "900000000000000000006",
+        "900000000000000000007"
+      ],
+      "confidence": "confirmed",
+      "effort_hours": 1.4,
+      "evidence": [
+        "4 active staff accounts (not administrators) have not enrolled in two-step verification."
+      ],
+      "finding_id": "9f0c8837f03e50b9",
+      "framework_refs": [
+        "PR.AA-03"
+      ],
+      "remediation_key": "mfa.enforce_all_users",
+      "risk_score": 30.27,
+      "rule_id": "GWS-MFA-002",
+      "severity": "high",
+      "title": "4 of 8 active accounts have no second factor (50.0% coverage)"
+    },
+    {
+      "affected": [
+        "900000000000000000011"
+      ],
+      "confidence": "high",
+      "effort_hours": 1.5,
+      "evidence": [
+        "user09@tenant.example has two-step verification but no security key or passkey registered, so the second step is a text message, an authenticator code or a phone prompt, all of which a fake sign-in page can pass on to an attacker in real time. Based on Google's security report for 27 September 2026, the latest Google had published. Google releases this report one to three days late, so a security key or passkey added after that date is not reflected."
+      ],
+      "finding_id": "7b5cd5fa8708a114",
+      "framework_refs": [
+        "PR.AA-03"
+      ],
+      "remediation_key": "mfa.security_keys_for_admins",
+      "risk_score": 38.0,
+      "rule_id": "GWS-MFA-003",
+      "severity": "high",
+      "title": "1 administrator account using a second factor that can be phished"
+    },
+    {
+      "affected": [
+        "900000000000000000009"
+      ],
+      "confidence": "confirmed",
+      "effort_hours": 1.0,
+      "evidence": [
+        "'Apollo' holds 2 broad permissions over the data of 1 person, 12% of active staff."
+      ],
+      "finding_id": "1aa2a90afec9f93d",
+      "framework_refs": [
+        "PR.AA-05",
+        "PR.DS-01"
+      ],
+      "remediation_key": "oauth.review_broad_scope_apps",
+      "risk_score": 40.0,
+      "rule_id": "GWS-OAU-002",
+      "severity": "high",
+      "title": "'Apollo' can read and change organization data for 1 user"
+    },
+    {
+      "affected": [
+        "900000000000000000009"
+      ],
+      "confidence": "medium",
+      "effort_hours": 1.0,
+      "evidence": [
+        "'Apollo' was connected by 1 person with wide access to organization data. Tools adopted by one person and never reviewed are the most common source of forgotten access."
+      ],
+      "finding_id": "5af13d0ba1c0d49c",
+      "framework_refs": [
+        "ID.AM-05"
+      ],
+      "remediation_key": "oauth.review_shadow_it",
+      "risk_score": 16.32,
+      "rule_id": "GWS-OAU-004",
+      "severity": "medium",
+      "title": "'Apollo' holds broad access but is used by only 1 person"
+    },
+    {
+      "affected": [
+        "drive-item-01"
+      ],
+      "confidence": "confirmed",
+      "effort_hours": 0.35,
+      "evidence": [
+        "1 Drive item can be opened by anyone with the link. Link sharing outlasts staff departures and needs no sign-in."
+      ],
+      "finding_id": "8fffe32093b73ba8",
+      "framework_refs": [
+        "PR.DS-01",
+        "PR.AA-05"
+      ],
+      "remediation_key": "sharing.restrict_public_links",
+      "risk_score": 40.0,
+      "rule_id": "GWS-SHR-001",
+      "severity": "critical",
+      "title": "1 Drive item shared with anyone who has the link"
+    },
+    {
+      "affected": [
+        "900000000000000000003",
+        "900000000000000000005",
+        "900000000000000000008"
+      ],
+      "confidence": "medium",
+      "effort_hours": 0.8,
+      "evidence": [
+        "3 accounts are suspended but not archived or deleted. Suspension retains the account's data and any tokens it holds."
+      ],
+      "finding_id": "f89ac49c3d642993",
+      "framework_refs": [
+        "PR.AA-01"
+      ],
+      "remediation_key": "accounts.review_suspended",
+      "risk_score": 7.94,
+      "rule_id": "GWS-STA-003",
+      "severity": "low",
+      "title": "3 suspended accounts still present in the directory"
+    },
+    {
+      "affected": [
+        "900000000000000000009"
+      ],
+      "confidence": "high",
+      "effort_hours": 1.5,
+      "evidence": [
+        "An administrator granted 'Apollo' broad data access. An application authorized by an admin inherits the reach of that account's mailbox and files, which is wider than for other staff."
+      ],
+      "finding_id": "7aaba1db47c47326",
+      "framework_refs": [
+        "PR.AA-05"
+      ],
+      "remediation_key": "apps.review_admin_authorized",
+      "risk_score": 38.0,
+      "rule_id": "GWS-SVC-002",
+      "severity": "high",
+      "title": "'Apollo' was authorized by an administrator with broad access"
+    },
+    {
+      "affected": [
+        "GWS-OAU-005"
+      ],
+      "confidence": "confirmed",
+      "effort_hours": 0.5,
+      "evidence": [
+        "This one check could not be evaluated; the other checks in its area ran normally. Its absence from the findings list is not a pass. Reason: Google's token audit log for this organization records when applications were authorized and revoked, but not when they were used, so unused access cannot be told apart from used access. Recording of usage events may depend on the Workspace edition."
+      ],
+      "finding_id": "45f19e674581369a",
+      "framework_refs": [],
+      "remediation_key": "coverage.restore_access",
+      "risk_score": 1.0,
+      "rule_id": "ICP-COVERAGE-002",
+      "severity": "info",
+      "title": "Not assessed: applications holding access with no recorded use"
+    },
+    {
+      "affected": [
+        "partial:google.public_drive_items"
+      ],
+      "confidence": "confirmed",
+      "effort_hours": 0.5,
+      "evidence": [
+        "These checks ran on incomplete data. Their findings stand, but a clean result in this area is not proof that nothing is wrong. Reason: Some accounts' Drive could not be searched directly (suspended or archived: user08@tenant.example, user05@tenant.example, user03@tenant.example). Their files made public in the last 180 days were found from Google's Drive audit log instead; files they made public before that could not be checked and may still be open to anyone with the link."
+      ],
+      "finding_id": "7e51b6d2a3b3834b",
+      "framework_refs": [],
+      "remediation_key": "coverage.restore_access",
+      "risk_score": 1.0,
+      "rule_id": "ICP-COVERAGE-003",
+      "severity": "info",
+      "title": "Partly assessed: external sharing"
+    }
+  ],
+  "synthetic": [
+    {
+      "affected": [
+        "100000000000000000003"
+      ],
+      "confidence": "high",
+      "effort_hours": 0.75,
+      "evidence": [
+        "former.consultant@dev-icp.example holds admin privileges; last signed in 2026-05-04."
+      ],
+      "finding_id": "5f4b79ff7b6169c6",
+      "framework_refs": [
+        "PR.AA-05",
+        "ID.AM-05"
+      ],
+      "remediation_key": "admin.remove_dormant_admin_rights",
+      "risk_score": 38.0,
+      "rule_id": "GWS-ADM-002",
+      "severity": "high",
+      "title": "1 administrator account unused for 45+ days but still holding full privileges"
+    },
+    {
+      "affected": [
+        "login"
+      ],
+      "confidence": "confirmed",
+      "effort_hours": 2.0,
+      "evidence": [
+        "The login activity stream returned no data. Without it, administrative changes and sign-in activity cannot be reconstructed after an incident."
+      ],
+      "finding_id": "de2a7333613a2eb3",
+      "framework_refs": [
+        "DE.AE-03",
+        "PR.PS-04"
+      ],
+      "remediation_key": "logging.enable_audit_streams",
+      "risk_score": 25.0,
+      "rule_id": "GWS-LOG-001",
+      "severity": "high",
+      "title": "1 essential audit stream could not be read"
+    },
+    {
+      "affected": [
+        "100000000000000000002"
+      ],
+      "confidence": "confirmed",
+      "effort_hours": 0.75,
+      "evidence": [
+        "sam.okafor@dev-icp.example is an administrator and has not enrolled in two-step verification."
+      ],
+      "finding_id": "073f920daa2b3fd5",
+      "framework_refs": [
+        "PR.AA-03",
+        "PR.AA-05"
+      ],
+      "remediation_key": "mfa.enforce_admins",
+      "risk_score": 64.0,
+      "rule_id": "GWS-MFA-001",
+      "severity": "critical",
+      "title": "1 administrator account with no second factor enrolled"
+    },
+    {
+      "affected": [
+        "100000000000000000030",
+        "100000000000000000031",
+        "100000000000000000032",
+        "100000000000000000033",
+        "100000000000000000034",
+        "100000000000000000035",
+        "100000000000000000050",
+        "100000000000000000051"
+      ],
+      "confidence": "confirmed",
+      "effort_hours": 1.8,
+      "evidence": [
+        "8 active staff accounts (not administrators) have not enrolled in two-step verification."
+      ],
+      "finding_id": "9f0c8837f03e50b9",
+      "framework_refs": [
+        "PR.AA-03"
+      ],
+      "remediation_key": "mfa.enforce_all_users",
+      "risk_score": 32.9,
+      "rule_id": "GWS-MFA-002",
+      "severity": "high",
+      "title": "8 of 32 active accounts have no second factor (75.0% coverage)"
+    },
+    {
+      "affected": [
+        "100000000000000000003",
+        "100000000000000000004"
+      ],
+      "confidence": "high",
+      "effort_hours": 2.0,
+      "evidence": [
+        "former.consultant@dev-icp.example has two-step verification but no security key or passkey registered, so the second step is a text message, an authenticator code or a phone prompt, all of which a fake sign-in page can pass on to an attacker in real time. Based on Google's security report for 30 August 2026, the latest Google had published. Google releases this report one to three days late, so a security key or passkey added after that date is not reflected.",
+        "priya.menon@dev-icp.example has two-step verification but no security key or passkey registered, so the second step is a text message, an authenticator code or a phone prompt, all of which a fake sign-in page can pass on to an attacker in real time. Based on Google's security report for 30 August 2026, the latest Google had published. Google releases this report one to three days late, so a security key or passkey added after that date is not reflected."
+      ],
+      "finding_id": "7b5cd5fa8708a114",
+      "framework_refs": [
+        "PR.AA-03"
+      ],
+      "remediation_key": "mfa.security_keys_for_admins",
+      "risk_score": 42.0,
+      "rule_id": "GWS-MFA-003",
+      "severity": "high",
+      "title": "2 administrator accounts using a second factor that can be phished"
+    },
+    {
+      "affected": [
+        "100000000000000000060",
+        "100000000000000000061"
+      ],
+      "confidence": "confirmed",
+      "effort_hours": 0.7,
+      "evidence": [
+        "'NoteTaker AI' still holds 2 permissions granted by departed.finance@dev-icp.example, whose account is suspended or archived. Suspending an account does not take back access it already gave to applications.",
+        "'ExpenseTracker' still holds 2 permissions granted by departed.ops@dev-icp.example, whose account is suspended or archived. Suspending an account does not take back access it already gave to applications."
+      ],
+      "finding_id": "561d6764e5cf39e5",
+      "framework_refs": [
+        "PR.AA-01",
+        "PR.AA-05",
+        "ID.AM-05"
+      ],
+      "remediation_key": "oauth.revoke_suspended_user_grants",
+      "risk_score": 44.21,
+      "rule_id": "GWS-OAU-001",
+      "severity": "critical",
+      "title": "2 applications still authorized by 2 suspended or archived accounts"
+    },
+    {
+      "affected": [
+        "100000000000000000001"
+      ],
+      "confidence": "confirmed",
+      "effort_hours": 1.0,
+      "evidence": [
+        "'LegacySync Connector' holds 2 broad permissions over the data of 1 person, 3% of active staff."
+      ],
+      "finding_id": "0825d981052d5e44",
+      "framework_refs": [
+        "PR.AA-05",
+        "PR.DS-01"
+      ],
+      "remediation_key": "oauth.review_broad_scope_apps",
+      "risk_score": 40.0,
+      "rule_id": "GWS-OAU-002",
+      "severity": "high",
+      "title": "'LegacySync Connector' can read and change organization data for 1 user"
+    },
+    {
+      "affected": [
+        "100000000000000000061"
+      ],
+      "confidence": "confirmed",
+      "effort_hours": 1.0,
+      "evidence": [
+        "'ExpenseTracker' holds 2 broad permissions over the data of 1 person, 3% of active staff."
+      ],
+      "finding_id": "7f427dc93f35d5dc",
+      "framework_refs": [
+        "PR.AA-05",
+        "PR.DS-01"
+      ],
+      "remediation_key": "oauth.review_broad_scope_apps",
+      "risk_score": 25.0,
+      "rule_id": "GWS-OAU-002",
+      "severity": "high",
+      "title": "'ExpenseTracker' can read and change organization data for 1 user"
+    },
+    {
+      "affected": [
+        "100000000000000000020"
+      ],
+      "confidence": "confirmed",
+      "effort_hours": 1.0,
+      "evidence": [
+        "'InboxCleaner Pro' holds 1 broad permission over the data of 1 person, 3% of active staff."
+      ],
+      "finding_id": "b0ab489f7a45ddc3",
+      "framework_refs": [
+        "PR.AA-05",
+        "PR.DS-01"
+      ],
+      "remediation_key": "oauth.review_broad_scope_apps",
+      "risk_score": 25.0,
+      "rule_id": "GWS-OAU-002",
+      "severity": "high",
+      "title": "'InboxCleaner Pro' can read and change organization data for 1 user"
+    },
+    {
+      "affected": [
+        "100000000000000000010",
+        "100000000000000000011",
+        "100000000000000000012",
+        "100000000000000000013",
+        "100000000000000000014",
+        "100000000000000000015",
+        "100000000000000000016",
+        "100000000000000000017",
+        "100000000000000000018",
+        "100000000000000000019",
+        "100000000000000000020",
+        "100000000000000000021",
+        "100000000000000000060"
+      ],
+      "confidence": "confirmed",
+      "effort_hours": 1.0,
+      "evidence": [
+        "'NoteTaker AI' holds 3 broad permissions over the data of 13 people, 41% of active staff."
+      ],
+      "finding_id": "bb5f170b9ac7f29c",
+      "framework_refs": [
+        "PR.AA-05",
+        "PR.DS-01"
+      ],
+      "remediation_key": "oauth.review_broad_scope_apps",
+      "risk_score": 34.75,
+      "rule_id": "GWS-OAU-002",
+      "severity": "high",
+      "title": "'NoteTaker AI' can read and change organization data for 13 users"
+    },
+    {
+      "affected": [
+        "100000000000000000018"
+      ],
+      "confidence": "confirmed",
+      "effort_hours": 1.0,
+      "evidence": [
+        "'999000111222.apps.googleusercontent.com' holds 1 broad permission over the data of 1 person, 3% of active staff."
+      ],
+      "finding_id": "c6b0155b89855bd8",
+      "framework_refs": [
+        "PR.AA-05",
+        "PR.DS-01"
+      ],
+      "remediation_key": "oauth.review_broad_scope_apps",
+      "risk_score": 25.0,
+      "rule_id": "GWS-OAU-002",
+      "severity": "high",
+      "title": "'999000111222.apps.googleusercontent.com' can read organization data for 1 user"
+    },
+    {
+      "affected": [
+        "100000000000000000018"
+      ],
+      "confidence": "high",
+      "effort_hours": 1.5,
+      "evidence": [
+        "Google reports this client as anonymous: it is not registered with Google, so it carries no publisher identity at all. (This is not Google's app-verification status, which the API does not expose.) Confirm with the IT contact whether it is a known internal script before revoking."
+      ],
+      "finding_id": "f6b1381b0b46887e",
+      "framework_refs": [
+        "ID.AM-05",
+        "PR.AA-05"
+      ],
+      "remediation_key": "oauth.investigate_unverified_apps",
+      "risk_score": 23.75,
+      "rule_id": "GWS-OAU-003",
+      "severity": "high",
+      "title": "Unregistered application (999000111222.apps.google) authorized by 1 user"
+    },
+    {
+      "affected": [
+        "100000000000000000018"
+      ],
+      "confidence": "medium",
+      "effort_hours": 1.0,
+      "evidence": [
+        "'999000111222.apps.googleusercontent.com' was connected by 1 person with wide access to organization data. Tools adopted by one person and never reviewed are the most common source of forgotten access."
+      ],
+      "finding_id": "15aa414784058ef5",
+      "framework_refs": [
+        "ID.AM-05"
+      ],
+      "remediation_key": "oauth.review_shadow_it",
+      "risk_score": 10.2,
+      "rule_id": "GWS-OAU-004",
+      "severity": "medium",
+      "title": "'999000111222.apps.googleusercontent.com' holds broad access but is used by only 1 person"
+    },
+    {
+      "affected": [
+        "100000000000000000020"
+      ],
+      "confidence": "medium",
+      "effort_hours": 1.0,
+      "evidence": [
+        "'InboxCleaner Pro' was connected by 1 person with wide access to organization data. Tools adopted by one person and never reviewed are the most common source of forgotten access."
+      ],
+      "finding_id": "5e36da79066e9b9c",
+      "framework_refs": [
+        "ID.AM-05"
+      ],
+      "remediation_key": "oauth.review_shadow_it",
+      "risk_score": 10.2,
+      "rule_id": "GWS-OAU-004",
+      "severity": "medium",
+      "title": "'InboxCleaner Pro' holds broad access but is used by only 1 person"
+    },
+    {
+      "affected": [
+        "100000000000000000061"
+      ],
+      "confidence": "medium",
+      "effort_hours": 1.0,
+      "evidence": [
+        "'ExpenseTracker' was connected by 1 person with wide access to organization data. Tools adopted by one person and never reviewed are the most common source of forgotten access."
+      ],
+      "finding_id": "68b2b5b17cd0df21",
+      "framework_refs": [
+        "ID.AM-05"
+      ],
+      "remediation_key": "oauth.review_shadow_it",
+      "risk_score": 10.2,
+      "rule_id": "GWS-OAU-004",
+      "severity": "medium",
+      "title": "'ExpenseTracker' holds broad access but is used by only 1 person"
+    },
+    {
+      "affected": [
+        "100000000000000000001"
+      ],
+      "confidence": "medium",
+      "effort_hours": 1.0,
+      "evidence": [
+        "'LegacySync Connector' was connected by 1 person with wide access to organization data. Tools adopted by one person and never reviewed are the most common source of forgotten access."
+      ],
+      "finding_id": "bf5fc82deaac1e05",
+      "framework_refs": [
+        "ID.AM-05"
+      ],
+      "remediation_key": "oauth.review_shadow_it",
+      "risk_score": 16.32,
+      "rule_id": "GWS-OAU-004",
+      "severity": "medium",
+      "title": "'LegacySync Connector' holds broad access but is used by only 1 person"
+    },
+    {
+      "affected": [
+        "100000000000000000020"
+      ],
+      "confidence": "high",
+      "effort_hours": 1.0,
+      "evidence": [
+        "'InboxCleaner Pro' is authorized by 1 account and the token audit log shows no use of it since 2026-03-05 (last used 2026-04-04)."
+      ],
+      "finding_id": "eea8af384bbf1d70",
+      "framework_refs": [
+        "PR.AA-05"
+      ],
+      "remediation_key": "oauth.revoke_dormant_grants",
+      "risk_score": 11.4,
+      "rule_id": "GWS-OAU-005",
+      "severity": "medium",
+      "title": "1 application holding access with no recorded use in 90+ days"
+    },
+    {
+      "affected": [
+        "dr001",
+        "dr002",
+        "dr003"
+      ],
+      "confidence": "confirmed",
+      "effort_hours": 0.55,
+      "evidence": [
+        "3 Drive items can be opened by anyone with the link. Link sharing outlasts staff departures and needs no sign-in."
+      ],
+      "finding_id": "8fffe32093b73ba8",
+      "framework_refs": [
+        "PR.DS-01",
+        "PR.AA-05"
+      ],
+      "remediation_key": "sharing.restrict_public_links",
+      "risk_score": 46.68,
+      "rule_id": "GWS-SHR-001",
+      "severity": "critical",
+      "title": "3 Drive items shared with anyone who has the link"
+    },
+    {
+      "affected": [
+        "dev-icp.example"
+      ],
+      "confidence": "confirmed",
+      "effort_hours": 0.5,
+      "evidence": [
+        "Drive sharing for organizational unit orgUnits/fixture-root is set to ALLOWED with the 'warn when sharing outside' option off. The warning is a low-cost control that catches accidental external shares as they happen."
+      ],
+      "finding_id": "7dbf7fbbb2841505",
+      "framework_refs": [
+        "PR.DS-01"
+      ],
+      "remediation_key": "sharing.enable_external_warnings",
+      "risk_score": 12.0,
+      "rule_id": "GWS-SHR-002",
+      "severity": "medium",
+      "title": "External sharing is allowed with no warning prompt for staff"
+    },
+    {
+      "affected": [
+        "100000000000000000003",
+        "100000000000000000040",
+        "100000000000000000041",
+        "100000000000000000042",
+        "100000000000000000043",
+        "100000000000000000044"
+      ],
+      "confidence": "high",
+      "effort_hours": 2.0,
+      "evidence": [
+        "former.consultant@dev-icp.example last signed in 2026-05-04.",
+        "vic.nowak@dev-icp.example last signed in 2026-03-25.",
+        "wes.olsen@dev-icp.example last signed in 2026-03-24.",
+        "xena.abara@dev-icp.example last signed in 2026-03-23.",
+        "yuri.baros@dev-icp.example last signed in 2026-03-22.",
+        "zoe.carr@dev-icp.example last signed in 2026-03-21."
+      ],
+      "finding_id": "b52020319030ae60",
+      "framework_refs": [
+        "PR.AA-01",
+        "ID.AM-05"
+      ],
+      "remediation_key": "accounts.suspend_dormant",
+      "risk_score": 23.21,
+      "rule_id": "GWS-STA-001",
+      "severity": "medium",
+      "title": "6 active accounts with no sign-in for 90+ days"
+    },
+    {
+      "affected": [
+        "100000000000000000050",
+        "100000000000000000051"
+      ],
+      "confidence": "confirmed",
+      "effort_hours": 0.45,
+      "evidence": [
+        "new.starter.a@dev-icp.example was created 2026-02-13 and has no recorded sign-in.",
+        "project.placeholder@dev-icp.example was created 2026-02-03 and has no recorded sign-in."
+      ],
+      "finding_id": "a54038b8944e71a5",
+      "framework_refs": [
+        "PR.AA-01"
+      ],
+      "remediation_key": "accounts.remove_never_used",
+      "risk_score": 13.26,
+      "rule_id": "GWS-STA-002",
+      "severity": "medium",
+      "title": "2 accounts created over 30 days ago and never signed into"
+    },
+    {
+      "affected": [
+        "100000000000000000060",
+        "100000000000000000061"
+      ],
+      "confidence": "medium",
+      "effort_hours": 0.7,
+      "evidence": [
+        "2 accounts are suspended but not archived or deleted. Suspension retains the account's data and any tokens it holds."
+      ],
+      "finding_id": "f89ac49c3d642993",
+      "framework_refs": [
+        "PR.AA-01"
+      ],
+      "remediation_key": "accounts.review_suspended",
+      "risk_score": 4.7,
+      "rule_id": "GWS-STA-003",
+      "severity": "low",
+      "title": "2 suspended accounts still present in the directory"
+    },
+    {
+      "affected": [
+        "100000000000000000001"
+      ],
+      "confidence": "confirmed",
+      "effort_hours": 2.0,
+      "evidence": [
+        "'LegacySync Connector' holds 1 administrator-level permission, granted by 1 person. With these it can act across the whole organization without asking anyone again."
+      ],
+      "finding_id": "62d51e848ac70210",
+      "framework_refs": [
+        "PR.AA-05",
+        "ID.AM-05"
+      ],
+      "remediation_key": "apps.revoke_admin_equivalent",
+      "risk_score": 64.0,
+      "rule_id": "GWS-SVC-001",
+      "severity": "critical",
+      "title": "'LegacySync Connector' holds administrator-equivalent access"
+    },
+    {
+      "affected": [
+        "100000000000000000001"
+      ],
+      "confidence": "high",
+      "effort_hours": 1.5,
+      "evidence": [
+        "An administrator granted 'LegacySync Connector' broad data access. An application authorized by an admin inherits the reach of that account's mailbox and files, which is wider than for other staff."
+      ],
+      "finding_id": "a4defa40705fe10c",
+      "framework_refs": [
+        "PR.AA-05"
+      ],
+      "remediation_key": "apps.review_admin_authorized",
+      "risk_score": 38.0,
+      "rule_id": "GWS-SVC-002",
+      "severity": "high",
+      "title": "'LegacySync Connector' was authorized by an administrator with broad access"
+    },
+    {
+      "affected": [
+        "100000000000000000004"
+      ],
+      "confidence": "high",
+      "effort_hours": 0.5,
+      "evidence": [
+        "priya.menon@dev-icp.example is signed in to 'Google Cloud SDK', a Google tool rather than an outside vendor, with administrator-level access. The login stays valid on that computer until it is revoked."
+      ],
+      "finding_id": "44f1d945f9349d88",
+      "framework_refs": [
+        "PR.AA-05"
+      ],
+      "remediation_key": "apps.revoke_developer_tool_logins",
+      "risk_score": 18.24,
+      "rule_id": "GWS-SVC-003",
+      "severity": "medium",
+      "title": "1 account signed in to Google's developer tools (Google Cloud SDK) with broad access"
+    }
+  ]
+}

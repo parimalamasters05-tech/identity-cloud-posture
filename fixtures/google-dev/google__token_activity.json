@@ -1,12 +1,12 @@
 {
   "window_days": 180,
-  "window_start": "2026-04-02T06:37:17.421293+00:00",
-  "events_read": 294,
+  "window_start": "2026-04-02T08:24:53.801960+00:00",
+  "events_read": 413,
   "oldest_event": "2026-09-16T22:55:11.842Z",
-  "newest_event": "2026-09-29T06:26:06.215Z",
+  "newest_event": "2026-09-29T08:19:28.078Z",
   "truncated": false,
   "event_names": {
-    "authorize": 279,
+    "authorize": 398,
     "revoke": 15
   },
   "activity_recorded": false,
@@ -23,7 +23,7 @@
       "client_id": "800000000000000000001",
       "app_name": "Service account 01",
       "user": "user08@tenant.example",
-      "last_authorized": "2026-09-29T06:13:36.694Z",
+      "last_authorized": "2026-09-29T07:16:06.396Z",
       "last_revoked": null,
       "last_activity": null
     },
@@ -31,7 +31,7 @@
       "client_id": "800000000000000000001",
       "app_name": "Service account 01",
       "user": "admin02@tenant.example",
-      "last_authorized": "2026-09-29T06:13:36.787Z",
+      "last_authorized": "2026-09-29T08:18:09.542Z",
       "last_revoked": null,
       "last_activity": null
     },
@@ -39,7 +39,7 @@
       "client_id": "800000000000000000001",
       "app_name": "Service account 01",
       "user": "user09@tenant.example",
-      "last_authorized": "2026-09-29T06:13:36.712Z",
+      "last_authorized": "2026-09-29T08:18:09.531Z",
       "last_revoked": null,
       "last_activity": null
     },
@@ -47,7 +47,7 @@
       "client_id": "800000000000000000001",
       "app_name": "Service account 01",
       "user": "admin01@tenant.example",
-      "last_authorized": "2026-09-29T06:26:06.215Z",
+      "last_authorized": "2026-09-29T08:19:28.078Z",
       "last_revoked": null,
       "last_activity": null
     },
@@ -55,7 +55,7 @@
       "client_id": "800000000000000000001",
       "app_name": "Service account 01",
       "user": "user04@tenant.example",
-      "last_authorized": "2026-09-29T06:13:36.799Z",
+      "last_authorized": "2026-09-29T08:18:09.593Z",
       "last_revoked": null,
       "last_activity": null
     },
@@ -63,7 +63,7 @@
       "client_id": "800000000000000000001",
       "app_name": "Service account 01",
       "user": "user07@tenant.example",
-      "last_authorized": "2026-09-29T06:13:36.830Z",
+      "last_authorized": "2026-09-29T08:18:09.685Z",
       "last_revoked": null,
       "last_activity": null
     },
@@ -71,7 +71,7 @@
       "client_id": "800000000000000000001",
       "app_name": "Service account 01",
       "user": "user06@tenant.example",
-      "last_authorized": "2026-09-29T06:13:36.749Z",
+      "last_authorized": "2026-09-29T08:18:09.580Z",
       "last_revoked": null,
       "last_activity": null
     },
@@ -79,7 +79,7 @@
       "client_id": "800000000000000000001",
       "app_name": "Service account 01",
       "user": "user02@tenant.example",
-      "last_authorized": "2026-09-29T06:13:36.768Z",
+      "last_authorized": "2026-09-29T08:18:09.632Z",
       "last_revoked": null,
       "last_activity": null
     },
@@ -87,7 +87,7 @@
       "client_id": "800000000000000000001",
       "app_name": "Service account 01",
       "user": "user01@tenant.example",
-      "last_authorized": "2026-09-29T06:13:37.212Z",
+      "last_authorized": "2026-09-29T08:18:09.678Z",
       "last_revoked": null,
       "last_activity": null
     },
@@ -135,7 +135,7 @@
       "client_id": "77185425430.apps.googleusercontent.com",
       "app_name": "Google Chrome",
       "user": "admin01@tenant.example",
-      "last_authorized": "2026-09-29T06:09:40.356Z",
+      "last_authorized": "2026-09-29T08:16:11.076Z",
       "last_revoked": "2026-09-28T05:25:17.451Z",
       "last_activity": null
     }

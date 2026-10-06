@@ -5,9 +5,10 @@ This set proves the rules read what Google actually returns: real field shapes,
 real first-party client IDs, a real passkey. Every assertion below is a fact
 about that tenant when it was frozen, checked by hand.
 
-Frozen from snapshot 20260929T063729908Z (29 Sep 2026, 06:37 UTC), after the
-day's live tests: two admins demoted to delegated roles and enrolled in 2SV,
-Hunter and the OAuth Playground grants revoked, the security-key report fix.
+Frozen from snapshot 20260929T082517155Z (29 Sep 2026, 08:25 UTC), the run
+behind the week-4 submission report: admins demoted and enrolled, Hunter and
+the Playground's broad grants revoked, a delegated admin suspended after its
+public file was made private again, developer-tool logins removed.
 
 After `icp freeze-fixtures` these expectations must be reviewed and updated:
 a failure then means "the tenant changed", which is the point of pinning it.
@@ -59,10 +60,10 @@ def dev_by_rule(dev_result) -> dict[str, list]:
 
 
 def test_the_run_facts_survive_the_freeze(dev_snapshot, dev_tenant):
-    assert dev_snapshot.collected_at == datetime.fromisoformat("2026-09-29T06:37:29.908944+00:00")
+    assert dev_snapshot.collected_at == datetime.fromisoformat("2026-09-29T08:25:17.155381+00:00")
     # The security-key report works now: nothing degraded.
     assert dev_snapshot.degraded_collectors() == ()
-    # Drive could not be searched for the two suspended accounts.
+    # Drive could not be searched for the three suspended accounts.
     assert list(dev_snapshot.partial) == ["google.public_drive_items"]
     # The profile name is the domain; both freeze to the same alias.
     assert dev_tenant.organization_name == dev_tenant.primary_domain == "tenant.example"
@@ -83,10 +84,10 @@ EXPECTED = {
     "GWS-MFA-001": {at("admin02"), at("user01")},
     # active non-admins without 2SV; the two suspended accounts are excluded
     "GWS-MFA-002": {at("user02"), at("user04"), at("user06"), at("user07")},
-    # the two delegated admins enrolled with a phone prompt or code; admin01
-    # has a passkey and is correctly absent
-    "GWS-MFA-003": {at("user08"), at("user09")},
-    "GWS-STA-003": {at("user03"), at("user05")},
+    # the active delegated admin enrolled with a phone prompt or code (user08,
+    # the other, is suspended and out of scope); admin01 has a passkey
+    "GWS-MFA-003": {at("user09")},
+    "GWS-STA-003": {at("user03"), at("user05"), at("user08")},
 }
 
 
@@ -117,10 +118,11 @@ def test_age_based_checks_do_not_fire_on_a_week_old_tenant(dev_by_rule, rule_id)
     assert rule_id not in dev_by_rule
 
 
-def test_gcloud_and_adc_logins_are_one_developer_tool_finding(dev_by_rule):
-    findings = dev_by_rule["GWS-SVC-003"]
-    assert len(findings) == 1
-    assert entity_labels(findings[0]) == {at("admin01")}
+def test_removed_developer_tool_logins_leave_no_finding(dev_tenant, dev_by_rule):
+    """gcloud and ADC logins (from Cloud Shell) were removed at
+    myaccount.google.com before this run; SVC-003 resolved live."""
+    assert "GWS-SVC-003" not in dev_by_rule
+    assert not any(a.first_party_kind == "developer_tool" for a in dev_tenant.applications)
 
 
 def test_sign_in_only_and_device_grants_are_never_flagged(dev_result):
@@ -161,20 +163,21 @@ def test_inventory_lists_every_app_with_its_kind(dev_tenant):
         "Google OAuth 2.0 Playground",
         "Google Chrome",
         "Android device",
-        "Google Cloud SDK",
-        "Google Auth Library",
     }
     assert apps["Google Chrome"].first_party_kind == "device_sign_in"
     assert apps["Android device"].first_party_kind == "device_sign_in"
-    assert apps["Google Cloud SDK"].first_party_kind == "developer_tool"
     assert apps["Apollo"].first_party_kind is None
 
 
 # -- family 5: sharing -----------------------------------------------------------
 
 
-def test_public_files_found_across_owners(dev_by_rule):
-    assert entity_labels(dev_by_rule["GWS-SHR-001"][0]) == {"Public item 01", "Public item 02"}
+def test_only_the_file_still_public_is_reported(dev_by_rule):
+    """Two files were made private before this run, one of them by an owner
+    who was then suspended: the audit log's latest event is "private", so it
+    is correctly absent."""
+    [finding] = dev_by_rule["GWS-SHR-001"]
+    assert entity_labels(finding) == {"Public item 01"}
     # The warning is on again for every department.
     assert "GWS-SHR-002" not in dev_by_rule
 
@@ -182,4 +185,5 @@ def test_public_files_found_across_owners(dev_by_rule):
 def test_suspended_owners_are_named_as_not_searched(dev_result):
     note = next(f for f in dev_result.findings if f.rule_id == "ICP-COVERAGE-003")
     reason = note.evidence[0].summary
-    assert at("user03") in reason and at("user05") in reason
+    assert all(at(u) in reason for u in ("user03", "user05", "user08"))
+    assert "audit log" in reason

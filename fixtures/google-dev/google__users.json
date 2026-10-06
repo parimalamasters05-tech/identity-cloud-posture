@@ -5,7 +5,7 @@
     "name": {
       "fullName": "User 08"
     },
-    "suspended": false,
+    "suspended": true,
     "archived": false,
     "isAdmin": false,
     "isDelegatedAdmin": true,
