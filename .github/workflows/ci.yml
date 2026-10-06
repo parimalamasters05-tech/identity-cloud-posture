@@ -66,7 +66,10 @@ jobs:
         run: bandit -c pyproject.toml -r src -ll
 
       - name: pip-audit (known vulnerabilities in dependencies)
-        run: pip-audit --strict --desc
+        run: |
+          # Audit the installed dependencies; the project itself is not on PyPI.
+          pip freeze --exclude-editable > "$RUNNER_TEMP/requirements-audit.txt"
+          pip-audit --strict --desc -r "$RUNNER_TEMP/requirements-audit.txt"
 
       - name: gitleaks (committed secrets)
         uses: gitleaks/gitleaks-action@v2

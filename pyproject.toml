@@ -95,6 +95,9 @@ skips = ["B101"]
 
 [tool.pytest.ini_options]
 testpaths = ["tests"]
+# Tests import shared helpers as `tests.conftest`; make that resolvable in CI
+# the same way it is locally.
+pythonpath = ["."]
 addopts = "-q --strict-markers"
 markers = [
   "security: controls that must never regress",
