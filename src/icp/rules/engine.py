@@ -68,6 +68,9 @@ def assess(
     for rule_cls in all_rules():
         rule: Rule = rule_cls()
 
+        if tenant.platform not in rule.platforms:
+            continue
+
         if not tenant.is_assessable(rule.check_family):
             continue
 

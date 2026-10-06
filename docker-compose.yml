@@ -144,3 +144,19 @@ services:
       - ./config:/work/config:ro
       - ${ICP_HOST_M365_KEY_FILE:?set ICP_HOST_M365_KEY_FILE in .env to the absolute host path of the Microsoft 365 private key}:/run/secrets/m365-key.pem:ro
     command: [preflight-m365]
+
+  # --------------------------------------------------------------------------
+  # Microsoft 365 collection (week 5). The only Microsoft service besides the
+  # preflight that contacts a tenant. Same key mount, same read-only guard.
+  # --------------------------------------------------------------------------
+  collect-m365:
+    <<: *hardening
+    env_file: [.env]
+    environment:
+      ICP_M365_KEY_FILE: /run/secrets/m365-key.pem
+    volumes:
+      - ./snapshots:/work/snapshots
+      - ./output:/work/output
+      - ./config:/work/config:ro
+      - ${ICP_HOST_M365_KEY_FILE:?set ICP_HOST_M365_KEY_FILE in .env to the absolute host path of the Microsoft 365 private key}:/run/secrets/m365-key.pem:ro
+    command: [collect-m365]

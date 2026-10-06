@@ -131,7 +131,7 @@ def collect(ctx: click.Context, tenant: str | None, no_encrypt: bool, fixtures: 
 @click.pass_context
 def assess(ctx: click.Context, snapshot_path: Path | None, tenant: str | None) -> None:
     """Run the rules engine against a snapshot and write findings."""
-    from icp.normalizers.google import normalize
+    from icp.normalizers import normalize_snapshot as normalize
     from icp.rules import assess as run_rules
     from icp.storage.finding_store import FindingStore
     from icp.storage.snapshot_store import SnapshotStore
@@ -192,7 +192,7 @@ def report(
     engagement_ref: str,
 ) -> None:
     """Generate the client-facing report."""
-    from icp.normalizers.google import normalize
+    from icp.normalizers import normalize_snapshot as normalize
     from icp.reporting.renderer import ReportRenderer
     from icp.rules import assess as run_rules
     from icp.storage.snapshot_store import SnapshotStore
@@ -349,6 +349,81 @@ def preflight_m365() -> None:
     if any(not r.ok for r in results):
         _fail("Some permissions are not working; see FAIL lines above.")
     click.secho("All permissions work.", fg="green")
+
+
+@cli.command(name="collect-m365")
+@click.option("--no-encrypt", is_flag=True, help="Write the snapshot unencrypted (dev tenants only).")
+@click.pass_context
+def collect_m365(ctx: click.Context, no_encrypt: bool) -> None:
+    """Microsoft 365: read the tenant through Graph and write a snapshot.
+
+    Same contract as `collect`: read-only, encrypted at rest, with a call
+    trail to reconcile against the Entra audit log. Tenant label for file
+    names: ICP_M365_TENANT_LABEL (default "m365").
+    """
+    import os
+
+    from icp.collectors import microsoft as m365
+    from icp.security.audit_log import write_audit_trail
+    from icp.storage.snapshot_store import SnapshotStore
+
+    settings = _settings(ctx)
+    client = _m365_client()
+    try:
+        snapshot = m365.collect(client, tenant_id=os.environ.get("ICP_M365_TENANT_LABEL", "m365"))
+    except Exception as exc:
+        _fail(f"{type(exc).__name__}: {exc}")
+
+    encrypt = settings.encrypt_at_rest and not no_encrypt
+    try:
+        path = SnapshotStore(settings.snapshot_dir, encrypt=encrypt).save(snapshot)
+        trail = write_audit_trail(
+            settings.snapshot_dir / f"{snapshot.snapshot_id}.apicalls.jsonl",
+            list(snapshot.api_calls),
+            tenant_id=snapshot.tenant_id,
+        )
+    except Exception as exc:
+        _fail(f"{type(exc).__name__}: {exc}")
+
+    click.echo(f"Read-only call trail: {trail}")
+    click.secho(f"Snapshot written: {path}", fg="green")
+    verbs = ", ".join(sorted({c.method for c in snapshot.api_calls}))
+    click.echo(
+        f"  artifacts: {len(snapshot.artifacts)}   Graph requests: {len(snapshot.api_calls)} ({verbs})"
+        f"   sign-in requests: {client.auth_requests} (token only)"
+    )
+    if snapshot.started_at:
+        click.echo(
+            f"  collection window (UTC): {snapshot.started_at:%Y-%m-%d %H:%M:%S} to "
+            f"{snapshot.collected_at:%H:%M:%S}  -- filter the Entra audit log to this"
+        )
+    if snapshot.errors:
+        click.secho(f"  degraded collectors: {', '.join(snapshot.degraded_collectors())}", fg="yellow")
+        for e in snapshot.errors:
+            click.secho(f"    {e.collector}: {e.message}", fg="yellow")
+    for name, reason in snapshot.partial.items():
+        click.secho(f"  partial: {name}: {reason}", fg="yellow")
+
+
+def _m365_client():  # type: ignore[no-untyped-def]
+    import os
+
+    from icp.security.graph_readonly import GraphCredentials, GraphReadOnly
+
+    needed = ("ICP_M365_TENANT_ID", "ICP_M365_CLIENT_ID", "ICP_M365_CERT_THUMBPRINT", "ICP_M365_KEY_FILE")
+    missing = [v for v in needed if not os.environ.get(v)]
+    if missing:
+        _fail(f"Set {', '.join(missing)} in .env.")
+    try:
+        creds = GraphCredentials.from_files(
+            tenant_id=os.environ["ICP_M365_TENANT_ID"],
+            client_id=os.environ["ICP_M365_CLIENT_ID"],
+            thumbprint=os.environ["ICP_M365_CERT_THUMBPRINT"],
+            key_file=Path(os.environ["ICP_M365_KEY_FILE"]),
+        )
+    except OSError as exc:
+        _fail(f"Cannot read the Microsoft 365 private key: {exc}")
+    return GraphReadOnly(creds)
 
 
 @cli.command(name="validate-delta")

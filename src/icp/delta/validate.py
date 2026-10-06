@@ -21,7 +21,7 @@ from dataclasses import dataclass
 from icp.delta.compare import compare
 from icp.models.finding import Finding
 from icp.models.snapshot import Snapshot
-from icp.normalizers.google import normalize
+from icp.normalizers import normalize_snapshot as normalize
 from icp.rules import assess
 
 _READ_METHODS = frozenset({"GET", "HEAD"})

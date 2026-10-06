@@ -14,7 +14,7 @@ from dataclasses import dataclass, field
 from datetime import UTC, datetime
 from typing import Any
 
-from icp.models.enums import Assessability, CheckFamily, Confidence, Severity
+from icp.models.enums import Assessability, CheckFamily, Confidence, Platform, Severity
 from icp.models.finding import AffectedEntity, Evidence, Finding, build_finding_id
 from icp.models.identity import Identity
 from icp.normalizers.base import NormalizedTenant
@@ -68,6 +68,11 @@ class Rule(ABC):
     #: A degraded collector listed here skips this rule alone, with a coverage
     #: note, instead of silencing every rule in the family.
     requires_collectors: tuple[str, ...] = ()
+
+    #: Platforms this rule reads. A rule only runs against a tenant of one of
+    #: these platforms: a Google rule must never be judged against Microsoft
+    #: data that happens to fit the same normalized shape.
+    platforms: tuple[Platform, ...] = (Platform.GOOGLE_WORKSPACE,)
 
     @abstractmethod
     def evaluate(self, tenant: NormalizedTenant, ctx: RuleContext) -> list[Finding]:
