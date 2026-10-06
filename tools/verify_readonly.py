@@ -120,6 +120,10 @@ FORBIDDEN_HTTP_VERBS: frozenset[str] = frozenset({"POST", "PUT", "PATCH", "DELET
 VERB_EXEMPT: frozenset[str] = frozenset(
     {
         "src/icp/security/readonly.py",  # defines the block list itself
+        # Microsoft 365: the one token POST to this tenant's login endpoint.
+        # The module's own check_request refuses every other non-GET, and is
+        # unit-tested to do so. Nothing else may name a write verb.
+        "src/icp/security/graph_readonly.py",
         "tools/verify_readonly.py",
     }
 )

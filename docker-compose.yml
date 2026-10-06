@@ -127,3 +127,20 @@ services:
     network_mode: none
     env_file: [.env]
     command: [--help]
+
+  # --------------------------------------------------------------------------
+  # Microsoft 365 preflight (week 5). Certificate sign-in, then one GET per
+  # permission. The private key is mounted read-only from ICP_HOST_M365_KEY_FILE
+  # and is never copied into the image.
+  # --------------------------------------------------------------------------
+  preflight-m365:
+    <<: *hardening
+    env_file: [.env]
+    environment:
+      ICP_M365_KEY_FILE: /run/secrets/m365-key.pem
+    volumes:
+      - ./snapshots:/work/snapshots
+      - ./output:/work/output
+      - ./config:/work/config:ro
+      - ${ICP_HOST_M365_KEY_FILE:?set ICP_HOST_M365_KEY_FILE in .env to the absolute host path of the Microsoft 365 private key}:/run/secrets/m365-key.pem:ro
+    command: [preflight-m365]

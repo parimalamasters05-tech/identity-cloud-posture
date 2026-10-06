@@ -81,3 +81,7 @@ htmlcov/
 .idea/
 .vscode/
 .DS_Store
+*.pfx
+*.p12
+*.cer
+*.crt

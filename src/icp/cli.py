@@ -301,6 +301,56 @@ def delta(ctx: click.Context, previous: Path, current: Path) -> None:
     click.secho(f"Written: {out}", fg="green")
 
 
+@cli.command(name="preflight-m365")
+def preflight_m365() -> None:
+    """Microsoft 365: sign in with the certificate and try one read per permission.
+
+    Reads ICP_M365_TENANT_ID, ICP_M365_CLIENT_ID, ICP_M365_CERT_THUMBPRINT and
+    ICP_M365_KEY_FILE. Prints counts and Microsoft's error codes only.
+    """
+    import os
+
+    from icp.preflight_m365 import run
+    from icp.security.graph_readonly import GraphCredentials, GraphError, GraphReadOnly
+
+    missing = [
+        v
+        for v in (
+            "ICP_M365_TENANT_ID",
+            "ICP_M365_CLIENT_ID",
+            "ICP_M365_CERT_THUMBPRINT",
+            "ICP_M365_KEY_FILE",
+        )
+        if not os.environ.get(v)
+    ]
+    if missing:
+        _fail(f"Set {', '.join(missing)} in .env.")
+    creds = GraphCredentials.from_files(
+        tenant_id=os.environ["ICP_M365_TENANT_ID"],
+        client_id=os.environ["ICP_M365_CLIENT_ID"],
+        thumbprint=os.environ["ICP_M365_CERT_THUMBPRINT"],
+        key_file=Path(os.environ["ICP_M365_KEY_FILE"]),
+    )
+    client = GraphReadOnly(creds)
+    try:
+        results = run(client)
+    except GraphError as exc:  # sign-in itself failed
+        _fail(f"Sign-in to Microsoft failed: {exc}. Check the certificate upload, thumbprint and IDs.")
+
+    click.secho("Microsoft 365 preflight (one read per permission)", bold=True)
+    for r in results:
+        mark = click.style("OK  ", fg="green") if r.ok else click.style("FAIL", fg="red")
+        click.echo(f"  [{mark}] {r.probe.permission:<52} {r.probe.what}: {r.detail}")
+    verbs = sorted({c.method for c in client.calls})
+    click.echo(
+        f"  Graph requests: {len(client.calls)} ({', '.join(verbs)}); "
+        f"sign-in requests: {client.auth_requests} (token only)"
+    )
+    if any(not r.ok for r in results):
+        _fail("Some permissions are not working; see FAIL lines above.")
+    click.secho("All permissions work.", fg="green")
+
+
 @cli.command(name="validate-delta")
 @click.option(
     "--previous", required=True, type=click.Path(exists=True, path_type=Path), help="Earlier snapshot file."

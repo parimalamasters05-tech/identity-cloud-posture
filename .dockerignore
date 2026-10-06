@@ -38,3 +38,7 @@ build/
 dist/
 htmlcov/
 .coverage
+*.pfx
+*.p12
+*.cer
+*.crt
