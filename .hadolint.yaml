@@ -1,0 +1,10 @@
+# Dockerfile lint configuration (read by hadolint locally and in CI).
+#
+# Every rule stays on except one, with the reason recorded here.
+ignored:
+  # DL3008: pin apt package versions. Debian's archive drops superseded
+  # versions as soon as a security update ships, so exact pins break the build
+  # within weeks and, worse, hold back the security fixes the Trivy scan in CI
+  # exists to catch. The image instead tracks the current patched packages of
+  # its Debian release, and Trivy fails the build on any HIGH/CRITICAL finding.
+  - DL3008
