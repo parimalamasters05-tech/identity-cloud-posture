@@ -194,7 +194,10 @@ def test_keygen_emits_a_usable_key(workspace: Path):
     import base64
 
     result = run("keygen")
-    assert len(base64.b64decode(result.output.strip())) == 32
+    # stdout only: the "store this safely" warning goes to stderr, and newer
+    # Click versions mix stderr into `result.output`. A script piping the key
+    # into a secret manager reads stdout, so that is what must be exactly the key.
+    assert len(base64.b64decode(result.stdout.strip())) == 32
 
 
 def test_live_collection_fails_clearly_without_configuration(tmp_path: Path, monkeypatch):
