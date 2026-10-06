@@ -63,6 +63,16 @@ RUN groupadd --gid 10001 icp \
 
 COPY --from=builder /opt/venv /opt/venv
 
+# The package installers are build tools, not runtime ones. pip vendors its own
+# urllib3 and msgpack, and the image's Trivy scan found HIGH vulnerabilities in
+# those copies (and in an old setuptools) that the tool itself never loads.
+# Nothing installs packages at runtime, so remove them from the final image:
+# fewer tools for an attacker, nothing left for the scanner to flag.
+RUN /opt/venv/bin/python -m pip uninstall --yes --quiet pip setuptools wheel \
+    && /usr/local/bin/python3 -m pip uninstall --yes --quiet pip setuptools wheel \
+    && rm -f /usr/local/bin/pip /usr/local/bin/pip3* \
+    && ! /opt/venv/bin/python -c "import pip" 2>/dev/null
+
 ENV PATH="/opt/venv/bin:$PATH" \
     PYTHONDONTWRITEBYTECODE=1 \
     PYTHONUNBUFFERED=1 \
