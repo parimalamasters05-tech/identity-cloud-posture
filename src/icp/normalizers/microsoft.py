@@ -9,6 +9,7 @@ guests) go into the fields the Google normalizer leaves empty.
 from __future__ import annotations
 
 import logging
+from dataclasses import replace
 from datetime import datetime
 from functools import lru_cache
 from pathlib import Path
@@ -294,6 +295,41 @@ def _applications(tenant: NormalizedTenant) -> list[Application]:
                 suspended_users=sum(1 for u in users if u in people and people[u].suspended),
                 scopes=scopes,
                 max_tier=max((g.max_tier for g in grants), key=lambda t: t.weight),
+                last_authorized_at=None,
+                last_used_at=None,
+            )
+        )
+    # Apps holding access by themselves belong in the inventory too, labelled
+    # as such; the assessment's own app is listed so the client can remove it.
+    app_only: dict[str, list[AppOnlyGrant]] = {}
+    for held_grant in tenant.app_only_grants:
+        app_only.setdefault(held_grant.app_id, []).append(held_grant)
+    for app_id, held in app_only.items():
+        listed = next((a for a in apps if a.client_id == app_id), None)
+        if listed is not None:
+            # Both kinds of access (seen live: Backup Sync Test held app-only
+            # Mail.Read plus an admin-approved User.Read). Skipping it here once
+            # showed the app as "Sign-in only". Merge, so the highest access
+            # and the "works without a user" label show.
+            apps[apps.index(listed)] = replace(
+                listed,
+                first_party_kind="assessor" if held[0].is_assessor else "app_only",
+                scopes=tuple(sorted({*listed.scopes, *(h.permission for h in held)})),
+                max_tier=max((listed.max_tier, *(h.tier for h in held)), key=lambda t: t.weight),
+            )
+            continue
+        apps.append(
+            Application(
+                client_id=app_id,
+                name=held[0].app_name,
+                is_first_party=False,
+                first_party_kind="assessor" if held[0].is_assessor else "app_only",
+                is_anonymous=False,
+                users=(),
+                active_users=0,
+                suspended_users=0,
+                scopes=tuple(sorted(h.permission for h in held)),
+                max_tier=max((h.tier for h in held), key=lambda t: t.weight),
                 last_authorized_at=None,
                 last_used_at=None,
             )

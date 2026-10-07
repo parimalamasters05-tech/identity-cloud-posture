@@ -4,11 +4,10 @@
 
   <h3>How the assessment ran</h3>
   <p>
-    Configuration was retrieved through Google's official administrative APIs, using delegated
-    credentials limited to the scopes listed below.
+    {{ platform.retrieval }}
     {% if write_capable_scopes %}All but {{ 'one are' if write_capable_scopes | length == 1 else (write_capable_scopes | length) ~ ' are' }}
-    read-only scopes; the exception{{ 's are' if write_capable_scopes | length > 1 else ' is' }} explained
-    below.{% else %}All are read-only scopes.{% endif %}
+    read-only {{ platform.permission_noun }}s; the exception{{ 's are' if write_capable_scopes | length > 1 else ' is' }} explained
+    below.{% else %}All are read-only {{ platform.permission_noun }}s.{% endif %}
     The tool performs read and list operations only: state-changing requests are blocked before
     they leave the tool, and every request is logged.
     Responses were written to a timestamped snapshot, and every finding in this report was
@@ -17,13 +16,17 @@
     assessment to show exactly what changed.
   </p>
 
-  <h4>Scopes used</h4>
+  <h4>{{ platform.permissions_heading }}</h4>
   <ul class="steps">
     {% for scope in snapshot.scopes_used %}<li class="mono">{{ scope }}</li>{% endfor %}
     {% if not snapshot.scopes_used %}<li class="muted">Offline run against frozen fixtures.</li>{% endif %}
   </ul>
   {% for scope, reason in write_capable_scopes %}
-  <p class="meta"><strong>Not a read-only scope:</strong> <span class="mono">{{ scope }}</span> is
+  <p class="meta"><strong>Not a read-only {{ platform.permission_noun }}:</strong> <span class="mono">{{ scope }}</span> is
+    {{ reason }}</p>
+  {% endfor %}
+  {% for permission, reason in content_capable_scopes %}
+  <p class="meta"><strong>Read-only, but could read file contents:</strong> <span class="mono">{{ permission }}</span>.
     {{ reason }}</p>
   {% endfor %}
   {% if snapshot.scopes_refused %}
@@ -36,11 +39,11 @@
 
   <h4>Read-only verification</h4>
   <p>
-    {{ snapshot.api_calls | length }} API requests were made during collection{% if read_request_count == snapshot.api_calls | length and read_request_count %}, all of them reads{% endif %}.
+    {{ snapshot.api_calls | length }} API requests were made during collection{% if read_request_count == snapshot.api_calls | length and read_request_count %}, all of them reads{% endif %}.{{ platform.request_note }}
     The tool blocks state-changing requests (POST, PUT, PATCH, DELETE) at the transport layer,
-    refuses any scope outside a fixed, reviewed allowlist, and asserts after every run that no
+    refuses any {{ platform.permission_noun }} outside a fixed, reviewed allowlist, and asserts after every run that no
     unsafe request was made. We recommend you
-    confirm this independently in your own admin audit log for the collection window{% if snapshot.started_at %},
+    confirm this independently in {{ platform.audit_log }} for the collection window{% if snapshot.started_at %},
     <strong>{{ snapshot.started_at.strftime('%d %B %Y, %H:%M:%S') }} to
     {{ snapshot.collected_at.strftime('%H:%M:%S') }} UTC</strong>{% endif %}.
   </p>
@@ -95,7 +98,7 @@
     <li>Point-in-time. Configuration captured {{ scope_statement.point_in_time.strftime('%d %B %Y') }}; anything changed since is not reflected.</li>
     {% if tenant.mfa_report_date %}<li>Which second factors each person uses (security keys and passkeys) comes from Google's daily security report, which Google publishes one to three days late. This assessment used the report for {{ tenant.mfa_report_date | long_date }}, so a key or passkey added after that date is not reflected.</li>{% endif %}
     <li>Configuration and metadata only. No message or file content was accessed, so this report cannot say anything about what your data contains.</li>
-    <li>Some Google reporting surfaces depend on your licence tier. Where data was unavailable, it is recorded as a coverage note rather than omitted.</li>
+    <li>{{ platform.licence_note }}</li>
     <li>Findings marked medium or low confidence are inferred from indirect signals and should be confirmed before acting.</li>
   </ul>
 </section>

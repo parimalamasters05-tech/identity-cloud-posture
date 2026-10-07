@@ -708,12 +708,15 @@ def _client_override(value: str) -> str:
 
 def _client_name(override: str, tenant_view) -> str:  # type: ignore[no-untyped-def]
     """The cover's organization name: override, else Google's profile name, else domain."""
+    from icp.reporting.platform_text import for_platform
+
     if override:
         click.echo(f"Cover name: {override} (from --client-name)")
         return override
     if tenant_view.organization_name:
         click.echo(
-            f"Cover name: {tenant_view.organization_name} (from the Google Workspace account profile)"
+            f"Cover name: {tenant_view.organization_name} "
+            f"(from {for_platform(tenant_view.platform).cover_name_source})"
         )
         return str(tenant_view.organization_name)
     if tenant_view.primary_domain:

@@ -19,6 +19,7 @@ from icp.models.enums import CheckFamily, Severity
 from icp.models.finding import Finding
 from icp.normalizers.base import NormalizedTenant
 from icp.reporting.plain import count, duration, lower_first, verb
+from icp.reporting.platform_text import for_platform
 from icp.reporting.remediation import RemediationLibrary
 from icp.risk.ranking import posture_rating, rank
 
@@ -163,6 +164,59 @@ _WHAT: dict[str, Callable[[Finding, int], str]] = {
     "GWS-OAU-005": lambda _f, _n: (
         "Outside applications still hold access that nobody has used in over three months."
     ),
+    # -- Microsoft 365 --------------------------------------------------------------
+    "M365-MFA-001": lambda _f, n: (
+        f"{count(n, 'administrator account', start=True)} can be signed into with a password "
+        "alone, with no second step such as an approval on a phone."
+    ),
+    "M365-MFA-002": lambda _f, n: (
+        f"{count(n, 'staff account', start=True)} can be signed into with a password alone, "
+        "with no second step such as an approval on a phone."
+    ),
+    "M365-MFA-003": lambda _f, n: (
+        f"{count(n, 'administrator', start=True)} {verb(n, 'uses', 'use')} a second sign-in step "
+        "that a convincing fake login page can capture."
+    ),
+    "M365-MFA-004": lambda _f, _n: (
+        "Nothing in the organization's settings requires a second sign-in step, so each person "
+        "is protected only if they set one up themselves."
+    ),
+    "M365-ADM-001": lambda _f, n: (
+        f"{count(n, 'person', 'people', start=True)} {verb(n, 'holds', 'hold')} full control of "
+        "your Microsoft 365 organization, more than an organization of your size needs."
+    ),
+    "M365-STA-003": lambda _f, n: (
+        f"{count(n, 'blocked account', start=True)} still {verb(n, 'holds', 'hold')} former "
+        "staff's mail and files, and whatever access they gave to outside applications."
+    ),
+    "M365-SVC-001": lambda f, _n: (
+        f"{_app(f)} can read every person's mail or files by itself, with no one signed in."
+    ),
+    "M365-SVC-002": lambda _f, n: (
+        f"{count(n, 'application password', start=True)} {verb(n, 'stays', 'stay')} valid for "
+        "years, so a copy that leaks keeps working."
+    ),
+    "M365-SHR-001": lambda _f, n: (
+        f"{count(n, 'file or folder', 'files and folders', start=True)} can be opened by anyone "
+        "who has the link, with no sign-in needed."
+    ),
+    "M365-SHR-002": lambda _f, _n: (
+        "Any staff member can make a file open to anyone on the internet, with no sign-in needed."
+    ),
+    "M365-SHR-003": lambda _f, _n: (
+        "Anyone in the organization, including outside guests, can invite more outside people in."
+    ),
+    "M365-OAU-001": lambda f, n: (
+        f"{_app(f)}, an outside application, can read the mail or files of "
+        f"{count(n, 'person', 'people')} in your organization."
+    ),
+    "M365-OAU-002": lambda _f, n: (
+        f"Outside applications can still read the mail or files of "
+        f"{count(n, 'person', 'people')} whose {verb(n, 'account is', 'accounts are')} blocked."
+    ),
+    "M365-OAU-003": lambda _f, _n: (
+        "Any staff member can let an application read their mail, and no administrator sees the request."
+    ),
 }
 
 
@@ -223,8 +277,8 @@ def _opening(tenant: NormalizedTenant, findings: list[Finding], rating: str) -> 
     high = sum(1 for f in findings if f.severity == Severity.HIGH)
 
     parts = [
-        f"We examined the identity and access configuration of your Google Workspace "
-        f"environment, covering {users} active staff accounts"
+        f"We examined the identity and access configuration of "
+        f"{for_platform(tenant.platform).environment}, covering {users} active staff accounts"
     ]
     if apps:
         parts.append(f" and {apps} connected third-party applications")

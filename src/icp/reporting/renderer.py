@@ -31,13 +31,14 @@ from icp.normalizers.base import Application, NormalizedTenant
 from icp.reporting import plain
 from icp.reporting.consolidation import consolidate
 from icp.reporting.executive_summary import build as build_summary
+from icp.reporting.platform_text import for_platform
 from icp.reporting.remediation import RemediationLibrary, load_framework
 from icp.risk import scoring
 from icp.risk.ranking import rank
 from icp.risk.severity import RiskMatrix
 from icp.rules.base import rules_for
 from icp.rules.engine import AssessmentResult
-from icp.security.scopes import optional_scopes, sorted_scopes, write_capable
+from icp.security.scopes import optional_scopes, sorted_scopes
 
 logger = logging.getLogger(__name__)
 
@@ -160,7 +161,13 @@ class ReportRenderer:
             "matrix": self.matrix,
             "matrix_rows": self.matrix.as_table(),
             "scope_statement": _scope_statement(tenant),
-            "write_capable_scopes": write_capable(_scopes_for_claims(tenant)),
+            "platform": for_platform(tenant.platform),
+            # Judged by the platform's own rule: Graph read permissions do not
+            # end in ".readonly", and the Google rule once called all nine writes.
+            "write_capable_scopes": for_platform(tenant.platform).write_capable(_scopes_for_claims(tenant)),
+            "content_capable_scopes": for_platform(tenant.platform).content_capable(
+                _scopes_for_claims(tenant)
+            ),
             "read_request_count": sum(1 for c in tenant.snapshot.api_calls if c.method in ("GET", "HEAD")),
             "degraded": list(tenant.snapshot.degraded_collectors()),
             # Only collectors a check depends on. The organization profile only
@@ -183,7 +190,7 @@ class ReportRenderer:
 
     @staticmethod
     def _family_title(finding: Finding) -> str:
-        return _FAMILY_TITLES.get(finding.check_family, str(finding.check_family))
+        return _family_title(finding.check_family, for_platform(finding.platform).family_titles)
 
     @staticmethod
     def _passed_areas(
@@ -200,9 +207,16 @@ class ReportRenderer:
         for family in CheckFamily:
             if family in flagged or family in incomplete or not tenant.is_assessable(family):
                 continue
-            checks = [r.title for r in rules_for(family) if r.rule_id not in result.unassessable]
+            # This platform's checks only: listing both platforms' rules once put
+            # Microsoft check names in a Google report's clean areas.
+            checks = [
+                r.title
+                for r in rules_for(family)
+                if tenant.platform in r.platforms and r.rule_id not in result.unassessable
+            ]
             if checks:
-                areas.append({"title": _FAMILY_TITLES.get(family, str(family)), "checks": checks})
+                title = _family_title(family, for_platform(tenant.platform).family_titles)
+                areas.append({"title": title, "checks": checks})
         return areas
 
     def _framework_rows(self, findings: list[Finding], framework: dict[str, Any]) -> list[dict[str, Any]]:
@@ -319,6 +333,19 @@ _COLLECTOR_AREAS = {
     "google.workspace_policies": "Drive's external-sharing settings",
     "google.public_drive_items": "publicly shared Drive files",
     "google.audit_readiness": "the availability of audit logs",
+    "m365.organization": "the organization profile",
+    "m365.users": "the staff directory",
+    "m365.mfa_registration": "Microsoft's report of registered sign-in methods",
+    "m365.auth_methods": "each account's registered sign-in methods",
+    "m365.roles": "who holds which administrator role",
+    "m365.groups": "groups",
+    "m365.service_principals": "the applications present in the organization",
+    "m365.graph_permissions": "the access granted to applications",
+    "m365.applications": "application sign-in credentials",
+    "m365.policies": "sign-in and consent policies",
+    "m365.sharepoint_settings": "SharePoint and OneDrive sharing settings",
+    "m365.public_files": "publicly shared OneDrive files",
+    "m365.audit_readiness": "the availability of sign-in and audit logs",
 }
 
 #: Collectors no check depends on.
@@ -339,10 +366,16 @@ def _tier_label(tier: ScopeTier) -> str:
     return _TIER_LABELS.get(tier, str(tier))
 
 
+def _family_title(family: CheckFamily, overrides: dict[CheckFamily, str]) -> str:
+    return overrides.get(family) or _FAMILY_TITLES.get(family, str(family))
+
+
 def _app_kind(app: Application) -> str:
     return {
         "developer_tool": "Google developer tool",
         "device_sign_in": "Google browser or device sign-in",
+        "assessor": "This assessment (remove afterwards)",
+        "app_only": "Works without a user",
     }.get(app.first_party_kind or "", "Third-party")
 
 
@@ -357,36 +390,31 @@ def _scopes_for_claims(tenant: NormalizedTenant) -> tuple[str, ...]:
 
 def _scope_statement(tenant: NormalizedTenant) -> dict[str, Any]:
     """What was and was not examined. Page one, for everyone."""
+    text = for_platform(tenant.platform)
+    permissions = _scopes_for_claims(tenant)
+    if text.write_capable(permissions):
+        # Accurate, not reassuring: one permission Google requires could, in
+        # principle, change something. What we can promise is behaviour.
+        caveat = (
+            " One permission Google requires for this review could in principle remove "
+            "connections between staff accounts and outside applications; the tool is built "
+            "so that it cannot send any change, and none was made."
+        )
+    elif text.content_capable(permissions):
+        # Microsoft: read-only, but one permission could open file contents.
+        caveat = (
+            " Every permission used can only read, but one could in principle open file contents; "
+            "the tool reads only who each file is shared with, and is built so that it cannot "
+            "request a file's contents."
+        )
+    else:
+        caveat = " Every permission used can only read."
     return {
-        "examined": [
-            "Your Google Workspace staff directory: accounts, groups and departments",
-            "Who holds administrator rights, and which rights",
-            "Whether each account uses two-step verification, and where Google reports it, which kind",
-            "Outside applications that staff have connected to their accounts",
-            "When each application was connected and last used, from Google's own records",
-            "Drive files and folders that anyone with the link can open",
-            "Drive's settings for sharing outside the organization, where readable",
-            "Whether the records needed to investigate an incident are being kept",
-        ],
-        "not_examined": [
-            "The contents of any email, document, or file. Settings and account details only.",
-            "Laptops, phones, networks, or anything outside Google Workspace",
-            "Any attempt to break in, test passwords, or exploit a weakness",
-            "Ongoing monitoring: this is a snapshot of one moment",
-            "Formal certification or attestation against any framework",
-        ],
+        "examined": list(text.examined),
+        "not_examined": list(text.not_examined),
         "method": (
-            "Read-only. Settings were read through Google's official administrative interfaces, "
-            "under a signed authorization letter."
-            + (
-                # Accurate, not reassuring: one permission Google requires could, in
-                # principle, change something. What we can promise is behaviour.
-                " One permission Google requires for this review could in principle remove "
-                "connections between staff accounts and outside applications; the tool is built "
-                "so that it cannot send any change, and none was made."
-                if write_capable(_scopes_for_claims(tenant))
-                else " Every permission used can only read."
-            )
+            text.method_opening
+            + caveat
             + " No setting was changed, and no message or file content was opened."
         ),
         "point_in_time": tenant.snapshot.collected_at,

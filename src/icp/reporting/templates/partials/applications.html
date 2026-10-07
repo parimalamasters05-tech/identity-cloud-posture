@@ -15,9 +15,9 @@
     <tbody>
       {% for app in applications %}
       <tr class="avoid-break">
-        <td>{{ app.name }}{% if app.is_anonymous %}<br><span class="meta">not registered with Google</span>{% endif %}</td>
+        <td>{{ app.name }}{% if app.is_anonymous %}<br><span class="meta">{{ platform.anonymous_label }}</span>{% endif %}</td>
         <td class="meta">{{ app_kind(app) }}</td>
-        <td>{{ app.active_users }}{% if app.suspended_users %}<br><span class="meta">+ {{ app.suspended_users }} suspended</span>{% endif %}</td>
+        <td>{% if app.first_party_kind in ("app_only", "assessor") %}every user{% elif "*" in app.users %}every user{% else %}{{ app.active_users }}{% endif %}{% if app.suspended_users %}<br><span class="meta">+ {{ app.suspended_users }} {{ "blocked" if platform.name == "Microsoft 365" else "suspended" }}</span>{% endif %}</td>
         <td>{{ tier_label(app.max_tier) }}</td>
         <td class="meta">{{ app.last_authorized_at.strftime('%d %b %Y') if app.last_authorized_at else '—' }}</td>
         <td class="meta">{{ app.last_used_at.strftime('%d %b %Y') if app.last_used_at else '—' }}</td>
@@ -26,6 +26,13 @@
     </tbody>
   </table>
   <p class="meta">
+    {% if platform.name == "Microsoft 365" %}
+    "Users" counts the people who gave each application access themselves; "every user" means an
+    administrator approved it for the whole organization, and "works without a user" means it
+    holds access by itself, with no one signed in. Microsoft does not report when an application
+    last used its access in the data this review reads, so dates are not shown.
+    "{{ platform.anonymous_label }}" marks applications whose publisher Microsoft has not verified.
+    {% else %}
     {% if token_log %}
     Dates come from Google's token audit log, read back to {{ token_log.covered_since.strftime('%d %B %Y') }};
     "—" means no such event in that period.
@@ -38,6 +45,7 @@
     {% endif %}
     Google does not publish whether an application has passed its verification review through
     this interface; "not registered with Google" marks applications with no registered publisher at all.
+    {% endif %}
   </p>
 </section>
 {% endif %}
