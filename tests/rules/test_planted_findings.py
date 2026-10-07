@@ -32,8 +32,12 @@ def test_every_rule_ran_without_error(result):
 
     assert result.rules_failed == [], f"rules raised: {result.rules_failed}"
     # Every rule either ran or produced an explicit coverage note; none vanished.
+    # Counted per platform: a Google tenant runs the Google rules only.
+    from icp.models.enums import Platform
+
+    google_rules = [r for r in all_rules() if Platform.GOOGLE_WORKSPACE in r.platforms]
     not_assessed = [k for k in result.unassessable if k.startswith("GWS-")]
-    assert result.rules_run + len(not_assessed) == len(all_rules()) == 20
+    assert result.rules_run + len(not_assessed) == len(google_rules) == 20
 
 
 def test_sharing_warning_finding_names_only_the_unwarned_unit(findings_by_rule):

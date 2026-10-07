@@ -1,0 +1,101 @@
+# Microsoft Graph permission -> blast-radius tier.
+#
+# Same tiers as scope_severity_taxonomy.yaml (Google), so one risk model ranks
+# both platforms. A permission's tier is what the holder can reach:
+#
+#   admin_equivalent  can change who has access, or grant itself more
+#   full_data_write   can read and change, send or delete organization data
+#   full_data_read    can read a whole category of data (all mail, all files)
+#   scoped_data       a narrow slice: one folder, selected sites, basic headers
+#   metadata_only     names and settings, no message or file content
+#   sign_in_only      identifies the user to the app, nothing more
+#
+# Delegated permissions apply to the consenting user's own data; application
+# permissions apply to every user. The rules use the grant type to say which.
+# Anything not listed is "unknown" and is reported as unclassified, never as safe.
+#
+# Verify names against Microsoft's permissions reference when adding:
+# https://learn.microsoft.com/graph/permissions-reference
+
+version: "2026.10.1"
+
+admin_equivalent:
+  - Directory.ReadWrite.All
+  - RoleManagement.ReadWrite.Directory
+  - AppRoleAssignment.ReadWrite.All
+  - Application.ReadWrite.All
+  - DelegatedPermissionGrant.ReadWrite.All
+  - Policy.ReadWrite.ConditionalAccess
+  - Policy.ReadWrite.Authorization
+  - Policy.ReadWrite.PermissionGrant
+  - Domain.ReadWrite.All
+  - Group.ReadWrite.All
+  - User.ReadWrite.All
+  - UserAuthenticationMethod.ReadWrite.All
+  - Sites.FullControl.All
+  - full_access_as_app
+
+full_data_write:
+  - Mail.ReadWrite
+  - Mail.Send
+  - Files.ReadWrite
+  - Files.ReadWrite.All
+  - Sites.ReadWrite.All
+  - Sites.Manage.All
+  - Calendars.ReadWrite
+  - Contacts.ReadWrite
+  - Notes.ReadWrite
+  - Notes.ReadWrite.All
+  - Chat.ReadWrite
+  - Chat.ReadWrite.All
+  - ChannelMessage.Send
+  - Tasks.ReadWrite
+
+full_data_read:
+  - Mail.Read
+  - Mail.Read.Shared
+  - Files.Read
+  - Files.Read.All
+  - Sites.Read.All
+  - Calendars.Read
+  - Contacts.Read
+  - Notes.Read
+  - Notes.Read.All
+  - Chat.Read
+  - Chat.Read.All
+  - ChannelMessage.Read.All
+  - Tasks.Read
+
+scoped_data:
+  - Mail.ReadBasic
+  - Mail.ReadBasic.All
+  - Files.Read.Selected
+  - Files.ReadWrite.Selected
+  - Files.ReadWrite.AppFolder
+  - Sites.Selected
+  - Calendars.ReadBasic
+
+metadata_only:
+  - User.Read.All
+  - User.ReadBasic.All
+  - Directory.Read.All
+  - Group.Read.All
+  - GroupMember.Read.All
+  - AuditLog.Read.All
+  - Reports.Read.All
+  - Policy.Read.All
+  - Application.Read.All
+  - RoleManagement.Read.Directory
+  - UserAuthenticationMethod.Read.All
+  - SharePointTenantSettings.Read.All
+  - Organization.Read.All
+
+sign_in_only:
+  - openid
+  - profile
+  - email
+  - User.Read
+  # Lets the app stay signed in (refresh tokens). Not data access by itself,
+  # but it turns any other permission into standing access: the rules call it
+  # out wherever it appears next to data access.
+  - offline_access

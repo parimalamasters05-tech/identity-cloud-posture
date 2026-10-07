@@ -302,3 +302,259 @@ remediations:
       - "For licence issues, note the limitation in your own records; it is not a defect in your configuration."
     verification: "At the next assessment, this area appears in the findings or in 'areas checked with no issues found', not in the coverage notes."
     owner_hint: IT administrator with the assessor
+
+  # -- Microsoft 365 (week 5) -------------------------------------------------
+  # Paths are the Microsoft Entra admin center (entra.microsoft.com), the
+  # Microsoft 365 admin center (admin.microsoft.com) and the SharePoint admin
+  # center, as laid out in October 2026.
+
+  m365.mfa.enforce_admins:
+    title: Require a second sign-in step for every administrator
+    impact: >
+      An administrator account that signs in with a password alone can be taken
+      over with one stolen or guessed password. Whoever holds it controls every
+      mailbox, file and account in the organization.
+    steps:
+      - "Entra admin center > Entra ID > Conditional Access > Policies > Create new policy from templates."
+      - "Choose 'Require multifactor authentication for admins', review the roles it covers, and set the policy to 'On'."
+      - "Before switching it on, ask each administrator named in the findings to add the Microsoft Authenticator app at mysignins.microsoft.com > Security info."
+      - "Exclude one emergency access account, kept offline with a long password, so a mistake cannot lock everyone out."
+    verification: "Entra ID > Users > select each administrator named in the findings > Authentication methods: a method other than Password is listed."
+    owner_hint: IT administrator
+    references:
+      - https://learn.microsoft.com/entra/identity/conditional-access/policy-old-require-mfa-admin
+
+  m365.mfa.enforce_all_users:
+    title: Require a second sign-in step for all staff
+    impact: >
+      Password-only accounts are the most common way small organizations are
+      broken into. A second step at sign-in stops nearly all of it, including
+      passwords reused from unrelated breaches.
+    steps:
+      - "Tell staff the date from which a second step will be required, and point them to mysignins.microsoft.com > Security info to add the Microsoft Authenticator app."
+      - "Entra admin center > Entra ID > Conditional Access > Policies > Create new policy from templates > 'Require multifactor authentication for all users'."
+      - "Start it in 'Report-only' for a week, check the sign-in logs for who would be affected, then set it to 'On'."
+      - "Exclude only the emergency access account, and record why."
+    verification: "Entra ID > Authentication methods > User registration details: every enabled staff account shows 'Multifactor authentication capable: Yes'."
+    owner_hint: IT administrator
+    references:
+      - https://learn.microsoft.com/entra/identity/conditional-access/policy-all-users-mfa-strength
+
+  m365.mfa.phishing_resistant_admins:
+    title: Move administrators to passkeys or security keys
+    impact: >
+      Codes and phone approvals can be captured by a convincing fake sign-in
+      page and replayed at once. A passkey or security key checks the website
+      address itself, so it cannot be tricked that way.
+    steps:
+      - "Entra admin center > Entra ID > Authentication methods > Policies > Passkey (FIDO2): enable it for all users or for an administrators group."
+      - "Each administrator: mysignins.microsoft.com > Security info > Add sign-in method > Passkey, using the Authenticator app or a hardware security key. Register two, one as a spare."
+      - "Entra ID > Conditional Access > New policy for the administrator roles > Grant > Require authentication strength > 'Phishing-resistant MFA'."
+    verification: "Entra ID > Users > each administrator > Authentication methods: a passkey or FIDO2 security key is listed."
+    owner_hint: IT administrator
+    references:
+      - https://learn.microsoft.com/entra/identity/authentication/how-to-enable-passkey-fido2
+
+  m365.mfa.require_org_wide:
+    title: Switch on an organization-wide second-step requirement
+    impact: >
+      Nothing in the organization's settings requires a second sign-in step,
+      so whether each account is protected depends on each person remembering
+      to set it up. New staff start unprotected.
+    steps:
+      - "Simplest: Entra admin center > Entra ID > Overview > Properties > Manage security defaults > 'Enabled'. Microsoft then requires everyone to register a second step within 14 days."
+      - "Or, if you use Conditional Access instead: Entra ID > Conditional Access > Policies, and set a policy requiring multifactor authentication for all users to 'On' (not 'Report-only')."
+      - "Use one or the other: Microsoft does not allow security defaults and Conditional Access together."
+    verification: "Entra ID > Overview > Properties > Manage security defaults shows 'Enabled', or a Conditional Access policy requiring multifactor authentication for all users is 'On'."
+    owner_hint: IT administrator
+    references:
+      - https://learn.microsoft.com/entra/fundamentals/security-defaults
+
+  m365.admins.reduce_global:
+    title: Reduce the number of Global Administrators
+    impact: >
+      Each Global Administrator can change anything in the organization,
+      including removing other administrators. Every extra one is another
+      account an attacker can aim for.
+    steps:
+      - "Entra admin center > Entra ID > Roles & admins > Global Administrator > Assignments."
+      - "For each person beyond the two you need, give them a narrower role that matches their work (for example User Administrator or Exchange Administrator) and then remove Global Administrator."
+      - "Never keep a contractor or a shared account as a Global Administrator."
+    verification: "Entra ID > Roles & admins > Global Administrator > Assignments lists no more than two named people, plus any documented emergency access account."
+    owner_hint: IT administrator with the executive director
+    references:
+      - https://learn.microsoft.com/entra/identity/role-based-access-control/best-practices
+
+  m365.admins.remove_dormant:
+    title: Remove administrator rights nobody is using
+    impact: >
+      An administrator account nobody uses is one nobody watches. If its
+      password leaks, the takeover can go unnoticed for months.
+    steps:
+      - "Entra admin center > Entra ID > Roles & admins > select the role > Assignments."
+      - "Remove the assignment for each account named in the findings, or delete the account if the person has left."
+    verification: "Entra ID > Users > each account named in the findings > Assigned roles shows no administrator role."
+    owner_hint: IT administrator
+
+  m365.accounts.remove_unused:
+    title: Remove accounts that are not being used
+    impact: >
+      Unused accounts still have passwords and still count toward your licence
+      bill. Nobody notices when one starts being used by someone else.
+    steps:
+      - "Microsoft 365 admin center > Users > Active users; select each account named in the findings."
+      - "If the person has left, choose 'Delete user' and give their mail and files to a manager when asked."
+      - "If the account is still needed, ask its owner to sign in, so it no longer looks abandoned."
+    verification: "Microsoft 365 admin center > Users > Active users: the accounts named in the findings are gone, or show a recent sign-in in Entra ID > Users."
+    owner_hint: IT administrator
+
+  m365.accounts.review_blocked:
+    title: Decide what happens to blocked accounts
+    impact: >
+      A blocked account keeps its mailbox, its files, its sharing links and any
+      access it gave to outside applications. Blocking stops the person; it
+      does not stop what the account already shared.
+    steps:
+      - "Microsoft 365 admin center > Users > Active users > filter 'Sign-in blocked'."
+      - "For each account, give its mail and OneDrive files to a manager, then choose 'Delete user'."
+      - "Where an account must be kept for legal reasons, record why and set a review date."
+    verification: "Microsoft 365 admin center > Users > Active users, filtered on 'Sign-in blocked': every account left has a written reason and a review date."
+    owner_hint: IT administrator with the executive director
+
+  m365.apps.review_app_only:
+    title: Remove organization-wide data access from applications
+    impact: >
+      This application can read every person's mail or files at any time,
+      without anyone signing in. Anyone who obtains its password or
+      certificate gets the same access.
+    steps:
+      - "Entra admin center > Entra ID > Enterprise apps > select the application > Permissions."
+      - "If nobody can say why it needs this access, choose 'Review permissions' and remove the permission, or delete the application."
+      - "If it is genuinely needed, limit it to the mailboxes it uses with an Exchange application access policy, and record the reason."
+    verification: "Entra ID > Enterprise apps > the application > Permissions: no permission described as 'all mail' or 'all files' remains under Admin consent, unless recorded as approved."
+    owner_hint: IT administrator with the executive director
+    references:
+      - https://learn.microsoft.com/graph/auth-limit-mailbox-access
+
+  m365.apps.shorten_secrets:
+    title: Replace long-lived application secrets
+    impact: >
+      An application secret is a password for software. One that stays valid
+      for years keeps working long after it was copied into a script or an
+      email, and nobody remembers where.
+    steps:
+      - "Entra admin center > Entra ID > App registrations > select the application > Certificates & secrets."
+      - "Prefer a certificate. If a secret is unavoidable, create a new one valid for 6 months, update the application to use it, then delete the old secret."
+      - "Put the expiry date in a shared calendar so it is renewed before it lapses."
+    verification: "Entra ID > App registrations > the application > Certificates & secrets: no client secret expires more than 12 months after it was created."
+    owner_hint: IT administrator
+    references:
+      - https://learn.microsoft.com/entra/identity-platform/how-to-add-credentials
+
+  m365.sharing.close_anyone_links:
+    title: Close public links on files that should not be public
+    impact: >
+      A file shared with 'Anyone with the link' can be opened by whoever has
+      the link, with no sign-in, including after the person who shared it has
+      left the organization.
+    steps:
+      - "Ask each owner named in the findings to open the file in OneDrive, choose Share > Manage access, and remove the 'Anyone with the link' link."
+      - "For a blocked owner: Microsoft 365 admin center > Users > Active users > select the user > OneDrive > 'Create link to files' to open their OneDrive, then remove the link yourself."
+      - "Then restrict the organization setting so new 'Anyone' links cannot be created (see the sharing setting finding)."
+    verification: "OneDrive > each file named in the findings > Share > Manage access: no 'Anyone with the link' entry remains."
+    owner_hint: File owners, coordinated by IT
+    references:
+      - https://learn.microsoft.com/sharepoint/turn-external-sharing-on-or-off
+
+  m365.sharing.restrict_org_setting:
+    title: Stop staff creating 'Anyone' links
+    impact: >
+      While the setting allows it, any staff member can make any file open to
+      the whole internet with two clicks, and the link keeps working
+      indefinitely.
+    steps:
+      - "SharePoint admin center > Policies > Sharing."
+      - "Move the SharePoint and OneDrive sliders from 'Anyone' to 'New and existing guests', or lower if the organization does not share with outsiders."
+      - "If 'Anyone' links must stay, set an expiry under 'Choose expiration and permissions options for Anyone links'."
+    verification: "SharePoint admin center > Policies > Sharing: neither slider is at 'Anyone'."
+    owner_hint: IT administrator
+    references:
+      - https://learn.microsoft.com/sharepoint/turn-external-sharing-on-or-off
+
+  m365.sharing.restrict_guest_invites:
+    title: Limit who can invite outside guests
+    impact: >
+      When anyone can invite outside people, guests can appear in the
+      organization's directory without an administrator knowing, and can be
+      given access to files and teams.
+    steps:
+      - "Entra admin center > Entra ID > External Identities > External collaboration settings."
+      - "Under 'Guest invite settings', choose 'Only users assigned to specific admin roles can invite guest users'."
+      - "Review the guests named in the findings and remove any nobody can account for: Entra ID > Users, filter User type 'Guest'."
+    verification: "Entra ID > External Identities > External collaboration settings: 'Guest invite settings' is not set to anyone in the organization including guests."
+    owner_hint: IT administrator
+
+  m365.logging.enable_logs:
+    title: Make sure activity logs are available
+    impact: >
+      Without these logs, nobody can reconstruct what happened after a
+      suspected break-in: which account signed in, from where, and what it
+      changed.
+    steps:
+      - "Sign-in logs need a Microsoft Entra ID P1 licence, included in Microsoft 365 Business Premium. Confirm it under Microsoft 365 admin center > Billing > Your products."
+      - "Microsoft Purview portal > Audit: if a banner offers 'Start recording user and admin activity', select it."
+    verification: "Entra admin center > Entra ID > Monitoring & health > Sign-in logs shows recent sign-ins, and Audit logs shows recent changes."
+    owner_hint: IT administrator
+
+  m365.apps.review_delegated:
+    title: Review applications that can read mail or files
+    impact: >
+      These applications can read everything the people who approved them can
+      read. That access continues after password changes and after the person
+      stops using the application.
+    steps:
+      - "Entra admin center > Entra ID > Enterprise apps > select the application > Permissions > User consent tab."
+      - "Ask each person listed whether they still use it. If nobody can say what it is for, choose 'Review permissions' and revoke, or delete the application under Properties."
+      - "Then tighten who may approve applications (see the consent finding)."
+    verification: "Entra ID > Enterprise apps > the application > Permissions: only the people who still need it are listed, or the application is gone."
+    owner_hint: IT administrator with the executive director
+    references:
+      - https://learn.microsoft.com/entra/identity/enterprise-apps/manage-application-permissions
+
+  m365.apps.revoke_departed:
+    title: Withdraw application access held by blocked accounts
+    impact: >
+      Blocking an account stops the person signing in, but any application
+      they connected keeps the access it was given, and can keep reading their
+      mail or files.
+    steps:
+      - "Entra admin center > Entra ID > Enterprise apps > select the application named in the findings > Permissions > User consent tab."
+      - "Choose 'Review permissions' and revoke the access granted by the blocked account, or delete the account entirely (see the blocked accounts finding)."
+    verification: "Entra ID > Enterprise apps > the application > Permissions > User consent: the blocked accounts named in the findings are no longer listed."
+    owner_hint: IT administrator
+
+  m365.apps.tighten_consent:
+    title: Require an administrator to approve access to mail or files
+    impact: >
+      Today any staff member can let an application read their mail or files,
+      and no administrator sees the request. A convincing fake app is all an
+      attacker needs.
+    steps:
+      - "Entra admin center > Entra ID > Enterprise apps > Consent and permissions > Permission classifications > Low: remove Mail.Read and any other permission that reads mail or files."
+      - "User consent settings: choose 'Let Microsoft manage your consent settings' or 'Do not allow user consent'."
+      - "Admin consent settings: set 'Users can request admin consent to apps they are unable to consent to' to Yes, and name who reviews the requests."
+    verification: "Entra ID > Enterprise apps > Consent and permissions > Permission classifications > Low lists only sign-in permissions (User.Read, openid, profile, email, offline_access)."
+    owner_hint: IT administrator
+    references:
+      - https://learn.microsoft.com/entra/identity/enterprise-apps/configure-user-consent
+
+  m365.apps.restrict_registration:
+    title: Stop ordinary users registering applications
+    impact: >
+      An application registered inside the organization looks trusted to other
+      staff when it asks them for access, which makes it a convenient disguise.
+    steps:
+      - "Entra admin center > Entra ID > Users > User settings."
+      - "Set 'Users can register applications' to No. Administrators can still register applications when needed."
+    verification: "Entra ID > Users > User settings shows 'Users can register applications: No'."
+    owner_hint: IT administrator

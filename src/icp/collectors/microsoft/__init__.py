@@ -260,6 +260,9 @@ def _policies(c: GraphReadOnly, _ctx: dict[str, Any]) -> dict[str, Any]:
                 "displayName": p.get("displayName"),
                 "state": p.get("state"),
                 "users": ((p.get("conditions") or {}).get("users")) or {},
+                # Which apps the policy covers: a policy for one app (Azure
+                # management, seen live) is not an organization-wide requirement.
+                "applications": ((p.get("conditions") or {}).get("applications")) or {},
                 "client_app_types": ((p.get("conditions") or {}).get("clientAppTypes")) or [],
                 "grant_controls": ((p.get("grantControls") or {}).get("builtInControls")) or [],
             }
@@ -407,6 +410,12 @@ def collect(client: GraphReadOnly, *, tenant_id: str) -> Snapshot:
         except GraphError as exc:
             errors.append(_error(name, exc))
             logger.warning("Collector %s degraded: %s", name, exc)
+
+    # Which app registration is the assessment tool itself, so its own (broad,
+    # read-only) permissions are reported as the assessor's, not as a finding.
+    creds = getattr(client, "creds", None)
+    if creds is not None:
+        artifacts["m365.assessor"] = {"client_id": creds.client_id}
 
     # Read-only attestation: the guard refuses writes before they are sent;
     # this asserts none was even recorded.

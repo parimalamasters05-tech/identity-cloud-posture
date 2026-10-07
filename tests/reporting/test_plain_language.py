@@ -28,10 +28,10 @@ from icp.rules import assess
 
 #: Anywhere a person reads.
 EVERYWHERE = {
-    "rule ID": r"\bGWS-[A-Z]{3}-\d{3}\b",
+    "rule ID": r"\b(GWS|M365)-[A-Z]{3}-\d{3}\b",
     "'(s)' plural": r"\w\(s\)",
     # Not preceded by a dot, so "myaccount.google.com" (a place the client goes) passes.
-    "collector name": r"(?<![\w.])google\.(?!com\b)[a-z_]+\b",
+    "collector name": r"(?<![\w.])(google|m365)\.(?!com\b)[a-z_]+\b",
     "raw field name": r"\b(isEnrolledIn2Sv|isAdmin|lastLoginTime|clientId|userKey)\b",
     "internal tier name": r"\b(admin_equivalent|full_data_write|full_data_read|sign_in_only|metadata_only)\b",
     "decimal hours": r"\b\d+\.\d+ ?h\b",

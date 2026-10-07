@@ -10,6 +10,7 @@ from icp.rules import (  # noqa: F401
     external_sharing,
     logging_readiness,
     mfa_coverage,
+    microsoft,
     oauth_grant_risk,
     service_account_privilege,
     stale_accounts,

@@ -251,7 +251,19 @@ def test_week4_every_remediation_gives_an_admin_console_path(library: Remediatio
         for key, entry in library.entries.items()
         if key != "coverage.restore_access"
         and not any(
-            marker in step for step in entry.steps for marker in ("Admin console", "myaccount.google.com")
+            marker in step
+            for step in entry.steps
+            for marker in (
+                # Google Workspace
+                "Admin console",
+                "myaccount.google.com",
+                # Microsoft 365 (week 5)
+                "Entra admin center",
+                "Microsoft 365 admin center",
+                "SharePoint admin center",
+                "mysignins.microsoft.com",
+                "Microsoft Purview portal",
+            )
         )
     ]
     assert not without_path, f"remediations with no console path: {without_path}"

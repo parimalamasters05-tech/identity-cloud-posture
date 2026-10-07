@@ -62,6 +62,43 @@ class Application:
 
 
 @dataclass(frozen=True)
+class AppOnlyGrant:
+    """A permission an application holds by itself, with no user signed in.
+
+    Microsoft 365 "application permissions": an app holding Mail.Read this way
+    can read every mailbox in the organization, at any time. Google has no
+    direct equivalent (its closest is domain-wide delegation), so the Google
+    normalizer leaves this empty.
+    """
+
+    app_id: str
+    app_name: str
+    permission: str
+    tier: ScopeTier
+    #: The assessment tool's own app registration. Reported separately, never
+    #: as a client finding, and the report says it should be removed afterwards.
+    is_assessor: bool = False
+
+
+@dataclass(frozen=True)
+class AppCredential:
+    """A secret or certificate an application signs in with (dates only)."""
+
+    app_id: str
+    app_name: str
+    kind: str  # "secret" or "certificate"
+    starts: datetime | None
+    expires: datetime | None
+    is_assessor: bool = False
+
+    @property
+    def lifetime_days(self) -> int | None:
+        if self.starts and self.expires:
+            return (self.expires - self.starts).days
+        return None
+
+
+@dataclass(frozen=True)
 class CoverageGap:
     """A check family that ran on incomplete data.
 
@@ -116,6 +153,13 @@ class NormalizedTenant:
 
     #: Families that ran on incomplete data. See `CoverageGap`.
     coverage_gaps: list[CoverageGap] = field(default_factory=list)
+
+    #: Microsoft 365 only (empty for Google): external guests, kept apart from
+    #: staff so they never count in staff MFA coverage; app-only permissions;
+    #: and application sign-in credentials.
+    guests: list[Identity] = field(default_factory=list)
+    app_only_grants: list[AppOnlyGrant] = field(default_factory=list)
+    app_credentials: list[AppCredential] = field(default_factory=list)
 
     # -- convenience accessors --------------------------------------------------
 
