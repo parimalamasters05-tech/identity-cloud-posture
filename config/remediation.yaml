@@ -522,16 +522,21 @@ remediations:
       - https://learn.microsoft.com/entra/identity/enterprise-apps/manage-application-permissions
 
   m365.apps.revoke_departed:
-    title: Withdraw application access held by blocked accounts
+    title: Remove application access left on blocked accounts
     impact: >
-      Blocking an account stops the person signing in, but any application
-      they connected keeps the access it was given, and can keep reading their
-      mail or files.
+      Blocking an account stops the applications it connected from working,
+      but their permission stays on record. If the account is ever re-enabled,
+      for a returning member of staff or by mistake, every one of those
+      applications gets its access to mail and files back, and nobody is asked.
     steps:
-      - "Entra admin center > Entra ID > Enterprise apps > select the application named in the findings > Permissions > User consent tab."
-      - "Choose 'Review permissions' and revoke the access granted by the blocked account, or delete the account entirely (see the blocked accounts finding)."
-    verification: "Entra ID > Enterprise apps > the application > Permissions > User consent: the blocked accounts named in the findings are no longer listed."
+      - "If the person has left for good: Microsoft 365 admin center > Users > Active users > select the account > Delete user, giving their mail and files to a manager when asked. A deleted account cannot be used by any application."
+      - "If the account must be kept: the Entra admin center shows this access (Entra ID > Enterprise apps > the application > Permissions > User consent) but has no button to remove one person's, and the person cannot remove it for an in-house application either. Remove it with Microsoft Graph PowerShell, signed in as an administrator."
+      - "Copy the account's Object ID from Entra ID > Users > the account > Overview. Then run: Connect-MgGraph -Scopes DelegatedPermissionGrant.ReadWrite.All"
+      - "Then run, with the Object ID in place of ID: Get-MgOauth2PermissionGrant -Filter \"principalId eq 'ID'\" | ForEach-Object { Remove-MgOauth2PermissionGrant -OAuth2PermissionGrantId $_.Id }. This removes every application's access for that one account, and nobody else's."
+    verification: "Entra ID > Enterprise apps > the application > Permissions > User consent: the count of users no longer includes the blocked accounts named in the findings."
     owner_hint: IT administrator
+    references:
+      - https://learn.microsoft.com/entra/identity/enterprise-apps/manage-application-permissions
 
   m365.apps.tighten_consent:
     title: Require an administrator to approve access to mail or files

@@ -211,8 +211,10 @@ _WHAT: dict[str, Callable[[Finding, int], str]] = {
         f"{count(n, 'person', 'people')} in your organization."
     ),
     "M365-OAU-002": lambda _f, n: (
-        f"Outside applications can still read the mail or files of "
-        f"{count(n, 'person', 'people')} whose {verb(n, 'account is', 'accounts are')} blocked."
+        f"Outside applications still have permission on record to read the mail or files of "
+        f"{count(n, 'blocked account')}; it cannot be used while "
+        f"{verb(n, 'the account stays', 'the accounts stay')} blocked, but returns if "
+        f"{verb(n, 'it is', 'one is')} re-enabled."
     ),
     "M365-OAU-003": lambda _f, _n: (
         "Any staff member can let an application read their mail, and no administrator sees the request."

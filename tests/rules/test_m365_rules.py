@@ -371,3 +371,28 @@ def test_a_failed_collector_makes_its_families_not_assessed():
         for f in result.findings
         if f.rule_id.startswith("ICP-")
     )
+
+
+def test_access_on_a_blocked_account_is_reported_as_dormant_not_as_live(seeded):
+    """First written as 'can keep reading their mail' (High). Microsoft refuses
+    to renew an application's sign-in for a disabled account, so the access
+    cannot be used while blocked; the risk is its silent return on re-enable."""
+    _, _, by_rule = seeded
+    [finding] = by_rule["M365-OAU-002"]
+    assert finding.severity.value == "medium"
+    summary = finding.evidence[0].summary
+    assert "cannot use it while the account stays blocked" in summary
+    assert "re-enabled" in summary
+    assert "can keep reading" not in summary
+
+
+def test_the_fix_for_blocked_account_access_is_one_a_client_can_follow(library):
+    """Found live: neither the Entra portal nor the user's own My Apps page can
+    remove one person's consent to an in-house application."""
+    entry = library.entries["m365.apps.revoke_departed"]
+    steps = " ".join(entry.steps)
+    assert "Delete user" in steps
+    assert "has no button" in steps
+    assert "Remove-MgOauth2PermissionGrant" in steps
+    assert "revoke the access granted by the blocked account" not in steps
+    assert "can keep reading" not in entry.impact

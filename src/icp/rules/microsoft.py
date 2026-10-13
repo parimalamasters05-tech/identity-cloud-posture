@@ -800,9 +800,13 @@ class M365BroadDelegatedApps(M365Rule):
 class M365GrantsHeldByBlockedUsers(M365Rule):
     rule_id = "M365-OAU-002"
     check_family = CheckFamily.OAUTH_GRANTS
-    title = "Application access still held by blocked accounts"
+    title = "Application access still recorded for blocked accounts"
     impact = 4
-    exposure = 4
+    # While the account is blocked the application cannot use this access:
+    # Microsoft refuses to renew its sign-in for a disabled account. The risk
+    # is that it returns, unreviewed, the moment the account is re-enabled.
+    # (First written as "can keep reading their mail", exposure 4: overstated.)
+    exposure = 2
     remediation_key = "m365.apps.revoke_departed"
     framework_refs = ("PR.AA-01", "PR.AA-05")
     default_effort_hours = 0.5
@@ -822,7 +826,10 @@ class M365GrantsHeldByBlockedUsers(M365Rule):
             self.make_finding(
                 tenant,
                 ctx,
-                title=f"{plural(len({u.id for u, _ in held}), 'blocked account')} still {'gives' if len(held) == 1 else 'give'} outside applications access",
+                title=(
+                    f"{plural(len({u.id for u, _ in held}), 'blocked account')} still "
+                    f"{'has' if len({u.id for u, _ in held}) == 1 else 'have'} application access on record"
+                ),
                 entities=[entity_from_identity(u) for u in {u.id: u for u, _ in held}.values()],
                 evidence=[
                     Evidence(
@@ -831,7 +838,9 @@ class M365GrantsHeldByBlockedUsers(M365Rule):
                         summary=(
                             f"{u.label} is blocked, but '{g.app_name}' still holds "
                             f"{', '.join(s.scope for s in g.scopes if s.tier.weight > ScopeTier.SIGN_IN_ONLY.weight)} "
-                            "over that account. Blocking sign-in does not withdraw access already given to apps."
+                            "over that account. The application cannot use it while the account stays "
+                            "blocked, but blocking does not remove it: if the account is ever re-enabled, "
+                            "the access returns with it, without anyone reviewing it."
                         ),
                         observed_values={"app": g.app_name or g.client_id},
                     )
