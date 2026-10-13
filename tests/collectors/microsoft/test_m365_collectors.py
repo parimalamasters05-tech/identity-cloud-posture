@@ -278,3 +278,21 @@ def test_a_recorded_write_aborts_the_run(monkeypatch):
     monkeypatch.setattr(m365, "COLLECTORS", ())
     with pytest.raises(RuntimeError, match="Read-only violation"):
         m365.collect(graph, tenant_id="m365")
+
+
+def test_a_collector_that_gets_no_response_degrades_alone_with_a_plain_reason(monkeypatch):
+    """Found live: a timeout in the last collector lost the whole run."""
+
+    def silent(c, ctx):
+        raise GraphError(None, "no_response", "no response from Microsoft (TimeoutError)")
+
+    ok = lambda c, ctx: {"fine": True}  # noqa: E731
+    monkeypatch.setattr(m365, "COLLECTORS", (("m365.organization", ok), ("m365.audit_readiness", silent)))
+    snapshot = m365.collect(FakeGraph({}), tenant_id="m365")
+
+    assert snapshot.artifacts == {"m365.organization": {"fine": True}}
+    [error] = snapshot.errors
+    assert error.collector == "m365.audit_readiness"
+    assert (
+        "did not respond in time" in error.message and "not a setting in your organization" in error.message
+    )

@@ -53,6 +53,8 @@ class GraphError(RuntimeError):
     def __init__(self, status: int | None, code: str, message: str) -> None:
         super().__init__(f"HTTP {status} {code}: {message}")
         self.status, self.code, self.message = status, code, message
+        #: Seconds Microsoft asked us to wait (a throttled request), if it said.
+        self.retry_after: float | None = None
 
 
 @dataclass(frozen=True)
@@ -153,12 +155,19 @@ class GraphReadOnly:
         recorder: list[ApiCallRecord] | None = None,
         opener: Opener | None = None,
         timeout: float = 30.0,
+        attempts: int = 3,
+        sleep: Callable[[float], None] = time.sleep,
     ) -> None:
         self.creds = creds
         self.calls: list[ApiCallRecord] = recorder if recorder is not None else []
         self.auth_requests = 0
+        #: Repeats of a request that timed out or was throttled. Every repeat
+        #: is the same read again; counted so the run's request total is honest.
+        self.retries = 0
         self._open = opener or urllib.request.urlopen
         self._timeout = timeout
+        self._attempts = max(1, attempts)
+        self._sleep = sleep
         self._token: str | None = None
         self._token_expires = 0.0
 
@@ -225,10 +234,33 @@ class GraphReadOnly:
     # -- transport --------------------------------------------------------------
 
     def _send(self, request: urllib.request.Request) -> dict[str, Any]:
+        """Send, retrying what is worth retrying.
+
+        Found live (13 Oct 2026): one slow response raised TimeoutError, which
+        nothing caught, and the whole collection died at its last collector.
+        Timeouts, dropped connections and Microsoft's "slow down / try again"
+        answers (429, 502, 503, 504) are retried with a pause; every request
+        here is a read or the token request, so repeating one changes nothing.
+        If it still fails it becomes a GraphError, which degrades only the
+        collector that asked.
+        """
+        last: GraphError | None = None
+        for attempt in range(1, self._attempts + 1):
+            try:
+                return self._send_once(request)
+            except GraphError as exc:
+                if exc.status not in (None, 429, 502, 503, 504) or attempt == self._attempts:
+                    raise
+                last = exc
+                self.retries += 1
+                self._sleep(min(exc.retry_after or 2.0 ** (attempt - 1), 30.0))
+        raise last or GraphError(None, "error", "request failed")  # pragma: no cover
+
+    def _send_once(self, request: urllib.request.Request) -> dict[str, Any]:
         try:
             with self._open(request, timeout=self._timeout) as response:
                 body = response.read()
-        except urllib.error.HTTPError as exc:
+        except urllib.error.HTTPError as exc:  # an answer, but an error (before URLError: its parent)
             raw = exc.read() if hasattr(exc, "read") else b""
             code, message = "error", raw.decode("utf-8", "replace")[:300]
             try:
@@ -239,5 +271,16 @@ class GraphReadOnly:
                     code, message = str(error["error"]), str(error.get("error_description", ""))[:300]
             except ValueError:
                 pass
-            raise GraphError(exc.code, code, message) from None
+            failure = GraphError(exc.code, code, message)
+            try:  # Microsoft says how long to wait when it throttles
+                header = exc.headers.get("Retry-After") if exc.headers is not None else None
+                failure.retry_after = float(header) if header else None
+            except (TypeError, ValueError):
+                failure.retry_after = None
+            raise failure from None
+        except (TimeoutError, urllib.error.URLError, OSError) as exc:
+            # No answer at all: a timeout or a dropped connection.
+            raise GraphError(
+                None, "no_response", f"no response from Microsoft ({type(exc).__name__})"
+            ) from None
         return json.loads(body or b"{}")

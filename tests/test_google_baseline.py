@@ -22,7 +22,7 @@ import os
 from pathlib import Path
 
 import pytest
-from tests.conftest import REPO_ROOT
+from tests.conftest import FIXTURE_NOW, REPO_ROOT
 
 from icp.collectors.google import load_fixture_snapshot
 from icp.normalizers.google import normalize
@@ -34,7 +34,12 @@ SETS = {"synthetic": ("google", "dev-icp"), "frozen-dev": ("google-dev", "dev")}
 
 def _findings(directory: str, tenant_id: str) -> list[dict]:
     snapshot = load_fixture_snapshot(REPO_ROOT / "fixtures" / directory, tenant_id=tenant_id)
-    result = assess(normalize(snapshot), now=snapshot.collected_at)
+    # The synthetic set encodes "today" as early September 2026 and its loader
+    # stamps the real time; measured from the real calendar, dormancy findings
+    # drift as days pass (this test failed a week after it was written, with no
+    # Google code changed). The frozen set carries its own collection time.
+    now = FIXTURE_NOW if directory == "google" else snapshot.collected_at
+    result = assess(normalize(snapshot), now=now)
     return sorted(
         (
             {

@@ -392,6 +392,10 @@ def collect_m365(ctx: click.Context, no_encrypt: bool) -> None:
         f"  artifacts: {len(snapshot.artifacts)}   Graph requests: {len(snapshot.api_calls)} ({verbs})"
         f"   sign-in requests: {client.auth_requests} (token only)"
     )
+    if client.retries:
+        click.echo(
+            f"  repeated requests: {client.retries} (the same reads again, after a slow or busy response)"
+        )
     if snapshot.started_at:
         click.echo(
             f"  collection window (UTC): {snapshot.started_at:%Y-%m-%d %H:%M:%S} to "

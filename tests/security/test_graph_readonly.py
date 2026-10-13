@@ -177,3 +177,72 @@ def test_microsofts_error_code_is_kept(creds):
         client.get("auditLogs/signIns")
     assert caught.value.status == 403 and caught.value.code == "Authorization_RequestDenied"
     assert client.calls[-1].status == 403
+
+
+# -- slow and busy responses (found live, 13 Oct 2026) -----------------------------
+
+
+class _Flaky:
+    """Fails the first `failures` Graph requests with `error`, then answers."""
+
+    def __init__(self, error, failures):
+        self.error, self.failures, self.graph_requests = error, failures, 0
+
+    def __call__(self, request, timeout=None):
+        if request.full_url == TOKEN_URL:
+            return _Response(json.dumps({"access_token": "t", "expires_in": 3600}).encode())
+        self.graph_requests += 1
+        if self.graph_requests <= self.failures:
+            raise self.error() if callable(self.error) else self.error
+        return _Response(json.dumps({"value": [{"id": "1"}]}).encode())
+
+
+def _throttled():
+    return urllib.error.HTTPError(
+        f"{GRAPH}/users", 429, "Too Many Requests", {"Retry-After": "7"}, io.BytesIO(b"{}")
+    )
+
+
+def test_a_timeout_is_retried_and_the_read_then_succeeds(creds):
+    """One slow response raised TimeoutError, nothing caught it, and a whole
+    live collection died on its last collector."""
+    pauses: list[float] = []
+    fake = _Flaky(TimeoutError("The read operation timed out"), failures=2)
+    client = GraphReadOnly(creds, opener=fake, sleep=pauses.append)
+
+    assert client.get("auditLogs/signIns") == {"value": [{"id": "1"}]}
+    assert fake.graph_requests == 3 and client.retries == 2
+    assert pauses == [1.0, 2.0]  # backs off between attempts
+    assert [c.status for c in client.calls] == [200]
+
+
+def test_no_response_after_every_attempt_is_a_graph_error_not_a_crash(creds):
+    from icp.security.graph_readonly import GraphError
+
+    client = GraphReadOnly(
+        creds, opener=_Flaky(TimeoutError("timed out"), failures=99), sleep=lambda _s: None
+    )
+    with pytest.raises(GraphError) as caught:
+        client.get("auditLogs/signIns")
+    assert caught.value.status is None and caught.value.code == "no_response"
+    assert client.calls[-1].status is None
+
+
+def test_throttling_waits_as_long_as_microsoft_asks(creds):
+    pauses: list[float] = []
+    client = GraphReadOnly(creds, opener=_Flaky(_throttled, failures=1), sleep=pauses.append)
+    client.get("users")
+    assert pauses == [7.0]
+
+
+def test_a_refusal_is_not_retried(creds):
+    from icp.security.graph_readonly import GraphError
+
+    def forbidden():
+        return urllib.error.HTTPError(f"{GRAPH}/users", 403, "Forbidden", {}, io.BytesIO(b"{}"))
+
+    fake = _Flaky(forbidden, failures=99)
+    client = GraphReadOnly(creds, opener=fake, sleep=lambda _s: None)
+    with pytest.raises(GraphError):
+        client.get("users")
+    assert fake.graph_requests == 1 and client.retries == 0

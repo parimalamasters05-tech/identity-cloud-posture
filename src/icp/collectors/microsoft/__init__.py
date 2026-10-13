@@ -392,6 +392,12 @@ def _error(name: str, exc: GraphError) -> CollectionError:
             Assessability.NOT_ASSESSABLE_LICENSE,
             f"Not available on this licence: {exc.message}",
         )
+    elif exc.status is None:
+        state, message = (
+            Assessability.NOT_ASSESSABLE_ERROR,
+            "Microsoft did not respond in time, after several attempts. This is a temporary "
+            "connection problem, not a setting in your organization; collecting again usually fixes it.",
+        )
     else:
         state, message = Assessability.NOT_ASSESSABLE_ERROR, f"HTTP {exc.status} {exc.code}: {exc.message}"
     return CollectionError(collector=name, assessability=state, message=message, http_status=exc.status)
