@@ -17,7 +17,7 @@
         &nbsp;{{ f.title }}
       </h4>
       <p class="meta">
-        <span class="mono">{{ f.finding_id }}</span> &middot; rule {{ f.rule_id }} &middot;
+        {% if combined %}<strong>{{ platform_name(f) }}</strong> &middot; {% endif %}<span class="mono">{{ f.finding_id }}</span> &middot; rule {{ f.rule_id }} &middot;
         confidence: {{ f.confidence }} &middot; risk score {{ f.risk_score }} &middot;
         {{ f.entity_count }} affected{% if f.privileged_entity_count %} ({{ f.privileged_entity_count }} privileged){% endif %}
       </p>
@@ -75,7 +75,7 @@
     {% for area in passed_areas %}
     <div class="finding sevbar-low">
       <h4 style="margin-top:0;">{{ area.title }} — no issues found</h4>
-      <p class="meta">We looked for: {{ area.checks | map('lower') | join('; ') }}. None was found.</p>
+      <p class="meta">We looked for: {{ area.checks | map('lower') | join('; ') }}. None was found.{{ area.note }}</p>
     </div>
     {% endfor %}
   {% endif %}
@@ -88,7 +88,7 @@
   </p>
     {% for entry in coverage_notes %}
     <div class="finding sevbar-low">
-      <h4 style="margin-top:0;"><span class="sev sev-info">Coverage note</span>&nbsp;{{ entry.finding.title }}</h4>
+      <h4 style="margin-top:0;"><span class="sev sev-info">Coverage note</span>&nbsp;{% if combined %}{{ platform_name(entry.finding) }}: {% endif %}{{ entry.finding.title }}</h4>
       {% for ev in entry.finding.evidence %}<p>{{ ev.summary }}</p>{% endfor %}
       {% set missed = entry.finding.affected_entities | selectattr('kind', 'equalto', 'user') | list %}
       {% if missed %}

@@ -15,7 +15,7 @@ from datetime import datetime, timedelta
 
 from icp.models.enums import CheckFamily, Confidence, Platform, ScopeTier
 from icp.models.finding import AffectedEntity, Evidence, Finding
-from icp.normalizers.base import NormalizedTenant
+from icp.normalizers.base import Identity, NormalizedTenant
 from icp.rules.admin_role_sprawl import _ABSOLUTE_CEILING, _MINIMUM_ALLOWED, _RATIO_CEILING
 from icp.rules.base import Rule, RuleContext, RuleNotAssessable, entity_from_identity, plural, register
 
@@ -77,12 +77,25 @@ class M365AdminsWithoutMfa(M365Rule):
         # these admins had never registered a method. The policy then asks for
         # one at the next sign-in, from whoever has the password.
         policies = (tenant.policy.raw if tenant.policy else {}).get("admin_mfa_policies", [])
-        pending = (
-            f" The policy '{policies[0]}' will ask for a second step at the next sign-in, but none is set "
-            "up yet, so whoever signs in next with the password, including someone who stole it, chooses it."
-            if policies
-            else ""
-        )
+
+        def pending(u: Identity) -> str:
+            # Said only of an account the policy really covers: the review of the
+            # first combined report caught this sentence on a Global Reader, a
+            # role the policy does not include.
+            for p in policies:
+                if set(u.admin_roles) & set(p["roles"]) and u.id not in p["excluded_users"]:
+                    return (
+                        f" The policy '{p['name']}' will ask for a second step at the next sign-in, but "
+                        "none is set up yet, so whoever signs in next with the password, including "
+                        "someone who stole it, chooses it."
+                    )
+            if policies:
+                return (
+                    f" The policy '{policies[0]['name']}' does not cover this role, so nothing asks "
+                    "this account for a second step."
+                )
+            return ""
+
         return [
             self.make_finding(
                 tenant,
@@ -95,7 +108,7 @@ class M365AdminsWithoutMfa(M365Rule):
                         pointer=f"/m365.auth_methods/entries/{u.id}",
                         summary=(
                             f"{u.label} holds {', '.join(u.admin_roles)} and has no sign-in method "
-                            "other than a password." + pending
+                            "other than a password." + pending(u)
                         ),
                         observed_values={"roles": ", ".join(u.admin_roles), "second_factor": False},
                     )
@@ -122,23 +135,43 @@ class M365UsersWithoutMfa(M365Rule):
         affected = [u for u in active if not u.is_privileged and not u.mfa_enrolled]
         if not affected:
             return []
+        # Coverage is of every active account. It once left out administrators
+        # with no second step (they are reported by M365-MFA-001), which read
+        # as 42.9% where the true figure was 28.6%.
         total = len(active) or 1
-        pct = round(100 * (total - len(affected)) / total, 1)
+        covered = sum(1 for u in active if u.mfa_enrolled)
+        admins_without = len(active) - covered - len(affected)
+        pct = round(100 * covered / total, 1)
+        have = "has" if len(affected) == 1 else "have"
         return [
             self.make_finding(
                 tenant,
                 ctx,
-                title=f"{len(affected)} of {total} active accounts have no second sign-in step ({pct}% coverage)",
+                title=(
+                    f"{plural(len(affected), 'staff account')} {have} no second sign-in step "
+                    f"({covered} of {total} active accounts covered, {pct}%)"
+                ),
                 entities=[entity_from_identity(u) for u in affected],
                 evidence=[
                     Evidence(
                         collector="m365.auth_methods",
                         pointer="/m365.auth_methods/entries",
                         summary=(
-                            f"{plural(len(affected), 'active staff account')} (not administrators) can sign in "
-                            "with a password alone."
+                            f"{plural(len(affected), 'active staff account')} (not administrators) {have} "
+                            "no second sign-in step set up."
+                            + (
+                                f" With the {plural(admins_without, 'administrator account')} reported "
+                                f"separately, {covered} of all {total} active accounts are covered ({pct}%)."
+                                if admins_without
+                                else f" {covered} of all {total} active accounts are covered ({pct}%)."
+                            )
                         ),
-                        observed_values={"without_second_factor": len(affected), "active_accounts": total},
+                        observed_values={
+                            "without_second_factor": len(affected),
+                            "administrators_without_second_factor": admins_without,
+                            "active_accounts": total,
+                            "coverage_pct": pct,
+                        },
                     )
                 ],
             )
@@ -795,7 +828,8 @@ class M365BroadDelegatedApps(M365Rule):
                                 "password changes and after the person stops using the app."
                                 + (
                                     f" For {', '.join(standing)} it can also stay signed in on its own "
-                                    "(offline access), so it can read at any time."
+                                    "(offline access), so it can keep reading without a new sign-in "
+                                    "until that access is removed."
                                     if standing
                                     else ""
                                 )

@@ -25,12 +25,14 @@ from typing import Any
 
 from jinja2 import Environment, FileSystemLoader, StrictUndefined, select_autoescape
 
-from icp.models.enums import CheckFamily, ScopeTier, Severity
+from icp.models.enums import CheckFamily, Platform, ScopeTier, Severity
 from icp.models.finding import Finding
 from icp.normalizers.base import Application, NormalizedTenant
 from icp.reporting import plain
 from icp.reporting.consolidation import consolidate
 from icp.reporting.executive_summary import build as build_summary
+from icp.reporting.executive_summary import build_combined as build_combined_summary
+from icp.reporting.platform_text import combined as combined_text
 from icp.reporting.platform_text import for_platform
 from icp.reporting.remediation import RemediationLibrary, load_framework
 from icp.risk import scoring
@@ -84,6 +86,8 @@ class ReportRenderer:
         self.env.filters["long_date"] = _long_date
         self.env.globals["tier_label"] = _tier_label
         self.env.globals["app_kind"] = _app_kind
+        self.env.globals["access"] = _access
+        self.env.globals["platform_name"] = lambda finding: for_platform(finding.platform).name
 
     # -- context ---------------------------------------------------------------
 
@@ -160,7 +164,7 @@ class ReportRenderer:
             "framework_rows": self._framework_rows(actionable, framework),
             "matrix": self.matrix,
             "matrix_rows": self.matrix.as_table(),
-            "scope_statement": _scope_statement(tenant),
+            "scope_statement": _scope_statement(tenant, engagement_ref),
             "platform": for_platform(tenant.platform),
             # Judged by the platform's own rule: Graph read permissions do not
             # end in ".readonly", and the Google rule once called all nine writes.
@@ -178,7 +182,184 @@ class ReportRenderer:
                 if c not in _COVER_ONLY_COLLECTORS
             ],
             "rules_failed": result.rules_failed,
+            # A single-platform report is a combined report with one part: the
+            # same templates render both, so their wording cannot drift apart.
+            "combined": False,
+            "parts": [self._part(tenant, engagement_ref)],
         }
+
+    @staticmethod
+    def _part(tenant: NormalizedTenant, engagement_ref: str = "") -> dict[str, Any]:
+        """What the per-platform sections (access method, permissions,
+        read-only proof, applications, limitations) need for one platform."""
+        text = for_platform(tenant.platform)
+        permissions = _scopes_for_claims(tenant)
+        return {
+            "platform": text,
+            "tenant": tenant,
+            "snapshot": tenant.snapshot,
+            "scope_statement": _scope_statement(tenant, engagement_ref),
+            "write_capable_scopes": text.write_capable(permissions),
+            "content_capable_scopes": text.content_capable(permissions),
+            "read_request_count": sum(1 for c in tenant.snapshot.api_calls if c.method in ("GET", "HEAD")),
+            "applications": tenant.applications,
+            "token_log": tenant.token_log,
+        }
+
+    def build_combined_context(
+        self,
+        assessed: list[tuple[NormalizedTenant, AssessmentResult]],
+        *,
+        client_name: str,
+        assessor: str,
+        engagement_ref: str = "",
+    ) -> dict[str, Any]:
+        """One report for a client on several platforms (the brief's week 5:
+        "one command against a mixed-platform client produces one coherent report").
+
+        One rating, one ranked action plan and one findings section across
+        every platform, each finding tagged with its platform; the access
+        method, permissions, read-only proof and connected applications are
+        given per platform, because those differ.
+        """
+        if len(assessed) < 2:
+            raise ValueError("A combined report needs at least two platforms")
+        tenants = [t for t, _ in assessed]
+        text = combined_text([t.platform for t in tenants])
+
+        findings = [f for _, r in assessed for f in r.findings]
+        actionable = [f for f in findings if f.severity != Severity.INFO]
+        coverage_notes = [f for f in findings if f.severity == Severity.INFO]
+        self._assert_content_complete(findings)
+
+        entries = consolidate(actionable)
+        leads = [e.finding for e in entries]
+        folded_into = {r.finding_id: e.finding for e in entries for r in e.related}
+        ranked = rank(leads, limit=10, dedupe_by_action=True)
+        framework = load_framework()
+
+        by_family: dict[str, list[dict[str, Any]]] = {}
+        for entry in sorted(entries, key=lambda e: (-e.finding.risk_score, e.finding.finding_id)):
+            context = self._finding_context(entry.finding)
+            context["related"] = entry.related
+            title = _family_title(entry.finding.check_family, text.family_titles)
+            by_family.setdefault(title, []).append(context)
+
+        appendix_by_family: dict[str, list[dict[str, Any]]] = {}
+        for finding in sorted(actionable, key=lambda f: (-f.risk_score, f.finding_id)):
+            context = self._finding_context(finding)
+            context["shown_under"] = folded_into.get(finding.finding_id)
+            title = _family_title(finding.check_family, text.family_titles)
+            appendix_by_family.setdefault(title, []).append(context)
+
+        lead_counts = {str(s): 0 for s in Severity}
+        for finding in leads:
+            lead_counts[str(finding.severity)] += 1
+
+        passed_areas = []
+        degraded_areas = []
+        for tenant, result in assessed:
+            name = for_platform(tenant.platform).name
+            own = [f for f in actionable if f.platform == tenant.platform]
+            for area in self._passed_areas(tenant, result, own):
+                passed_areas.append({**area, "title": f"{name}: {area['title']}"})
+            degraded_areas += [
+                f"{name}: {_COLLECTOR_AREAS.get(c, c)}"
+                for c in tenant.snapshot.degraded_collectors()
+                if c not in _COVER_ONLY_COLLECTORS
+            ]
+
+        parts = [self._part(t, engagement_ref) for t in tenants]
+        any_write = any(p["write_capable_scopes"] for p in parts)
+        any_content = any(p["content_capable_scopes"] for p in parts)
+        caveat = " Every permission used can only read."
+        if any_write or any_content:
+            caveat = (
+                " Not every permission is limited to settings: one could in principle remove "
+                "connections between staff accounts and outside applications, and one could open "
+                "file contents. The tool is built so that it cannot send any change or request a "
+                "file's contents, and it did neither."
+                if any_write and any_content
+                else (_WRITE_CAVEAT if any_write else _CONTENT_CAVEAT)
+            )
+
+        return {
+            "generated_at": datetime.now(UTC),
+            "client_name": client_name,
+            "assessor": assessor,
+            "engagement_ref": engagement_ref,
+            "tenant": tenants[0],
+            "coverage": tenants[0].coverage,
+            "snapshot": tenants[0].snapshot,
+            "summary": build_combined_summary(tenants, leads + coverage_notes, self.library),
+            "counts": lead_counts,
+            "total_findings": len(leads),
+            "total_checks_flagged": len(actionable),
+            "action_plan": [
+                {
+                    "rank": entry.rank,
+                    "risk_per_hour": entry.risk_per_hour,
+                    "finding": entry.finding,
+                    "covers": entry.covers,
+                    "also_resolves": entry.also_resolves,
+                    "remediation": self.library.get(entry.finding.remediation_key),
+                }
+                for entry in ranked
+            ],
+            "findings_by_family": by_family,
+            "applications": [],
+            "token_log": None,
+            "appendix_by_family": appendix_by_family,
+            "passed_areas": passed_areas,
+            "coverage_notes": [self._finding_context(f) for f in coverage_notes],
+            "framework": framework,
+            "framework_rows": self._framework_rows(actionable, framework),
+            "matrix": self.matrix,
+            "matrix_rows": self.matrix.as_table(),
+            "scope_statement": {
+                "examined": list(text.examined),
+                "not_examined": list(text.not_examined),
+                "method": _authorized(text.method_opening, engagement_ref)
+                + caveat
+                + " No setting was changed, and no message or file content was opened.",
+                "point_in_time": max(t.snapshot.collected_at for t in tenants),
+                "degraded": [c for t in tenants for c in t.snapshot.degraded_collectors()],
+            },
+            "platform": text,
+            "write_capable_scopes": [],
+            "content_capable_scopes": [],
+            "read_request_count": sum(p["read_request_count"] for p in parts),
+            "degraded": [c for t in tenants for c in t.snapshot.degraded_collectors()],
+            "degraded_areas": degraded_areas,
+            "rules_failed": [x for _, r in assessed for x in r.rules_failed],
+            "combined": True,
+            "parts": parts,
+        }
+
+    def render_combined(
+        self,
+        assessed: list[tuple[NormalizedTenant, AssessmentResult]],
+        output_dir: Path,
+        *,
+        client_name: str,
+        assessor: str,
+        engagement_ref: str = "",
+        basename: str | None = None,
+    ) -> RenderResult:
+        context = self.build_combined_context(
+            assessed, client_name=client_name, assessor=assessor, engagement_ref=engagement_ref
+        )
+        html = self.env.get_template("report.html").render(**context)
+
+        output_dir = Path(output_dir)
+        output_dir.mkdir(parents=True, exist_ok=True)
+        latest = max((t.snapshot for t, _ in assessed), key=lambda s: s.collected_at)
+        stem = basename or f"{_slug(client_name)}__combined__{latest.snapshot_id}"
+
+        html_path = output_dir / f"{stem}.html"
+        html_path.write_text(html, encoding="utf-8")
+        pdf_path, pdf_error = self._render_pdf(html, output_dir / f"{stem}.pdf")
+        return RenderResult(html_path=html_path, pdf_path=pdf_path, pdf_error=pdf_error)
 
     def _finding_context(self, finding: Finding) -> dict[str, Any]:
         return {
@@ -216,7 +397,18 @@ class ReportRenderer:
             ]
             if checks:
                 title = _family_title(family, for_platform(tenant.platform).family_titles)
-                areas.append({"title": title, "checks": checks})
+                # A clean age check means something only if the dates were there.
+                dated = (
+                    tenant.platform == Platform.MICROSOFT_365
+                    and family in (CheckFamily.STALE_ACCOUNTS, CheckFamily.ADMIN_ROLE_SPRAWL)
+                    and tenant.coverage.get("sign_in_data_available")
+                )
+                note = (
+                    " Microsoft supplied last sign-in dates, so the unused-account checks ran."
+                    if dated
+                    else ""
+                )
+                areas.append({"title": title, "checks": checks, "note": note})
         return areas
 
     def _framework_rows(self, findings: list[Finding], framework: dict[str, Any]) -> list[dict[str, Any]]:
@@ -366,6 +558,34 @@ def _tier_label(tier: ScopeTier) -> str:
     return _TIER_LABELS.get(tier, str(tier))
 
 
+#: Microsoft: the "Users" column already says whose data. "Read all data"
+#: beside an app one person approved for their own mailbox overstated it.
+_M365_TIER_LABELS = {
+    ScopeTier.FULL_DATA_WRITE: "Read and change mail or files",
+    ScopeTier.FULL_DATA_READ: "Read mail or files",
+    ScopeTier.SCOPED_DATA: "Limited data",
+    ScopeTier.METADATA_ONLY: "Directory details only",
+}
+
+
+def _access(app: Application, platform_name: str) -> dict[str, str]:
+    """The inventory's "Highest access" cell: a label, and for Microsoft the
+    permission names behind it, so the label can be checked against the portal."""
+    if platform_name != "Microsoft 365":
+        return {"label": _tier_label(app.max_tier), "detail": ""}
+    if app.first_party_kind == "assessor":
+        return {
+            "label": "Read-only",
+            "detail": (
+                f"{len(app.scopes)} read permissions, listed under Methodology; "
+                "used for settings and sharing details only"
+            ),
+        }
+    names = sorted(s for s in app.scopes if s not in ("openid", "profile", "email", "offline_access"))
+    shown = ", ".join(names[:4]) + (f" and {len(names) - 4} more" if len(names) > 4 else "")
+    return {"label": _M365_TIER_LABELS.get(app.max_tier, _tier_label(app.max_tier)), "detail": shown}
+
+
 def _family_title(family: CheckFamily, overrides: dict[CheckFamily, str]) -> str:
     return overrides.get(family) or _FAMILY_TITLES.get(family, str(family))
 
@@ -380,6 +600,21 @@ def _app_kind(app: Application) -> str:
     }.get(app.first_party_kind or "", "Third-party")
 
 
+#: Accurate, not reassuring: one permission Google requires could, in principle,
+#: change something. What we can promise is behaviour.
+_WRITE_CAVEAT = (
+    " One permission Google requires for this review could in principle remove "
+    "connections between staff accounts and outside applications; the tool is built "
+    "so that it cannot send any change, and none was made."
+)
+#: Microsoft: read-only, but one permission could open file contents.
+_CONTENT_CAVEAT = (
+    " Every permission used can only read, but one could in principle open file contents; "
+    "the tool reads only who each file is shared with, and is built so that it cannot "
+    "request a file's contents."
+)
+
+
 def _scopes_for_claims(tenant: NormalizedTenant) -> tuple[str, ...]:
     """The scopes the report's access claims must be true of.
 
@@ -389,32 +624,32 @@ def _scopes_for_claims(tenant: NormalizedTenant) -> tuple[str, ...]:
     return tenant.snapshot.scopes_used or (*sorted_scopes(), *optional_scopes())
 
 
-def _scope_statement(tenant: NormalizedTenant) -> dict[str, Any]:
+#: The letter is claimed only when the run names it. A report produced without
+#: an engagement reference once said "under a signed authorization letter" for a
+#: lab tenant that had none.
+_LETTER = ", under a signed authorization letter."
+_GRANTED = ", using access an administrator of the organization granted for this review."
+
+
+def _authorized(method_opening: str, engagement_ref: str) -> str:
+    return method_opening if engagement_ref else method_opening.replace(_LETTER, _GRANTED)
+
+
+def _scope_statement(tenant: NormalizedTenant, engagement_ref: str = "") -> dict[str, Any]:
     """What was and was not examined. Page one, for everyone."""
     text = for_platform(tenant.platform)
     permissions = _scopes_for_claims(tenant)
     if text.write_capable(permissions):
-        # Accurate, not reassuring: one permission Google requires could, in
-        # principle, change something. What we can promise is behaviour.
-        caveat = (
-            " One permission Google requires for this review could in principle remove "
-            "connections between staff accounts and outside applications; the tool is built "
-            "so that it cannot send any change, and none was made."
-        )
+        caveat = _WRITE_CAVEAT
     elif text.content_capable(permissions):
-        # Microsoft: read-only, but one permission could open file contents.
-        caveat = (
-            " Every permission used can only read, but one could in principle open file contents; "
-            "the tool reads only who each file is shared with, and is built so that it cannot "
-            "request a file's contents."
-        )
+        caveat = _CONTENT_CAVEAT
     else:
         caveat = " Every permission used can only read."
     return {
         "examined": list(text.examined),
         "not_examined": list(text.not_examined),
         "method": (
-            text.method_opening
+            _authorized(text.method_opening, engagement_ref)
             + caveat
             + " No setting was changed, and no message or file content was opened."
         ),

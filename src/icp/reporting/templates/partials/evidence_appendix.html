@@ -4,7 +4,8 @@
   <p>
     Every individual check result, with its full affected-entity list and the arithmetic behind
     its score. This includes results grouped under a single application in the detailed findings.
-    Snapshot reference <span class="mono">{{ snapshot.snapshot_id }}</span>; each pointer locates
+    Snapshot reference{{ 's' if combined else '' }}
+    {% for part in parts %}{% if combined %}{{ part.platform.name }} {% endif %}<span class="mono">{{ part.snapshot.snapshot_id }}</span>{{ '' if loop.last else ', ' }}{% endfor %}; each pointer locates
     the exact observation in that snapshot.
   </p>
 
@@ -29,6 +30,7 @@
             = {{ entry.score.total }}
           </td>
         </tr>
+        {% if combined %}<tr><th>Platform</th><td>{{ platform_name(f) }}</td></tr>{% endif %}
         <tr><th>Rule</th><td class="mono">{{ f.rule_id }}</td></tr>
         <tr><th>Remediation key</th><td class="mono">{{ f.remediation_key }}</td></tr>
         <tr><th>First seen</th><td>{{ f.first_seen.strftime('%d %B %Y') }}</td></tr>
@@ -57,9 +59,14 @@
 
   <h3>Data handling</h3>
   <p>
+    {% if engagement_ref %}
     The raw snapshot supporting this report is delivered to you alongside it. Our copy is
     encrypted at rest and destroyed at the end of the retention window agreed in the engagement,
-    with a written deletion attestation issued at that point. We hold no copy of any message or
-    file content, because none was collected.
+    with a written deletion attestation issued at that point.
+    {% else %}
+    The snapshot supporting this report is stored encrypted. The tool deletes snapshots older
+    than its retention setting and writes a deletion record when it does.
+    {% endif %}
+    We hold no copy of any message or file content, because none was collected.
   </p>
 </section>

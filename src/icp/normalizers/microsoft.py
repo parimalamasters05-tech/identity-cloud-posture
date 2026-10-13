@@ -386,6 +386,12 @@ def _policy(snapshot: Snapshot, domain: str) -> DomainPolicy:
         and "All" in ((p.get("applications") or {}).get("includeApplications") or [])
     ]
     capability = sharing.get("sharingCapability")
+    # A policy lists roles by template id; people hold them by name.
+    role_names: dict[str, str] = {}
+    for d in (snapshot.artifact("m365.roles") or {}).get("definitions", []):
+        for key in (d.get("templateId"), d.get("id")):
+            if key and d.get("displayName"):
+                role_names[key] = d["displayName"]
     return DomainPolicy(
         platform=Platform.MICROSOFT_365,
         domain=domain,
@@ -401,12 +407,22 @@ def _policy(snapshot: Snapshot, domain: str) -> DomainPolicy:
             "mfa_enforcing_policies": [p.get("displayName") for p in mfa_policies],
             # Enabled policies requiring a second step for administrator roles:
             # an admin with none registered is asked to set one up at next sign-in.
+            # Each names the roles it covers: the Microsoft template covers 14,
+            # and an admin holding only another role (Global Reader, seen live)
+            # is not asked for anything.
             "admin_mfa_policies": [
-                p.get("displayName")
+                {
+                    "name": p.get("displayName"),
+                    "roles": sorted(
+                        role_names.get(r, r) for r in (p.get("users") or {}).get("includeRoles") or []
+                    ),
+                    "excluded_users": list((p.get("users") or {}).get("excludeUsers") or []),
+                }
                 for p in ca
                 if p.get("state") == "enabled"
                 and "mfa" in (p.get("grant_controls") or [])
                 and (p.get("users") or {}).get("includeRoles")
+                and "All" in ((p.get("applications") or {}).get("includeApplications") or [])
             ],
             "consent_policies": (policies.get("authorization") or {}).get("permission_grant_policies", []),
             "users_can_register_apps": (policies.get("authorization") or {}).get("users_can_register_apps"),

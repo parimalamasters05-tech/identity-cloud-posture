@@ -445,3 +445,49 @@ def test_the_fix_for_blocked_account_access_is_one_a_client_can_follow(library):
     assert "Remove-MgOauth2PermissionGrant" in steps
     assert "revoke the access granted by the blocked account" not in steps
     assert "can keep reading" not in entry.impact
+
+
+# -- Found by the review of the first combined report (13 Oct 2026) ---------------------
+
+
+def test_the_admin_policy_is_only_claimed_for_a_role_it_covers(seeded):
+    """The report said the admin policy "will ask for a second step" of a Global
+    Reader, a role that policy does not include."""
+    _, _, by_rule = seeded
+    by_account = {e.summary.split(" holds ")[0]: e.summary for e in by_rule["M365-MFA-001"][0].evidence}
+    assert "will ask for a second step" in by_account["it.contractor@lab.example"]
+    reader = by_account["svc-scanner@lab.example"]
+    assert "will ask for a second step" not in reader
+    assert "does not cover this role" in reader
+
+
+def test_an_admin_policy_for_one_application_is_not_claimed():
+    artifacts = deepcopy(_artifacts())
+    artifacts["m365.policies"]["conditional_access"][0]["applications"] = {
+        "includeApplications": ["one-app"]
+    }
+    _, _, by_rule = _run(artifacts)
+    assert all("will ask for a second step" not in e.summary for e in by_rule["M365-MFA-001"][0].evidence)
+
+
+def test_coverage_counts_administrators_without_a_second_step(seeded):
+    """It read 42.9% live where the true figure was 28.6%: the three
+    administrators with no second step were left out of the uncovered count."""
+    tenant, _, by_rule = seeded
+    [finding] = by_rule["M365-MFA-002"]
+    active = [u for u in tenant.active_users if u.mfa_method_known]
+    covered = sum(1 for u in active if u.mfa_enrolled)
+    assert any(u.is_privileged and not u.mfa_enrolled for u in active), "fixture must include the case"
+    assert (
+        f"({covered} of {len(active)} active accounts covered, {round(100 * covered / len(active), 1)}%)"
+        in finding.title
+    )
+    assert finding.evidence[0].observed_values["coverage_pct"] == round(100 * covered / len(active), 1)
+    assert "administrator accounts reported separately" in finding.evidence[0].summary
+
+
+def test_offline_access_is_not_described_as_unconditional(seeded):
+    _, _, by_rule = seeded
+    summary = by_rule["M365-OAU-001"][0].evidence[0].summary
+    assert "at any time" not in summary
+    assert "until that access is removed" in summary

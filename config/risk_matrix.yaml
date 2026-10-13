@@ -84,3 +84,29 @@ effort_hours:
   oauth.review_shadow_it: 1.0
   oauth.revoke_dormant_grants: 1.0
   coverage.restore_access: 0.5
+
+  # -- Microsoft 365 --------------------------------------------------------
+  # The same kind of work gets the same estimate as its Google equivalent, so
+  # a combined report ranks both platforms on one scale. (Without these, every
+  # Microsoft fix fell back to its rule's rough default: closing one public
+  # file read "3 hours" beside Google's "20 minutes".)
+  m365.mfa.enforce_admins: {base: 0.5, per_item: 0.25, cap: 3.0}
+  m365.mfa.enforce_all_users: {base: 1.0, per_item: 0.1, cap: 8.0}
+  m365.mfa.phishing_resistant_admins: {base: 1.0, per_item: 0.5, cap: 6.0}
+  # One policy to switch on, after telling staff.
+  m365.mfa.require_org_wide: 2.0
+  m365.admins.reduce_global: 2.0
+  m365.admins.remove_dormant: {base: 0.5, per_item: 0.25, cap: 3.0}
+  m365.accounts.remove_unused: {base: 0.25, per_item: 0.1, cap: 4.0}
+  m365.accounts.review_blocked: {base: 0.5, per_item: 0.1, cap: 4.0}
+  m365.apps.review_app_only: 1.5
+  m365.apps.shorten_secrets: {base: 0.5, per_item: 0.25, cap: 3.0}
+  m365.sharing.close_anyone_links: {base: 0.25, per_item: 0.1, cap: 8.0}
+  m365.sharing.restrict_org_setting: 0.5
+  m365.sharing.restrict_guest_invites: 0.5
+  m365.logging.enable_logs: 2.0
+  m365.apps.review_delegated: 1.0
+  # No portal button for one person's consent; a short script per account.
+  m365.apps.revoke_departed: {base: 0.5, per_item: 0.25, cap: 3.0}
+  m365.apps.tighten_consent: 0.5
+  m365.apps.restrict_registration: 0.25

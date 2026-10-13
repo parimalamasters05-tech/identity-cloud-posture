@@ -160,3 +160,48 @@ MICROSOFT = PlatformText(
 
 def for_platform(platform: Platform) -> PlatformText:
     return MICROSOFT if platform == Platform.MICROSOFT_365 else GOOGLE
+
+
+def _join(names: list[str]) -> str:
+    return names[0] if len(names) == 1 else ", ".join(names[:-1]) + " and " + names[-1]
+
+
+def combined(platforms: list[Platform]) -> PlatformText:
+    """Wording for one report covering several platforms (week 5).
+
+    Page-one text is platform-neutral, because two full "what we examined"
+    lists do not fit on a cover; each platform's own access details are given
+    in the methodology, one block per platform.
+    """
+    from dataclasses import replace
+
+    texts = [for_platform(p) for p in platforms]
+    names = _join([t.name for t in texts])
+    return replace(
+        texts[0],
+        name=names,
+        environment=f"your {names} environments",
+        console=_join([t.console for t in texts]),
+        examined=(
+            f"Your staff directories in {names}: accounts, guests and groups",
+            "Who holds administrator rights, and which rights",
+            "Whether each account uses a second sign-in step, and whether it can resist phishing",
+            "Outside applications that staff or administrators have given access to",
+            "Applications that hold access on their own, and how they sign in",
+            "Files and folders that anyone with the link can open, and the sharing settings behind them",
+            "Whether the records needed to investigate an incident are being kept",
+        ),
+        not_examined=(
+            "The contents of any email, document, or file. Settings and account details only.",
+            f"Laptops, phones, networks, or anything outside {names}",
+            "Any attempt to break in, test passwords, or exploit a weakness",
+            "Ongoing monitoring: this is a snapshot of one moment",
+            "Formal certification or attestation against any framework",
+        ),
+        method_opening=(
+            f"Read-only. Settings were read through the official administrative interfaces of {names}, "
+            "under a signed authorization letter."
+        ),
+        family_titles={CheckFamily.MFA_COVERAGE: "Second sign-in step coverage"},
+        cover_name_source="",
+    )

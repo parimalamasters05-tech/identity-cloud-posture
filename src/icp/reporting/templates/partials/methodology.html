@@ -4,10 +4,14 @@
 
   <h3>How the assessment ran</h3>
   <p>
-    {{ platform.retrieval }}
-    {% if write_capable_scopes %}All but {{ 'one are' if write_capable_scopes | length == 1 else (write_capable_scopes | length) ~ ' are' }}
-    read-only {{ platform.permission_noun }}s; the exception{{ 's are' if write_capable_scopes | length > 1 else ' is' }} explained
-    below.{% else %}All are read-only {{ platform.permission_noun }}s.{% endif %}
+    {# One access statement per platform; a single-platform report has one part. #}
+    {% for part in parts %}
+    {% if combined %}<strong>{{ part.platform.name }}.</strong>{% endif %}
+    {{ part.platform.retrieval }}
+    {% if part.write_capable_scopes %}All but {{ 'one are' if part.write_capable_scopes | length == 1 else (part.write_capable_scopes | length) ~ ' are' }}
+    read-only {{ part.platform.permission_noun }}s; the exception{{ 's are' if part.write_capable_scopes | length > 1 else ' is' }} explained
+    below.{% else %}All are read-only {{ part.platform.permission_noun }}s.{% endif %}
+    {% endfor %}
     The tool performs read and list operations only: state-changing requests are blocked before
     they leave the tool, and every request is logged.
     Responses were written to a timestamped snapshot, and every finding in this report was
@@ -16,37 +20,39 @@
     assessment to show exactly what changed.
   </p>
 
-  <h4>{{ platform.permissions_heading }}</h4>
+  {% for part in parts %}
+  <h4>{% if combined %}{{ part.platform.name }}: {% endif %}{{ part.platform.permissions_heading }}</h4>
   <ul class="steps">
-    {% for scope in snapshot.scopes_used %}<li class="mono">{{ scope }}</li>{% endfor %}
-    {% if not snapshot.scopes_used %}<li class="muted">Offline run against frozen fixtures.</li>{% endif %}
+    {% for scope in part.snapshot.scopes_used %}<li class="mono">{{ scope }}</li>{% endfor %}
+    {% if not part.snapshot.scopes_used %}<li class="muted">Offline run against frozen fixtures.</li>{% endif %}
   </ul>
-  {% for scope, reason in write_capable_scopes %}
-  <p class="meta"><strong>Not a read-only {{ platform.permission_noun }}:</strong> <span class="mono">{{ scope }}</span> is
+  {% for scope, reason in part.write_capable_scopes %}
+  <p class="meta"><strong>Not a read-only {{ part.platform.permission_noun }}:</strong> <span class="mono">{{ scope }}</span> is
     {{ reason }}</p>
   {% endfor %}
-  {% for permission, reason in content_capable_scopes %}
+  {% for permission, reason in part.content_capable_scopes %}
   <p class="meta"><strong>Read-only, but could read file contents:</strong> <span class="mono">{{ permission }}</span>.
     {{ reason }}</p>
   {% endfor %}
-  {% if snapshot.scopes_refused %}
+  {% if part.snapshot.scopes_refused %}
   <p class="meta">Requested but not granted by your domain-wide delegation settings, so the checks
     that need them are listed as coverage notes:</p>
   <ul class="steps">
-    {% for scope in snapshot.scopes_refused %}<li class="mono">{{ scope }}</li>{% endfor %}
+    {% for scope in part.snapshot.scopes_refused %}<li class="mono">{{ scope }}</li>{% endfor %}
   </ul>
   {% endif %}
 
-  <h4>Read-only verification</h4>
+  <h4>{% if combined %}{{ part.platform.name }}: {% endif %}Read-only verification</h4>
   <p>
-    {{ snapshot.api_calls | length }} API requests were made during collection{% if read_request_count == snapshot.api_calls | length and read_request_count %}, all of them reads{% endif %}.{{ platform.request_note }}
+    {{ part.snapshot.api_calls | length }} API requests were made during collection{% if part.read_request_count == part.snapshot.api_calls | length and part.read_request_count %}, all of them reads{% endif %}.{{ part.platform.request_note }}
     The tool blocks state-changing requests (POST, PUT, PATCH, DELETE) at the transport layer,
-    refuses any {{ platform.permission_noun }} outside a fixed, reviewed allowlist, and asserts after every run that no
+    refuses any {{ part.platform.permission_noun }} outside a fixed, reviewed allowlist, and asserts after every run that no
     unsafe request was made. We recommend you
-    confirm this independently in {{ platform.audit_log }} for the collection window{% if snapshot.started_at %},
-    <strong>{{ snapshot.started_at.strftime('%d %B %Y, %H:%M:%S') }} to
-    {{ snapshot.collected_at.strftime('%H:%M:%S') }} UTC</strong>{% endif %}.
+    confirm this independently in {{ part.platform.audit_log }} for the collection window{% if part.snapshot.started_at %},
+    <strong>{{ part.snapshot.started_at.strftime('%d %B %Y, %H:%M:%S') }} to
+    {{ part.snapshot.collected_at.strftime('%H:%M:%S') }} UTC</strong>{% endif %}.
   </p>
+  {% endfor %}
 
   <h3>How findings are scored</h3>
   <p>
@@ -95,10 +101,10 @@
 
   <h3>Limitations</h3>
   <ul class="steps">
-    <li>Point-in-time. Configuration captured {{ scope_statement.point_in_time.strftime('%d %B %Y') }}; anything changed since is not reflected.</li>
-    {% if tenant.mfa_report_date %}<li>Which second factors each person uses (security keys and passkeys) comes from Google's daily security report, which Google publishes one to three days late. This assessment used the report for {{ tenant.mfa_report_date | long_date }}, so a key or passkey added after that date is not reflected.</li>{% endif %}
+    {% for part in parts %}<li>Point-in-time. {% if combined %}{{ part.platform.name }} configuration{% else %}Configuration{% endif %} captured {{ part.scope_statement.point_in_time.strftime('%d %B %Y') }}; anything changed since is not reflected.</li>{% endfor %}
+    {% for part in parts %}{% if part.tenant.mfa_report_date %}<li>Which second factors each person uses (security keys and passkeys) comes from Google's daily security report, which Google publishes one to three days late. This assessment used the report for {{ part.tenant.mfa_report_date | long_date }}, so a key or passkey added after that date is not reflected.</li>{% endif %}{% endfor %}
     <li>Configuration and metadata only. No message or file content was accessed, so this report cannot say anything about what your data contains.</li>
-    <li>{{ platform.licence_note }}</li>
+    {% for part in parts %}<li>{{ part.platform.licence_note }}</li>{% endfor %}
     <li>Findings marked medium or low confidence are inferred from indirect signals and should be confirmed before acting.</li>
   </ul>
 </section>

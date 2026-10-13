@@ -92,16 +92,21 @@ class UsersWithoutMfa(Rule):
         if not affected:
             return []
 
+        # Coverage is of every active account. Until the combined-report review
+        # it left out administrators with no second factor (GWS-MFA-001 reports
+        # them), which overstated coverage whenever one existed.
         total = len(tenant.active_users) or 1
-        coverage_pct = round(100 * (total - len(affected)) / total, 1)
+        covered = sum(1 for u in tenant.active_users if u.mfa_enrolled)
+        coverage_pct = round(100 * covered / total, 1)
 
         return [
             self.make_finding(
                 tenant,
                 ctx,
                 title=(
-                    f"{len(affected)} of {total} active accounts have no second factor "
-                    f"({coverage_pct}% coverage)"
+                    f"{plural(len(affected), 'staff account')} "
+                    f"{'has' if len(affected) == 1 else 'have'} no second factor "
+                    f"({covered} of {total} active accounts covered, {coverage_pct}%)"
                 ),
                 entities=[entity_from_identity(u) for u in affected],
                 evidence=[
@@ -111,7 +116,8 @@ class UsersWithoutMfa(Rule):
                         summary=(
                             f"{plural(len(affected), 'active staff account')} (not administrators) "
                             f"{'has' if len(affected) == 1 else 'have'} not enrolled in two-step "
-                            "verification."
+                            f"verification. {covered} of all {total} active accounts, administrators "
+                            f"included, are enrolled ({coverage_pct}%)."
                         ),
                         observed_values={
                             "accounts_without_2sv": len(affected),

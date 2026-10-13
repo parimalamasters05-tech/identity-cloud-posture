@@ -2,7 +2,7 @@
    this says what is there, so the client can spot the app nobody recognizes. #}
 {% if applications %}
 <section class="page-break">
-  <h2>Connected applications</h2>
+  <h2>Connected applications{% if combined %}: {{ platform.name }}{% endif %}</h2>
   <p>
     Every application that staff have connected to organization accounts, {{ applications | length }}
     in total, ordered by how much each can reach. Applications with no finding are listed too:
@@ -18,7 +18,8 @@
         <td>{{ app.name }}{% if app.is_anonymous %}<br><span class="meta">{{ platform.anonymous_label }}</span>{% endif %}</td>
         <td class="meta">{{ app_kind(app) }}</td>
         <td>{% if app.first_party_kind in ("app_only", "assessor") %}every user{% elif "*" in app.users %}every user{% else %}{{ app.active_users }}{% endif %}{% if app.suspended_users %}<br><span class="meta">+ {{ app.suspended_users }} {{ "blocked" if platform.name == "Microsoft 365" else "suspended" }}</span>{% endif %}</td>
-        <td>{{ tier_label(app.max_tier) }}</td>
+        {% set reach = access(app, platform.name) %}
+        <td>{{ reach.label }}{% if reach.detail %}<br><span class="meta">{{ reach.detail }}</span>{% endif %}</td>
         <td class="meta">{{ app.last_authorized_at.strftime('%d %b %Y') if app.last_authorized_at else '—' }}</td>
         <td class="meta">{{ app.last_used_at.strftime('%d %b %Y') if app.last_used_at else '—' }}</td>
       </tr>

@@ -17,9 +17,13 @@
     {% if engagement_ref %}
     <tr><th>Engagement reference</th><td class="mono">{{ engagement_ref }}</td></tr>
     {% endif %}
-    <tr><th>Configuration captured</th><td>{{ scope_statement.point_in_time.strftime('%d %B %Y, %H:%M UTC') }}</td></tr>
+    {% for part in parts %}
+    <tr><th>Configuration captured</th><td>{% if combined %}{{ part.platform.name }}: {% endif %}{{ part.scope_statement.point_in_time.strftime('%d %B %Y, %H:%M UTC') }}</td></tr>
+    {% endfor %}
     <tr><th>Report generated</th><td>{{ generated_at.strftime('%d %B %Y') }}</td></tr>
-    <tr><th>Snapshot reference</th><td class="mono">{{ snapshot.snapshot_id }}</td></tr>
+    {% for part in parts %}
+    <tr><th>Snapshot reference</th><td>{% if combined %}{{ part.platform.name }}: {% endif %}<span class="mono">{{ part.snapshot.snapshot_id }}</span></td></tr>
+    {% endfor %}
   </table>
 
   <table class="scope-columns">

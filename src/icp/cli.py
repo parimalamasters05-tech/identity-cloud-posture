@@ -165,14 +165,20 @@ def assess(ctx: click.Context, snapshot_path: Path | None, tenant: str | None) -
 
 
 @cli.command()
-@click.option("--snapshot", "snapshot_path", type=click.Path(exists=True, path_type=Path))
+@click.option(
+    "--snapshot",
+    "snapshot_paths",
+    multiple=True,
+    type=click.Path(exists=True, path_type=Path),
+    help="Snapshot to report on. Give it once per platform for one combined report.",
+)
 @click.option("--tenant", help="Use the latest snapshot for this tenant.")
 @click.option(
     "--client-name",
     default="",
     help=(
         "Override the organization name on the cover. Default: the name in the client's "
-        "Google Workspace account profile, or failing that its primary domain."
+        "own account profile, or failing that its primary domain."
     ),
 )
 @click.option(
@@ -185,13 +191,17 @@ def assess(ctx: click.Context, snapshot_path: Path | None, tenant: str | None) -
 @click.pass_context
 def report(
     ctx: click.Context,
-    snapshot_path: Path | None,
+    snapshot_paths: tuple[Path, ...],
     tenant: str | None,
     client_name: str,
     assessor: str,
     engagement_ref: str,
 ) -> None:
-    """Generate the client-facing report."""
+    """Generate the client-facing report.
+
+    With one snapshot (or none: the latest for the tenant), a report for that
+    platform. With --snapshot given once per platform, one combined report.
+    """
     from icp.normalizers import normalize_snapshot as normalize
     from icp.reporting.renderer import ReportRenderer
     from icp.rules import assess as run_rules
@@ -206,19 +216,45 @@ def report(
     settings = _settings(ctx)
     store = SnapshotStore(settings.snapshot_dir, encrypt=False)
 
-    snapshot = _load_snapshot(store, snapshot_path, tenant or settings.tenant_id)
-    tenant_view = normalize(snapshot)
-    result = run_rules(tenant_view)
-    client_name = _client_name(override, tenant_view)
+    def assessed(path: Path | None):  # type: ignore[no-untyped-def]
+        snapshot = _load_snapshot(store, path, tenant or settings.tenant_id)
+        view = normalize(snapshot)
+        # As of collection, like `assess`: a report written weeks later must
+        # show the findings the snapshot had, not ones aged by today's date.
+        return view, run_rules(view, now=snapshot.collected_at)
 
-    rendered = ReportRenderer().render(
-        tenant_view,
-        result,
-        settings.output_dir,
-        client_name=client_name,
-        assessor=assessor,
-        engagement_ref=engagement_ref,
-    )
+    if len(snapshot_paths) > 1:
+        pairs = [assessed(path) for path in snapshot_paths]
+        platforms = [view.platform for view, _ in pairs]
+        if len(set(platforms)) != len(platforms):
+            _fail("A combined report takes one snapshot per platform; two of these are the same platform.")
+        # Prefer a real organization name over one that is just the domain
+        # (seen live: Google's profile name was "identityposturelab.com" while
+        # Microsoft's was "Identity Posture Lab").
+        named = next(
+            (v for v, _ in pairs if v.organization_name and v.organization_name != v.primary_domain),
+            next((v for v, _ in pairs if v.organization_name), pairs[0][0]),
+        )
+        client_name = _client_name(override, named)
+        rendered = ReportRenderer().render_combined(
+            pairs,
+            settings.output_dir,
+            client_name=client_name,
+            assessor=assessor,
+            engagement_ref=engagement_ref,
+        )
+        click.echo("Combined report for: " + ", ".join(str(p).replace("_", " ") for p in platforms))
+    else:
+        tenant_view, result = assessed(snapshot_paths[0] if snapshot_paths else None)
+        client_name = _client_name(override, tenant_view)
+        rendered = ReportRenderer().render(
+            tenant_view,
+            result,
+            settings.output_dir,
+            client_name=client_name,
+            assessor=assessor,
+            engagement_ref=engagement_ref,
+        )
 
     click.secho(f"HTML report: {rendered.html_path}", fg="green")
     if rendered.pdf_path:

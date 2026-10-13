@@ -23,7 +23,7 @@
         <td>{{ item.rank }}</td>
         <td>
           <strong>{{ item.remediation.title }}</strong><br>
-          <span class="meta">{{ item.finding.title }}{% if item.covers > 1 %}
+          <span class="meta">{% if combined %}{{ platform_name(item.finding) }}: {% endif %}{{ item.finding.title }}{% if item.covers > 1 %}
             &mdash; and {{ item.covers - 1 }} further finding{{ 's' if item.covers > 2 else '' }}
             resolved by the same action{% endif %}</span>
         </td>

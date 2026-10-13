@@ -149,3 +149,49 @@ def test_microsofts_own_apps_are_labelled_as_microsofts_not_third_party():
     assert _app_kind(app) == "Microsoft's own"
     # Listed for transparency, but a Microsoft component is not a client finding.
     assert not any("SharePoint Online" in f.title for f in result.findings)
+
+
+# -- Found by the review of the first combined report (13 Oct 2026) ---------------------
+
+
+def test_the_inventory_names_permissions_and_does_not_say_read_all_data(m365):
+    """One person's Mail.Read was labelled "Read all data", and so was this tool."""
+    from icp.reporting.renderer import _access
+
+    context, text = m365
+    assert "Read all data" not in text
+    apps = {a.name: _access(a, "Microsoft 365") for a in context["applications"]}
+    assert apps["Posture OAuth Test"]["label"] == "Read mail or files"
+    assert "Mail.Read" in apps["Posture OAuth Test"]["detail"]
+    assert apps["ICP Assessment (read-only)"]["label"] == "Read-only"
+    assert "settings and sharing details only" in apps["ICP Assessment (read-only)"]["detail"]
+
+
+def test_the_summary_does_not_say_password_alone_for_microsoft(m365):
+    context, _ = m365
+    for risk in context["summary"].headline_risks:
+        assert "password alone" not in risk.heading.lower()
+        assert "can be signed into with a password alone" not in risk.paragraph
+
+
+def test_a_signed_letter_is_claimed_only_when_the_run_names_one():
+    tenant, result, _ = _run()
+    renderer = ReportRenderer()
+    without = renderer.build_context(tenant, result, client_name="Lab", assessor="T")
+    named = renderer.build_context(tenant, result, client_name="Lab", assessor="T", engagement_ref="ENG-1")
+    assert "authorization letter" not in without["scope_statement"]["method"]
+    assert "an administrator of the organization granted" in without["scope_statement"]["method"]
+    assert "under a signed authorization letter" in named["scope_statement"]["method"]
+    render = renderer.env.get_template("report.html").render
+    assert "retention window agreed in the engagement" not in render(**without)
+    assert "retention window agreed in the engagement" in render(**named)
+
+
+def test_a_clean_age_check_says_the_dates_were_there(m365, tenant, result):
+    context, _ = m365
+    m365_tenant = context["tenant"]
+    notes = [a["note"] for a in context["passed_areas"]]
+    if m365_tenant.coverage.get("sign_in_data_available") and any(notes):
+        assert any("last sign-in dates" in n for n in notes)
+    google = ReportRenderer().build_context(tenant, result, client_name="Lab", assessor="T")
+    assert all(a["note"] == "" for a in google["passed_areas"])

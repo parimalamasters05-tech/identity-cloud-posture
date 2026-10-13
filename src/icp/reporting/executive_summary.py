@@ -63,7 +63,15 @@ _FAMILY_FRAMING = {
 
 
 #: Rules whose plain-language framing differs from the rest of their family.
+_NO_SECOND_STEP = (
+    "accounts with no second sign-in step",
+    "A stolen or reused password is the most common way an organization this size is "
+    "broken into. A second step at sign-in stops almost all of it.",
+)
+
 _RULE_FRAMING = {
+    "M365-MFA-001": _NO_SECOND_STEP,
+    "M365-MFA-002": _NO_SECOND_STEP,
     "GWS-SVC-003": (
         "administrator logins left behind in developer tools",
         "A command-line login stays valid on that computer until someone revokes it. Anyone "
@@ -165,13 +173,16 @@ _WHAT: dict[str, Callable[[Finding, int], str]] = {
         "Outside applications still hold access that nobody has used in over three months."
     ),
     # -- Microsoft 365 --------------------------------------------------------------
+    # "No second step set up", not "password alone": a policy may be waiting to
+    # ask for one, and then the risk is that whoever has the password sets it up.
     "M365-MFA-001": lambda _f, n: (
-        f"{count(n, 'administrator account', start=True)} can be signed into with a password "
-        "alone, with no second step such as an approval on a phone."
+        f"{count(n, 'administrator account', start=True)} {verb(n, 'has', 'have')} no second "
+        "sign-in step set up, such as an approval on a phone. Whoever has the password can sign "
+        "in, or set that step up for themselves."
     ),
     "M365-MFA-002": lambda _f, n: (
-        f"{count(n, 'staff account', start=True)} can be signed into with a password alone, "
-        "with no second step such as an approval on a phone."
+        f"{count(n, 'staff account', start=True)} {verb(n, 'has', 'have')} no second sign-in "
+        "step set up, such as an approval on a phone."
     ),
     "M365-MFA-003": lambda _f, n: (
         f"{count(n, 'administrator', start=True)} {verb(n, 'uses', 'use')} a second sign-in step "
@@ -285,7 +296,14 @@ def _opening(tenant: NormalizedTenant, findings: list[Finding], rating: str) -> 
     if apps:
         parts.append(f" and {apps} connected third-party applications")
     parts.append(". The assessment was read-only: nothing in your environment was changed at any point. ")
+    parts.append(_verdict(critical, high, rating))
+    return "".join(parts)
 
+
+def _verdict(critical: int, high: int, rating: str) -> str:
+    """How many issues, how urgent, and the overall position. Shared by the
+    single-platform and combined openings so they cannot drift apart."""
+    parts: list[str] = []
     if critical:
         parts.append(
             f"We found {critical} issue{'s' if critical != 1 else ''} that we would ask you to "
@@ -348,10 +366,17 @@ def _heading_for(finding: Finding) -> str:
 
 
 def _closing(findings: list[Finding], tenant: NormalizedTenant) -> str:
+    return _closing_text(findings, _has_gaps(tenant))
+
+
+def _has_gaps(tenant: NormalizedTenant) -> bool:
+    # The organization profile only names the cover; its absence is not a gap.
+    return any(c != "google.customer" for c in tenant.coverage.get("degraded_collectors") or [])
+
+
+def _closing_text(findings: list[Finding], degraded: bool) -> str:
     plan = rank(findings, limit=10, dedupe_by_action=True)
     total_hours = sum(e.finding.effort_hours for e in plan)
-    # The organization profile only names the cover; its absence is not a gap.
-    degraded = [c for c in tenant.coverage.get("degraded_collectors") or [] if c != "google.customer"]
     n = len(plan)
     items = "one item" if n == 1 else f"{n} items"
     all_of = "it" if n == 1 else f"all {n}"
@@ -368,3 +393,51 @@ def _closing(findings: list[Finding], tenant: NormalizedTenant) -> str:
             "passed."
         )
     return text
+
+
+def build_combined(
+    tenants: list[NormalizedTenant], findings: list[Finding], library: RemediationLibrary | None = None
+) -> ExecutiveSummary:
+    """One summary for a report covering several platforms.
+
+    Same rating, same verdict and closing sentences as a single-platform
+    summary; the opening counts accounts per platform, and each headline risk
+    says which platform it is in, because the fix is in a different console.
+    """
+    from icp.reporting.platform_text import combined
+
+    rating, rating_explanation = posture_rating(findings)
+    actionable = [f for f in findings if f.severity != Severity.INFO]
+    critical = sum(1 for f in actionable if f.severity == Severity.CRITICAL)
+    high = sum(1 for f in actionable if f.severity == Severity.HIGH)
+
+    text = combined([t.platform for t in tenants])
+    per_platform = ", ".join(f"{len(t.active_users)} in {for_platform(t.platform).name}" for t in tenants)
+    users = sum(len(t.active_users) for t in tenants)
+    apps = sum(len({g.client_id for g in t.grants if not g.is_first_party}) for t in tenants)
+    opening = (
+        f"We examined the identity and access configuration of {text.environment}, covering "
+        f"{users} active staff accounts ({per_platform})"
+        + (f" and {apps} connected third-party applications" if apps else "")
+        + ". The assessment was read-only: nothing in your environments was changed at any point. "
+        + _verdict(critical, high, rating)
+    )
+
+    platform_of = {f.finding_id: for_platform(f.platform).name for f in actionable}
+    risks = [
+        HeadlineRisk(
+            heading=f"{risk.heading} ({platform_of[risk.finding_ids[0]]})"
+            if risk.finding_ids
+            else risk.heading,
+            paragraph=risk.paragraph,
+            finding_ids=risk.finding_ids,
+        )
+        for risk in _headline_risks(actionable, library)
+    ]
+    return ExecutiveSummary(
+        rating=rating,
+        rating_explanation=rating_explanation,
+        opening=opening,
+        headline_risks=tuple(risks),
+        closing=_closing_text(actionable, any(_has_gaps(t) for t in tenants)),
+    )

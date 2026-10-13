@@ -32,7 +32,7 @@
       "confidence": "confirmed",
       "effort_hours": 1.4,
       "evidence": [
-        "4 active staff accounts (not administrators) have not enrolled in two-step verification."
+        "4 active staff accounts (not administrators) have not enrolled in two-step verification. 2 of all 8 active accounts, administrators included, are enrolled (25.0%)."
       ],
       "finding_id": "9f0c8837f03e50b9",
       "framework_refs": [
@@ -42,7 +42,7 @@
       "risk_score": 30.27,
       "rule_id": "GWS-MFA-002",
       "severity": "high",
-      "title": "4 of 8 active accounts have no second factor (50.0% coverage)"
+      "title": "4 staff accounts have no second factor (2 of 8 active accounts covered, 25.0%)"
     },
     {
       "affected": [
@@ -272,7 +272,7 @@
       "confidence": "confirmed",
       "effort_hours": 1.8,
       "evidence": [
-        "8 active staff accounts (not administrators) have not enrolled in two-step verification."
+        "8 active staff accounts (not administrators) have not enrolled in two-step verification. 23 of all 32 active accounts, administrators included, are enrolled (71.9%)."
       ],
       "finding_id": "9f0c8837f03e50b9",
       "framework_refs": [
@@ -282,7 +282,7 @@
       "risk_score": 32.9,
       "rule_id": "GWS-MFA-002",
       "severity": "high",
-      "title": "8 of 32 active accounts have no second factor (75.0% coverage)"
+      "title": "8 staff accounts have no second factor (23 of 32 active accounts covered, 71.9%)"
     },
     {
       "affected": [
