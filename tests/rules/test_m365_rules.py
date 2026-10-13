@@ -355,22 +355,71 @@ def test_microsoft_rules_never_run_on_google_and_vice_versa(seeded, result):
     assert all(f.rule_id.startswith(("GWS-", "ICP-")) for f in result.findings)
 
 
-def test_a_failed_collector_makes_its_families_not_assessed():
+# -- one failed source silences only the rules that need it ------------------------------
+
+#: Always "not assessed" in this synthetic tenant: it has no sign-in times.
+NO_SIGN_IN_DATA = {"M365-STA-001", "M365-STA-002", "M365-ADM-002"}
+
+
+def _without(collector: str):
+    """The seeded tenant with one collector failed for a missing permission."""
     from icp.models.enums import Assessability
     from icp.models.snapshot import CollectionError
 
     artifacts = _artifacts()
-    del artifacts["m365.public_files"]
+    del artifacts[collector]
     error = CollectionError(
-        collector="m365.public_files", assessability=Assessability.NOT_ASSESSABLE_PERMISSION, message="403"
+        collector=collector,
+        assessability=Assessability.NOT_ASSESSABLE_PERMISSION,
+        message="Access denied (403 accessDenied).",
     )
     _, result, by_rule = _run(artifacts, errors=(error,))
-    assert "M365-SHR-001" not in by_rule
-    assert any(
-        f.rule_id == "ICP-COVERAGE-001" or "sharing" in f.title.lower()
-        for f in result.findings
-        if f.rule_id.startswith("ICP-")
-    )
+    return result, by_rule
+
+
+def test_losing_the_sharing_setting_does_not_hide_the_public_files():
+    """Found live (13 Oct 2026): consent for SharePointTenantSettings.Read.All
+    was revoked. The whole sharing area went "not assessed" and a CRITICAL
+    public-file finding, whose data had been collected, disappeared."""
+    result, by_rule = _without("m365.sharepoint_settings")
+
+    assert labels(by_rule["M365-SHR-001"][0]) == {"TEST board papers.docx", "TEST departed owner file.docx"}
+    assert "M365-SHR-003" in by_rule  # guest invitations: a different source
+    assert "M365-SHR-002" not in by_rule
+    assert "Access denied" in result.unassessable["M365-SHR-002"]
+    assert set(result.unassessable) - NO_SIGN_IN_DATA == {"M365-SHR-002"}
+
+
+def test_losing_the_file_listing_hides_only_the_file_check():
+    result, by_rule = _without("m365.public_files")
+    assert set(result.unassessable) - NO_SIGN_IN_DATA == {"M365-SHR-001"}
+    assert {"M365-SHR-002", "M365-SHR-003"} <= set(by_rule)
+
+
+def test_unreadable_roles_never_look_like_no_administrators():
+    """The opposite error: with no roles, every admin check would find nobody
+    and report a clean result."""
+    result, by_rule = _without("m365.roles")
+    assert set(result.unassessable) - NO_SIGN_IN_DATA == {"M365-MFA-001", "M365-MFA-003", "M365-ADM-001"}
+    assert "M365-ADM-002" in result.unassessable
+    assert not {"M365-MFA-001", "M365-MFA-003", "M365-ADM-001"} & set(by_rule)
+    assert "M365-MFA-002" in by_rule  # staff coverage still measured
+
+
+def test_unreadable_policies_do_not_claim_nothing_is_enforced():
+    """Without the policies, 'nothing requires a second step' would be a guess."""
+    result, by_rule = _without("m365.policies")
+    assert {"M365-MFA-004", "M365-SHR-003", "M365-OAU-003", "M365-OAU-004"} <= set(result.unassessable)
+    assert "M365-MFA-004" not in by_rule
+    assert "M365-SHR-002" in by_rule  # the sharing setting comes from SharePoint, still read
+
+
+def test_every_microsoft_rule_names_the_sources_it_needs():
+    from icp.rules import all_rules
+
+    rules = [r for r in all_rules() if Platform.MICROSOFT_365 in r.platforms]
+    assert len(rules) == 19
+    assert [r.rule_id for r in rules if not r.requires_collectors] == []
 
 
 def test_access_on_a_blocked_account_is_reported_as_dormant_not_as_live(seeded):

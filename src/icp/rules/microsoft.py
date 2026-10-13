@@ -58,6 +58,7 @@ class M365Rule(Rule):
 @register
 class M365AdminsWithoutMfa(M365Rule):
     rule_id = "M365-MFA-001"
+    requires_collectors = ("m365.users", "m365.roles", "m365.auth_methods")
     check_family = CheckFamily.MFA_COVERAGE
     title = "Administrator accounts without a second sign-in step"
     impact = 5
@@ -65,7 +66,6 @@ class M365AdminsWithoutMfa(M365Rule):
     remediation_key = "m365.mfa.enforce_admins"
     framework_refs = ("PR.AA-03", "PR.AA-05")
     default_effort_hours = 1.0
-    requires_collectors = ("m365.auth_methods",)
 
     def evaluate(self, tenant: NormalizedTenant, ctx: RuleContext) -> list[Finding]:
         affected = [
@@ -108,6 +108,7 @@ class M365AdminsWithoutMfa(M365Rule):
 @register
 class M365UsersWithoutMfa(M365Rule):
     rule_id = "M365-MFA-002"
+    requires_collectors = ("m365.users", "m365.auth_methods")
     check_family = CheckFamily.MFA_COVERAGE
     title = "Staff accounts without a second sign-in step"
     impact = 4
@@ -115,7 +116,6 @@ class M365UsersWithoutMfa(M365Rule):
     remediation_key = "m365.mfa.enforce_all_users"
     framework_refs = ("PR.AA-03",)
     default_effort_hours = 3.0
-    requires_collectors = ("m365.auth_methods",)
 
     def evaluate(self, tenant: NormalizedTenant, ctx: RuleContext) -> list[Finding]:
         active = [u for u in tenant.active_users if u.mfa_method_known]
@@ -148,6 +148,7 @@ class M365UsersWithoutMfa(M365Rule):
 @register
 class M365AdminsWithPhishableMfa(M365Rule):
     rule_id = "M365-MFA-003"
+    requires_collectors = ("m365.users", "m365.roles", "m365.auth_methods")
     check_family = CheckFamily.MFA_COVERAGE
     title = "Administrators without phishing-resistant sign-in"
     impact = 4
@@ -155,7 +156,6 @@ class M365AdminsWithPhishableMfa(M365Rule):
     remediation_key = "m365.mfa.phishing_resistant_admins"
     framework_refs = ("PR.AA-03",)
     default_effort_hours = 4.0
-    requires_collectors = ("m365.auth_methods",)
 
     def evaluate(self, tenant: NormalizedTenant, ctx: RuleContext) -> list[Finding]:
         affected = [
@@ -197,6 +197,7 @@ class M365NoOrganizationWideMfa(M365Rule):
     """Microsoft-only: nothing requires a second step for the organization."""
 
     rule_id = "M365-MFA-004"
+    requires_collectors = ("m365.policies",)
     check_family = CheckFamily.MFA_COVERAGE
     title = "No organization-wide requirement for a second sign-in step"
     impact = 5
@@ -248,6 +249,7 @@ class M365NoOrganizationWideMfa(M365Rule):
 @register
 class M365TooManyGlobalAdmins(M365Rule):
     rule_id = "M365-ADM-001"
+    requires_collectors = ("m365.users", "m365.roles")
     check_family = CheckFamily.ADMIN_ROLE_SPRAWL
     title = "More Global Administrators than the organization needs"
     impact = 4
@@ -297,6 +299,7 @@ class M365TooManyGlobalAdmins(M365Rule):
 @register
 class M365DormantAdmins(M365Rule):
     rule_id = "M365-ADM-002"
+    requires_collectors = ("m365.users", "m365.roles")
     check_family = CheckFamily.ADMIN_ROLE_SPRAWL
     title = "Administrator accounts not used recently"
     impact = 4
@@ -358,6 +361,7 @@ class _StaleBase(M365Rule):
 @register
 class M365NeverSignedIn(_StaleBase):
     rule_id = "M365-STA-001"
+    requires_collectors = ("m365.users",)
     title = "Accounts that have never been used"
     impact = 3
     exposure = 3
@@ -394,6 +398,7 @@ class M365NeverSignedIn(_StaleBase):
 @register
 class M365DormantAccounts(_StaleBase):
     rule_id = "M365-STA-002"
+    requires_collectors = ("m365.users",)
     title = "Accounts not used for a long time"
     impact = 3
     exposure = 3
@@ -428,6 +433,7 @@ class M365DormantAccounts(_StaleBase):
 @register
 class M365BlockedAccountsRetained(M365Rule):
     rule_id = "M365-STA-003"
+    requires_collectors = ("m365.users",)
     check_family = CheckFamily.STALE_ACCOUNTS
     title = "Blocked accounts still in the directory"
     impact = 2
@@ -471,6 +477,7 @@ class M365AppOnlyDataAccess(M365Rule):
     """Microsoft-only: an app that can read every mailbox or file, by itself."""
 
     rule_id = "M365-SVC-001"
+    requires_collectors = ("m365.graph_permissions", "m365.service_principals")
     check_family = CheckFamily.SERVICE_ACCOUNT_PRIVILEGE
     title = "Applications that can read every user's data on their own"
     impact = 5
@@ -519,6 +526,7 @@ class M365LongLivedAppSecrets(M365Rule):
     """Microsoft-only: password-like app secrets valid for over a year."""
 
     rule_id = "M365-SVC-002"
+    requires_collectors = ("m365.applications",)
     check_family = CheckFamily.SERVICE_ACCOUNT_PRIVILEGE
     title = "Application secrets valid for more than a year"
     impact = 3
@@ -565,6 +573,7 @@ class M365LongLivedAppSecrets(M365Rule):
 @register
 class M365PublicFiles(M365Rule):
     rule_id = "M365-SHR-001"
+    requires_collectors = ("m365.users", "m365.public_files")
     check_family = CheckFamily.EXTERNAL_SHARING
     title = "Files reachable by anyone with the link"
     impact = 4
@@ -616,6 +625,7 @@ class M365PublicFiles(M365Rule):
 @register
 class M365AnyoneLinksAllowed(M365Rule):
     rule_id = "M365-SHR-002"
+    requires_collectors = ("m365.sharepoint_settings",)
     check_family = CheckFamily.EXTERNAL_SHARING
     title = "Organization allows 'Anyone' sharing links"
     impact = 3
@@ -658,6 +668,7 @@ class M365AnyoneLinksAllowed(M365Rule):
 @register
 class M365GuestInvitesUnrestricted(M365Rule):
     rule_id = "M365-SHR-003"
+    requires_collectors = ("m365.policies",)
     check_family = CheckFamily.EXTERNAL_SHARING
     title = "Anyone can invite outside guests"
     impact = 2
@@ -700,6 +711,7 @@ class M365GuestInvitesUnrestricted(M365Rule):
 @register
 class M365LogsUnavailable(M365Rule):
     rule_id = "M365-LOG-001"
+    requires_collectors = ("m365.audit_readiness",)
     check_family = CheckFamily.LOGGING_READINESS
     title = "Activity logs not available for investigation"
     impact = 3
@@ -737,6 +749,7 @@ class M365LogsUnavailable(M365Rule):
 @register
 class M365BroadDelegatedApps(M365Rule):
     rule_id = "M365-OAU-001"
+    requires_collectors = ("m365.users", "m365.graph_permissions", "m365.service_principals")
     check_family = CheckFamily.OAUTH_GRANTS
     title = "Applications that can read staff mail or files"
     impact = 4
@@ -799,6 +812,7 @@ class M365BroadDelegatedApps(M365Rule):
 @register
 class M365GrantsHeldByBlockedUsers(M365Rule):
     rule_id = "M365-OAU-002"
+    requires_collectors = ("m365.users", "m365.graph_permissions", "m365.service_principals")
     check_family = CheckFamily.OAUTH_GRANTS
     title = "Application access still recorded for blocked accounts"
     impact = 4
@@ -855,6 +869,7 @@ class M365RiskyConsentPolicy(M365Rule):
     """Microsoft-only: ordinary users may approve mail or file access."""
 
     rule_id = "M365-OAU-003"
+    requires_collectors = ("m365.policies", "m365.graph_permissions")
     check_family = CheckFamily.OAUTH_GRANTS
     title = "Staff can give applications access to their mail or files without an administrator"
     impact = 4
@@ -898,6 +913,7 @@ class M365RiskyConsentPolicy(M365Rule):
 @register
 class M365UsersCanRegisterApps(M365Rule):
     rule_id = "M365-OAU-004"
+    requires_collectors = ("m365.policies",)
     check_family = CheckFamily.OAUTH_GRANTS
     title = "Any user can register new applications"
     impact = 2

@@ -17,7 +17,7 @@ from typing import Any
 
 import yaml
 
-from icp.models.enums import Assessability, CheckFamily, IdentityKind, Platform, ResourceKind, ScopeTier
+from icp.models.enums import CheckFamily, IdentityKind, Platform, ResourceKind, ScopeTier
 from icp.models.identity import Identity, MfaMethod, OAuthGrant, OAuthScope
 from icp.models.resource import DomainPolicy, Resource
 from icp.models.snapshot import Snapshot
@@ -54,25 +54,19 @@ _NOT_MFA = frozenset(
     {"passwordAuthenticationMethod", "emailAuthenticationMethod", "temporaryAccessPassAuthenticationMethod"}
 )
 
-_COLLECTOR_IMPACT: dict[str, tuple[CheckFamily, ...]] = {
-    "m365.users": (
-        CheckFamily.MFA_COVERAGE,
-        CheckFamily.ADMIN_ROLE_SPRAWL,
-        CheckFamily.STALE_ACCOUNTS,
-        CheckFamily.OAUTH_GRANTS,
-        CheckFamily.SERVICE_ACCOUNT_PRIVILEGE,
-    ),
+#: No collector silences a whole check family here. Found live (13 Oct 2026):
+#: with only the sharing-*setting* permission removed, a family-level mapping
+#: marked all of "external sharing" not assessed and dropped a CRITICAL
+#: public-file finding whose data had been collected. Each Microsoft rule
+#: instead lists the collectors it needs (`Rule.requires_collectors`), which
+#: also stops the opposite error: a rule whose source failed reporting a clean
+#: result (no roles read, so "no administrators without a second step").
+#:
+#: This map is only for collectors that ran but incompletely: which family's
+#: coverage note the partial result belongs under.
+_PARTIAL_FAMILIES: dict[str, tuple[CheckFamily, ...]] = {
     "m365.auth_methods": (CheckFamily.MFA_COVERAGE,),
-    "m365.roles": (CheckFamily.ADMIN_ROLE_SPRAWL,),
-    "m365.service_principals": (CheckFamily.OAUTH_GRANTS, CheckFamily.SERVICE_ACCOUNT_PRIVILEGE),
-    "m365.graph_permissions": (CheckFamily.OAUTH_GRANTS, CheckFamily.SERVICE_ACCOUNT_PRIVILEGE),
-    "m365.applications": (CheckFamily.SERVICE_ACCOUNT_PRIVILEGE,),
     "m365.public_files": (CheckFamily.EXTERNAL_SHARING,),
-    "m365.sharepoint_settings": (CheckFamily.EXTERNAL_SHARING,),
-    "m365.audit_readiness": (CheckFamily.LOGGING_READINESS,),
-    # m365.policies is deliberately absent: each rule that needs a policy says
-    # "not assessed" itself when it is unknown, so one missing policy does not
-    # silence a whole family.
 }
 
 
@@ -128,16 +122,12 @@ def normalize(snapshot: Snapshot) -> NormalizedTenant:
     tenant.resources = _resources(snapshot)
     tenant.audit_streams = _audit(snapshot)
     tenant.policy = _policy(snapshot, default_domain or "")
-    tenant.assessability = {
-        family: (e.assessability, e.message)
-        for e in reversed(snapshot.errors)
-        for family in _COLLECTOR_IMPACT.get(e.collector, ())
-    }
+    tenant.assessability = {}  # per rule, not per family: see _PARTIAL_FAMILIES
     tenant.coverage = _coverage(snapshot, tenant)
     tenant.coverage_gaps = [
-        CoverageGap(key=f"partial:{name}", families=_COLLECTOR_IMPACT.get(name, ()), reason=reason)
+        CoverageGap(key=f"partial:{name}", families=_PARTIAL_FAMILIES[name], reason=reason)
         for name, reason in sorted(snapshot.partial.items())
-        if _COLLECTOR_IMPACT.get(name)
+        if name in _PARTIAL_FAMILIES
     ]
     return tenant
 
@@ -379,12 +369,13 @@ def _audit(snapshot: Snapshot) -> list[AuditStream]:
     ]
 
 
-def _policy(snapshot: Snapshot, domain: str) -> DomainPolicy | None:
-    policies = snapshot.artifact("m365.policies")
+def _policy(snapshot: Snapshot, domain: str) -> DomainPolicy:
+    # Built from whatever was readable. A rule that needs one of these sources
+    # names it in `requires_collectors`, so a missing one makes that rule "not
+    # assessed"; it must not also hide what the other sources did return.
+    policies = snapshot.artifact("m365.policies") or {}
     sharing = snapshot.artifact("m365.sharepoint_settings") or {}
     grants = snapshot.artifact("m365.graph_permissions") or {}
-    if policies is None:
-        return None
     ca = policies.get("conditional_access", [])
     mfa_policies = [
         p
@@ -442,9 +433,6 @@ def _coverage(snapshot: Snapshot, tenant: NormalizedTenant) -> dict[str, Any]:
         "sign_in_data_available": with_sign_in > 0,
         "users_with_sign_in_data": with_sign_in,
         "degraded_collectors": list(snapshot.degraded_collectors()),
-        "assessability_note": {
-            str(f): str(a) for f, (a, _) in tenant.assessability.items() if a != Assessability.ASSESSED
-        },
     }
 
 

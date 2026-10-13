@@ -296,3 +296,19 @@ def test_a_collector_that_gets_no_response_degrades_alone_with_a_plain_reason(mo
     assert (
         "did not respond in time" in error.message and "not a setting in your organization" in error.message
     )
+
+
+def test_a_refused_collector_names_the_permission_to_grant(monkeypatch):
+    """Found live: 'missing a permission' did not say which one."""
+
+    def refused(c, ctx):
+        raise GraphError(403, "accessDenied", "Access denied")
+
+    monkeypatch.setattr(m365, "COLLECTORS", (("m365.sharepoint_settings", refused),))
+    [error] = m365.collect(FakeGraph({}), tenant_id="m365").errors
+    assert "SharePointTenantSettings.Read.All" in error.message
+    assert "App registrations" in error.message
+
+
+def test_every_collector_has_a_named_permission():
+    assert {name for name, _ in m365.COLLECTORS} == set(m365.COLLECTOR_PERMISSIONS)

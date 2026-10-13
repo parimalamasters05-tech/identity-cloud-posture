@@ -380,12 +380,37 @@ COLLECTORS: tuple[tuple[str, Callable[[GraphReadOnly, dict[str, Any]], Any]], ..
 )
 
 
+#: The permission each collector needs, so a refusal can name what to grant.
+COLLECTOR_PERMISSIONS: dict[str, str] = {
+    "m365.organization": "Directory.Read.All",
+    "m365.users": "User.Read.All and AuditLog.Read.All",
+    "m365.mfa_registration": "AuditLog.Read.All and UserAuthenticationMethod.Read.All",
+    "m365.auth_methods": "UserAuthenticationMethod.Read.All",
+    "m365.roles": "RoleManagement.Read.Directory",
+    "m365.groups": "Directory.Read.All",
+    "m365.service_principals": "Application.Read.All",
+    "m365.graph_permissions": "Directory.Read.All",
+    "m365.applications": "Application.Read.All",
+    "m365.policies": "Policy.Read.All",
+    "m365.sharepoint_settings": "SharePointTenantSettings.Read.All",
+    "m365.public_files": "Sites.Read.All",
+    "m365.audit_readiness": "AuditLog.Read.All",
+}
+
+
 def _error(name: str, exc: GraphError) -> CollectionError:
     if exc.status in (401, 403):
+        needed = COLLECTOR_PERMISSIONS.get(name)
         state, message = (
             Assessability.NOT_ASSESSABLE_PERMISSION,
-            f"Access denied ({exc.status} {exc.code}). The app registration is missing a "
-            "permission, or admin consent was not granted.",
+            f"Access denied ({exc.status} {exc.code}). "
+            + (
+                f"Reading this needs the permission {needed}, with admin consent granted, on the "
+                "assessment's app registration (Entra admin center > App registrations > the "
+                "assessment app > API permissions)."
+                if needed
+                else "The app registration is missing a permission, or admin consent was not granted."
+            ),
         )
     elif exc.status in (400, 404) and "licen" in exc.message.lower():
         state, message = (
