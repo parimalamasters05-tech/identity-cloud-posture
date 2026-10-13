@@ -376,6 +376,7 @@ def _app_kind(app: Application) -> str:
         "device_sign_in": "Google browser or device sign-in",
         "assessor": "This assessment (remove afterwards)",
         "app_only": "Works without a user",
+        "microsoft": "Microsoft's own",
     }.get(app.first_party_kind or "", "Third-party")
 
 

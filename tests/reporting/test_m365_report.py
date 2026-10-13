@@ -117,3 +117,35 @@ def test_an_app_with_both_kinds_of_access_shows_its_highest(m365):
     [app] = [a for a in context["applications"] if a.name == "Backup Sync Test"]
     assert "Mail.Read" in app.scopes
     assert app.max_tier.value == "full_data_read"
+
+
+def test_microsofts_own_apps_are_labelled_as_microsofts_not_third_party():
+    """Found live: 'SharePoint Online Web Client Extensibility', owned by
+    Microsoft and holding organization-wide access, was listed as 'Third-party'."""
+    from tests.rules.test_m365_rules import _artifacts
+
+    from icp.reporting.renderer import _app_kind
+
+    artifacts = _artifacts()
+    artifacts["m365.service_principals"].append(
+        {
+            "id": "sp-spo",
+            "appId": "app-spo",
+            "displayName": "SharePoint Online Web Client Extensibility",
+            "appOwnerOrganizationId": "f8cdef31-a31e-4b4a-93e4-5f571e91255a",
+        }
+    )
+    artifacts["m365.graph_permissions"]["delegated_grants"].append(
+        {
+            "clientId": "sp-spo",
+            "consentType": "AllPrincipals",
+            "principalId": None,
+            "scope": "Sites.FullControl.All",
+        }
+    )
+    tenant, result, _ = _run(artifacts)
+
+    [app] = [a for a in tenant.applications if a.name.startswith("SharePoint Online")]
+    assert _app_kind(app) == "Microsoft's own"
+    # Listed for transparency, but a Microsoft component is not a client finding.
+    assert not any("SharePoint Online" in f.title for f in result.findings)

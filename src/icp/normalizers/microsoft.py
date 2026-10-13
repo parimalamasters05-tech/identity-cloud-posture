@@ -288,7 +288,10 @@ def _applications(tenant: NormalizedTenant) -> list[Application]:
                 client_id=client_id,
                 name=grants[0].app_name or client_id,
                 is_first_party=grants[0].is_first_party,
-                first_party_kind=None,
+                # Microsoft's own components (seen live: "SharePoint Online Web
+                # Client Extensibility") are listed, labelled as Microsoft's, not
+                # as third-party; they raise no finding.
+                first_party_kind="microsoft" if grants[0].is_first_party else None,
                 is_anonymous=grants[0].is_anonymous_app,
                 users=users,
                 active_users=sum(1 for u in users if u == "*" or (u in people and not people[u].suspended)),
