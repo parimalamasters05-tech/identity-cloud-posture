@@ -542,8 +542,8 @@ remediations:
   m365.apps.tighten_consent:
     title: Require an administrator to approve access to mail or files
     impact: >
-      Today any staff member can let an application read their mail or files,
-      and no administrator sees the request. A convincing fake app is all an
+      Today any staff member can let an application read the data named in the
+      evidence below, and no administrator sees the request. A convincing fake app is all an
       attacker needs.
     steps:
       - "Entra admin center > Entra ID > Enterprise apps > Consent and permissions > Permission classifications > Low: remove Mail.Read and any other permission that reads mail or files."

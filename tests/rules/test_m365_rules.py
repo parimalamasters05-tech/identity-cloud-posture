@@ -490,7 +490,7 @@ def test_offline_access_is_not_described_as_unconditional(seeded):
     _, _, by_rule = seeded
     summary = by_rule["M365-OAU-001"][0].evidence[0].summary
     assert "at any time" not in summary
-    assert "until that access is removed" in summary
+    assert "for as long as Microsoft keeps renewing that access" in summary
 
 
 # -- Found by the second review of the combined report (13 Oct 2026) --------------------
@@ -521,3 +521,10 @@ def test_the_org_wide_finding_names_each_policy_and_its_state():
     assert "'Require multifactor authentication for all users' (report-only)" in summary
     assert "'Require multifactor authentication for admins' is switched on, but applies to" in summary
     assert "report-only or off" not in summary
+
+
+def test_the_consent_finding_says_what_the_low_impact_permission_reads(seeded):
+    _, _, by_rule = seeded
+    summary = by_rule["M365-OAU-003"][0].evidence[0].summary
+    assert "read their mail without an administrator" in summary
+    assert "mail or files" not in summary

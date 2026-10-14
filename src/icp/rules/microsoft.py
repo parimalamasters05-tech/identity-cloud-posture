@@ -874,7 +874,8 @@ class M365BroadDelegatedApps(M365Rule):
                                 + (
                                     f" For {', '.join(standing)} it can also stay signed in on its own "
                                     "(offline access), so it can keep reading without a new sign-in "
-                                    "until that access is removed."
+                                    "for as long as Microsoft keeps renewing that access and nobody "
+                                    "removes it."
                                     if standing
                                     else ""
                                 )
@@ -979,8 +980,8 @@ class M365RiskyConsentPolicy(M365Rule):
                         pointer="/m365.graph_permissions/low_impact_classifications",
                         summary=(
                             f"Users may approve applications themselves, and {', '.join(risky)} is classified as "
-                            "'low impact', so any staff member can let an application read their mail or files "
-                            "without an administrator seeing the request."
+                            f"'low impact', so any staff member can let an application read their "
+                            f"{readable_kinds(risky)} without an administrator seeing the request."
                         ),
                         observed_values={"low_impact": ", ".join(raw.get("low_impact_permissions", []))},
                     )

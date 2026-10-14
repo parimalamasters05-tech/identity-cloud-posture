@@ -161,7 +161,7 @@ def test_the_inventory_names_permissions_and_does_not_say_read_all_data(m365):
     context, text = m365
     assert "Read all data" not in text
     apps = {a.name: _access(a, "Microsoft 365") for a in context["applications"]}
-    assert apps["Posture OAuth Test"]["label"] == "Read mail or files"
+    assert apps["Posture OAuth Test"]["label"] == "Read mail"
     assert "Mail.Read" in apps["Posture OAuth Test"]["detail"]
     assert apps["ICP Assessment (read-only)"]["label"] == "Read-only"
     assert "settings and sharing details only" in apps["ICP Assessment (read-only)"]["detail"]

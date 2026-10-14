@@ -40,6 +40,7 @@ from icp.risk.ranking import rank
 from icp.risk.severity import RiskMatrix
 from icp.rules.base import rules_for
 from icp.rules.engine import AssessmentResult
+from icp.rules.microsoft import readable_kinds
 from icp.security.scopes import optional_scopes, sorted_scopes
 
 logger = logging.getLogger(__name__)
@@ -407,7 +408,8 @@ class ReportRenderer:
                     " Microsoft had recorded a sign-in for "
                     f"{tenant.coverage.get('users_with_sign_in_data')} of "
                     f"{tenant.coverage.get('users_total')} accounts, so the unused-account checks "
-                    "ran; an account with no sign-in on record is judged by when it was created."
+                    "ran. An account with no sign-in on record is flagged only once it is old "
+                    "enough to expect one; a missing record is not proof that it was never used."
                     if dated
                     else ""
                 )
@@ -586,7 +588,12 @@ def _access(app: Application, platform_name: str) -> dict[str, str]:
         }
     names = sorted(s for s in app.scopes if s not in ("openid", "profile", "email", "offline_access"))
     shown = ", ".join(names[:4]) + (f" and {len(names) - 4} more" if len(names) > 4 else "")
-    return {"label": _M365_TIER_LABELS.get(app.max_tier, _tier_label(app.max_tier)), "detail": shown}
+    label = _M365_TIER_LABELS.get(app.max_tier, _tier_label(app.max_tier))
+    # "Read mail", not "Read mail or files", when the names say which.
+    kinds = readable_kinds(n for n in names if readable_kinds([n]) != "data")
+    if kinds != "data" and app.max_tier in (ScopeTier.FULL_DATA_READ, ScopeTier.FULL_DATA_WRITE):
+        label = ("Read " if app.max_tier == ScopeTier.FULL_DATA_READ else "Read and change ") + kinds
+    return {"label": label, "detail": shown}
 
 
 def _family_title(family: CheckFamily, overrides: dict[CheckFamily, str]) -> str:
