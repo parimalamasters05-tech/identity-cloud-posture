@@ -187,9 +187,13 @@ rules:
     exposure: 2
     privileged: true
     noun: role
-    one: 1 role that programs or other accounts can use has full administrative rights
-    many: "{n} roles that programs or other accounts can use have full administrative rights"
-    evidence: "The role {name} has the AdministratorAccess policy. Anything allowed to use the role can do anything in the account."
+    # Prowler leaves out roles that AWS services use (a Lambda function's role,
+    # an EC2 instance's): seen live, a Lambda role with AdministratorAccess was
+    # not reported. The wording says which roles were checked, and the
+    # limitations section says which were not.
+    one: 1 role that people or other AWS accounts can switch into has full administrative rights
+    many: "{n} roles that people or other AWS accounts can switch into have full administrative rights"
+    evidence: "The role {name} has the AdministratorAccess policy. Anyone allowed to switch into the role can do anything in the account."
     remediation: aws.roles.reduce_admin_roles
     framework: [PR.AA-05]
 

@@ -329,3 +329,30 @@ def test_a_title_mid_sentence_keeps_its_acronym():
     assert sentence_case("AWS users have access keys") == "AWS users have access keys"
     assert sentence_case("Super-administrators") == "super-administrators"
     assert sentence_case("OAuth grants") == "OAuth grants"
+
+
+# -- Found in the second live round (14 Oct 2026) ------------------------------------
+
+
+def test_an_inline_policy_is_named_with_the_user_it_is_on():
+    from icp.rules.aws import _label
+
+    mapped = next(r for r in load_map().rules if r.rule_id == "AWS-ADM-004")
+    row = {
+        "resource_type": "AwsIamPolicy",
+        "resource_name": "test-dev/test-inline-everything",
+        "resource_uid": "",
+    }
+    assert _label(row, mapped) == "test-inline-everything (inline, on test-dev)"
+
+
+def test_the_report_says_roles_used_by_aws_services_were_not_checked():
+    """Live: a Lambda role with AdministratorAccess was not reported, because
+    Prowler leaves out roles that AWS services use. The report must not imply
+    they were covered."""
+    from icp.reporting.platform_text import AWS
+
+    assert "Lambda" in AWS.licence_note and "not checked" in AWS.licence_note
+    assert not any("services are allowed" in line for line in AWS.examined)
+    svc = next(r for r in load_map().rules if r.rule_id == "AWS-SVC-001")
+    assert "switch into" in svc.one

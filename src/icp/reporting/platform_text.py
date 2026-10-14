@@ -179,7 +179,7 @@ AWS = PlatformText(
         "The sign-in protection on the account's root user and on each person's AWS login",
         "Which users, groups and roles hold full administrative rights",
         "Logins and access keys that have not been used for a long time, and keys never replaced",
-        "Roles that other AWS accounts or services are allowed to use",
+        "Roles that people or other AWS accounts can switch into",
         "Storage buckets that the public can read or write, and the settings that should prevent it",
         "Whether the activity records needed to investigate an incident are being kept",
     ),
@@ -205,7 +205,8 @@ AWS = PlatformText(
     licence_note=(
         "Only identity and storage-exposure settings were examined in AWS; this is not a full "
         "review of the account. A check Prowler did not run is recorded as a coverage note "
-        "rather than omitted."
+        "rather than omitted. Roles used by AWS services (for example a Lambda function's or "
+        "a server's role) were not checked for full administrative rights: Prowler leaves them out."
     ),
     anonymous_label="",
     write_capable=lambda _policies: [],

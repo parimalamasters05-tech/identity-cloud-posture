@@ -32,6 +32,10 @@ def _label(row: dict[str, Any], mapped: MappedRule) -> str:
     if mapped.noun == "root user":
         return "the root user"
     name = row["resource_name"] or row["resource_uid"].rsplit("/", 1)[-1].rsplit(":", 1)[-1]
+    # Prowler names an inline policy "<user>/<policy>".
+    if row["resource_type"] == "AwsIamPolicy" and "/" in name:
+        owner, policy = name.split("/", 1)
+        return f"{policy} (inline, on {owner})"
     # Prowler names the root user "<root_account>".
     return "the root user" if name.strip("<>") == "root_account" else name
 
