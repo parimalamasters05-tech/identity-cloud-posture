@@ -46,7 +46,14 @@
   .sev-low      { background: #fff; }
   .sev-info     { background: #fff; border-style: dashed; color: #555; }
 
-  .finding { page-break-inside: avoid; margin: 0 0 16pt; padding-left: 8pt; border-left: 2.5pt solid #16191c; }
+  /* A finding may run onto the next page: kept whole, each one that did not fit left
+     up to half a page blank behind it. Its heading stays with what follows, and no
+     single evidence line or step is split. */
+  .finding { margin: 0 0 16pt; padding-left: 8pt; border-left: 2.5pt solid #16191c; }
+  .finding h4, h3 { page-break-after: avoid; }
+  .finding li, .finding p { page-break-inside: avoid; }
+  /* The closing "how to check" and framework lines never start a page alone. */
+  .finding ol + p.meta, .finding p.meta + p.meta { page-break-before: avoid; }
   .finding.sevbar-medium { border-left-width: 1.5pt; }
   .finding.sevbar-low    { border-left-width: 0.75pt; }
   .meta { font-size: 8.5pt; color: #555; font-family: "Source Sans 3", Arial, sans-serif; }

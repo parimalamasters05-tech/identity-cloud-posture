@@ -12,6 +12,8 @@
     {% for entry in entries %}
     {% set f = entry.finding %}
     <div class="finding sevbar-{{ f.severity }}">
+      {# The heading, its details and the reason stay on one page together. #}
+      <div class="avoid-break">
       <h4 style="margin-top:0;">
         <span class="sev sev-{{ f.severity }}">{{ f.severity | severity_label }}</span>
         &nbsp;{{ f.title }}
@@ -23,6 +25,7 @@
       </p>
 
       <p><strong>Why this matters.</strong> {{ entry.remediation.impact }}</p>
+      </div>
 
       {% if f.confidence.value in ('medium', 'low') %}
       <p class="meta"><em>Confidence note: this finding is inferred rather than read directly from
