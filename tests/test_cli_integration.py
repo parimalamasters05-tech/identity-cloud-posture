@@ -241,3 +241,36 @@ def test_tenant_flag_alone_satisfies_the_tenant_identifier(workspace: Path, monk
     monkeypatch.delenv("ICP_TENANT_ID", raising=False)
     result = run("collect", "--fixtures", "--tenant", "dev")
     assert "dev__" in result.output
+
+
+def test_report_latest_picks_each_configured_platform_and_its_previous_snapshot(tmp_path, monkeypatch):
+    """The one-command flow: newest snapshot per configured label, never a
+    sample saved under another label."""
+    from icp.cli import _latest_per_platform
+    from icp.storage.snapshot_store import SnapshotStore
+
+    for name in (
+        "dev__20260929T081813285Z-7e376b99.json.enc",
+        "dev__20260929T082517155Z-686ca914.json.enc",
+        "m365__20261014T033834656Z-bcdab18e.json.enc",
+        "aws__20261014T202612306Z-ac55d486.json.enc",
+        "aws__20261014T213019769Z-441373ef.json.enc",
+        "aws-sample__20261010T140000000Z-d7ad3273.json.enc",
+    ):
+        (tmp_path / name).write_bytes(b"x")
+    monkeypatch.delenv("ICP_M365_TENANT_LABEL", raising=False)
+    monkeypatch.delenv("ICP_AWS_TENANT_LABEL", raising=False)
+
+    class _Settings:
+        tenant_id = "dev"
+
+    current, previous = _latest_per_platform(SnapshotStore(tmp_path, encrypt=False), _Settings(), True)
+    assert [p.name for p in current] == [
+        "dev__20260929T082517155Z-686ca914.json.enc",
+        "m365__20261014T033834656Z-bcdab18e.json.enc",
+        "aws__20261014T213019769Z-441373ef.json.enc",
+    ]
+    assert [p.name for p in previous] == [
+        "dev__20260929T081813285Z-7e376b99.json.enc",
+        "aws__20261014T202612306Z-ac55d486.json.enc",
+    ]

@@ -182,6 +182,19 @@ def assess(ctx: click.Context, snapshot_path: Path | None, tenant: str | None) -
         "review' section. Give it once per platform to compare."
     ),
 )
+@click.option(
+    "--latest",
+    is_flag=True,
+    help=(
+        "Use the newest snapshot of every configured platform (Google: ICP_TENANT_ID; "
+        "Microsoft: ICP_M365_TENANT_LABEL, default m365; AWS: ICP_AWS_TENANT_LABEL, default aws)."
+    ),
+)
+@click.option(
+    "--with-progress",
+    is_flag=True,
+    help="With --latest: compare each platform with its previous snapshot.",
+)
 @click.option("--tenant", help="Use the latest snapshot for this tenant.")
 @click.option(
     "--client-name",
@@ -203,6 +216,8 @@ def report(
     ctx: click.Context,
     snapshot_paths: tuple[Path, ...],
     previous_paths: tuple[Path, ...],
+    latest: bool,
+    with_progress: bool,
     tenant: str | None,
     client_name: str,
     assessor: str,
@@ -226,6 +241,15 @@ def report(
 
     settings = _settings(ctx)
     store = SnapshotStore(settings.snapshot_dir, encrypt=False)
+
+    if latest:
+        if snapshot_paths or previous_paths:
+            _fail("--latest picks the snapshots itself; leave out --snapshot and --previous-snapshot.")
+        snapshot_paths, previous_paths = _latest_per_platform(store, settings, with_progress)
+    elif with_progress:
+        _fail(
+            "--with-progress works with --latest; otherwise name the earlier snapshot with --previous-snapshot."
+        )
 
     def assessed(path: Path | None):  # type: ignore[no-untyped-def]
         snapshot = _load_snapshot(store, path, tenant or settings.tenant_id)
@@ -916,6 +940,37 @@ def _client_name(override: str, tenant_view) -> str:  # type: ignore[no-untyped-
         "snapshot, so the cover has no name. Check `icp preflight`, or pass --client-name."
     )
     return ""  # unreachable; _fail exits
+
+
+def _latest_per_platform(store, settings, with_progress: bool):  # type: ignore[no-untyped-def]
+    """The newest snapshot for each configured platform, and the one before it.
+
+    By configured label only, so a sample or test snapshot saved under another
+    label (aws-sample, say) is never picked up into a client's report.
+    """
+    import os
+
+    labels = [
+        ("Google Workspace", settings.tenant_id),
+        ("Microsoft 365", os.environ.get("ICP_M365_TENANT_LABEL", "m365")),
+        ("AWS", os.environ.get("ICP_AWS_TENANT_LABEL", "aws")),
+    ]
+    current: list[Path] = []
+    previous: list[Path] = []
+    for name, label in labels:
+        found = store.list_snapshots(label) if label else []
+        if not found:
+            click.echo(f"  {name}: no snapshot (label {label or 'not set'}), left out")
+            continue
+        current.append(found[-1])
+        note = ""
+        if with_progress and len(found) > 1:
+            previous.append(found[-2])
+            note = f", compared with {found[-2].name}"
+        click.echo(f"  {name}: {found[-1].name}{note}")
+    if not current:
+        _fail("No snapshots found for any configured platform. Collect first.")
+    return tuple(current), tuple(previous)
 
 
 def _load_snapshot(store, snapshot_path: Path | None, tenant_id: str | None):  # type: ignore[no-untyped-def]
