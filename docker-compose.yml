@@ -204,6 +204,12 @@ services:
       - prowler
       - --no-banner
       - --ignore-exit-code-3
+      # Refused reads are logged, not reported: collect-aws reads this log so a
+      # check AWS would not let Prowler read is "not assessed", not a pass.
+      - --log-level
+      - ERROR
+      - --log-file
+      - /output/prowler.log
 
   collect-aws:
     <<: *hardening

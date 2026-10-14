@@ -55,8 +55,11 @@
     refuses any {{ part.platform.permission_noun }} outside a fixed, reviewed allowlist, and asserts after every run that no
     unsafe request was made. We recommend you
     confirm this independently in {{ part.platform.audit_log }} for the collection window{% endif %}{% if part.snapshot.started_at %},
+    {% if part.snapshot.started_at == part.snapshot.collected_at %}{# Prowler stamps every result with the scan's start. #}
+    starting <strong>{{ part.snapshot.started_at.strftime('%d %B %Y, %H:%M:%S') }} UTC</strong>, for as long as
+    the scan ran{% else %}
     <strong>{{ part.snapshot.started_at.strftime('%d %B %Y, %H:%M:%S') }} to
-    {{ part.snapshot.collected_at.strftime('%H:%M:%S') }} UTC</strong>{% endif %}.
+    {{ part.snapshot.collected_at.strftime('%H:%M:%S') }} UTC</strong>{% endif %}{% endif %}.
   </p>
   {% endfor %}
 

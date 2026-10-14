@@ -13,12 +13,47 @@ from typing import Any
 
 from icp.models.enums import Platform
 from icp.models.snapshot import Snapshot
-from icp.normalizers.base import NormalizedTenant
+from icp.normalizers.base import CoverageGap, NormalizedTenant
+from icp.risk.prowler_map import load as load_map
 
 
 def results(tenant: NormalizedTenant) -> list[dict[str, Any]]:
     """Prowler's per-resource results, as the importer stored them."""
     return list((tenant.snapshot.artifact("aws.prowler") or {}).get("results", []))
+
+
+def _refused_regions(snapshot: Snapshot, rows: list[dict[str, Any]]) -> list[CoverageGap]:
+    """A per-region check AWS refused in some regions: those regions are left
+    out of its results (see icp.rules.aws), and the report says which."""
+    denied = snapshot.artifacts.get("aws.denied")
+    if not isinstance(denied, dict):
+        return []
+    gaps = []
+    for rule in load_map().rules:
+        refused = [a for a in rule.needs if a in denied]
+        regions = sorted({r for a in refused for r in denied[a].get("regions", [])})
+        checked = sorted({r["region"] for r in rows if r["check_id"] in rule.checks} - set(regions))
+        if rule.collapse != "region" or not regions or not checked:
+            continue  # all or nothing: the rule itself is "not assessed"
+        by_policy = any(denied[a].get("by_organization_policy") for a in refused)
+        gaps.append(
+            CoverageGap(
+                key=f"aws-refused-{rule.rule_id.lower()}",
+                families=(rule.family,),
+                reason=(
+                    f"AWS refused to list what this check needs ({', '.join(refused)}) in "
+                    f"{len(regions)} region{'s' if len(regions) != 1 else ''} ({', '.join(regions)})"
+                    + (
+                        ", because of a policy set by the organization that manages this account"
+                        if by_policy
+                        else ""
+                    )
+                    + f". Those regions were not checked and are left out; the result covers "
+                    f"{', '.join(checked)} only."
+                ),
+            )
+        )
+    return gaps
 
 
 def normalize(snapshot: Snapshot) -> NormalizedTenant:
@@ -33,6 +68,7 @@ def normalize(snapshot: Snapshot) -> NormalizedTenant:
         # The alias is the only name an AWS account has; many have none.
         organization_name=account.get("alias") or None,
         primary_domain=f"AWS account {account_id}",
+        coverage_gaps=_refused_regions(snapshot, rows),
         coverage={
             "account_id": account_id,
             "prowler_version": prowler.get("prowler_version"),

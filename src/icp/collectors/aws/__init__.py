@@ -17,6 +17,7 @@ copied into the snapshot.
 from __future__ import annotations
 
 import json
+import re
 import secrets
 from datetime import UTC, datetime
 from pathlib import Path
@@ -69,12 +70,69 @@ def _row(item: dict[str, Any]) -> dict[str, Any]:
     }
 
 
+#: "... is not authorized to perform: iam:GetLoginProfile on resource: ..."
+_REFUSED = re.compile(r"not authorized to perform: ([A-Za-z0-9-]+:[A-Za-z0-9]+)")
+_REGION = re.compile(r"\b([a-z]{2}(?:-gov|-iso[a-z]?)?-[a-z]+-\d) -- ")
+
+
+def read_refusals(log_path: Path) -> dict[str, dict[str, Any]]:
+    """Reads AWS refused during the scan, from Prowler's log.
+
+    Prowler logs a refused read and carries on, and its checks then report on
+    the data it did not get: seen live, an organization's service control
+    policy denied iam:GetLoginProfile, and every user was reported as having
+    no console password. Returns action -> {"count", "by_organization_policy"}.
+    """
+    refused: dict[str, dict[str, Any]] = {}
+    for line in Path(log_path).read_text("utf-8", errors="replace").splitlines():
+        match = _REFUSED.search(line)
+        if not match:
+            continue
+        entry = refused.setdefault(
+            match.group(1), {"count": 0, "by_organization_policy": False, "regions": []}
+        )
+        entry["count"] += 1
+        entry["by_organization_policy"] |= "service control policy" in line
+        # Prowler starts each regional error with "<region> -- ".
+        region = _REGION.search(line)
+        if region and region.group(1) not in entry["regions"]:
+            entry["regions"] = sorted([*entry["regions"], region.group(1)])
+    return dict(sorted(refused.items()))
+
+
+#: Check-map service -> the prefix AWS uses for its actions.
+_ACTION_PREFIX = {"accessanalyzer": "access-analyzer"}
+
+
+def _not_read(service: str, denied: dict[str, dict[str, Any]] | None) -> str:
+    """Why Prowler returned nothing for a whole area, as precisely as the log allows."""
+    prefix = _ACTION_PREFIX.get(service, service) + ":"
+    refused = sorted(a for a in (denied or {}) if a.startswith(prefix))
+    if refused:
+        by_policy = any((denied or {})[a]["by_organization_policy"] for a in refused)
+        return (
+            f"AWS refused the reads this area needs ({', '.join(refused)})"
+            + (
+                ", because of a policy set by the organization that manages this account "
+                "(a service control policy), whatever rights the assessment role has"
+                if by_policy
+                else ""
+            )
+            + "."
+        )
+    return (
+        "Prowler returned no result for this area. The assessment role may lack permission to "
+        "read it, or these checks were not included in the run."
+    )
+
+
 def import_prowler(
     path: Path,
     *,
     tenant_id: str = "aws",
     account_alias: str = "",
     check_map: ProwlerMap | None = None,
+    log_path: Path | None = None,
 ) -> Snapshot:
     """Read a Prowler `json-ocsf` file and return a snapshot.
 
@@ -118,6 +176,7 @@ def import_prowler(
 
     # A service with no result for any of its checks was not read: Prowler
     # logs an access-denied error and simply emits nothing for it.
+    denied = read_refusals(log_path) if log_path else None
     errors = []
     seen = {r["check_id"] for r in rows}
     for service, checks in check_map.services.items():
@@ -126,10 +185,7 @@ def import_prowler(
                 CollectionError(
                     collector=f"aws.{service}",
                     assessability=Assessability.NOT_ASSESSABLE_PERMISSION,
-                    message=(
-                        "Prowler returned no result for this area. The assessment role may lack "
-                        "permission to read it, or these checks were not included in the run."
-                    ),
+                    message=_not_read(service, denied),
                 )
             )
 
@@ -152,6 +208,9 @@ def import_prowler(
                 "checks_mapped": list(check_map.checks),
                 "results": rows,
             },
+            # None when no Prowler log was given: refusals are then unknown,
+            # not absent, and the report cannot claim either way.
+            "aws.denied": denied,
         },
         errors=tuple(errors),
     )

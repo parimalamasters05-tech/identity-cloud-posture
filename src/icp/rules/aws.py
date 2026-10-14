@@ -17,7 +17,7 @@ from icp.normalizers.aws import results
 from icp.normalizers.base import NormalizedTenant
 from icp.risk.prowler_map import MappedRule
 from icp.risk.prowler_map import load as load_map
-from icp.rules.base import Rule, RuleContext, register
+from icp.rules.base import Rule, RuleContext, RuleNotAssessable, register
 
 AWS = (Platform.AWS,)
 
@@ -52,7 +52,22 @@ class ProwlerRule(Rule):
     def evaluate(self, tenant: NormalizedTenant, ctx: RuleContext) -> list[Finding]:
         m = self.mapped
         rows = results(tenant)
-        failed = [r for r in rows if r["check_id"] in m.checks and r["status"] == "FAIL"]
+        # Regions AWS refused to show (a per-region rule only): left out, with
+        # a coverage note from the normalizer, rather than reported as failing.
+        refused_regions = self._check_inputs(tenant, rows)
+        # A resource another finding already covers is left out (a public
+        # bucket is not also "shared with another account").
+        covered = {
+            r["resource_uid"] for r in rows if r["check_id"] in m.except_failing and r["status"] == "FAIL"
+        }
+        failed = [
+            r
+            for r in rows
+            if r["check_id"] in m.checks
+            and r["status"] == "FAIL"
+            and r["resource_uid"] not in covered
+            and r["region"] not in refused_regions
+        ]
         if not failed:
             return []
         if m.unless:
@@ -93,6 +108,41 @@ class ProwlerRule(Rule):
             )
         ]
 
+    def _check_inputs(self, tenant: NormalizedTenant, rows: list[dict[str, Any]]) -> set[str]:
+        """Raise RuleNotAssessable where Prowler's verdict cannot be trusted.
+
+        Returns the regions to leave out when a per-region rule was refused in
+        some regions but not all.
+        """
+        m = self.mapped
+        if m.needs:
+            denied = tenant.snapshot.artifacts.get("aws.denied")
+            if not isinstance(denied, dict):
+                raise RuleNotAssessable(
+                    "Prowler's log was not imported with its results, so a read AWS refused during "
+                    "the scan cannot be ruled out, and Prowler reports a pass when that happens."
+                )
+            refused = [a for a in m.needs if a in denied]
+            if refused:
+                regions = {r for a in refused for r in denied[a].get("regions", [])}
+                checked = {r["region"] for r in rows if r["check_id"] in m.checks} - regions
+                if m.collapse == "region" and regions and checked:
+                    return regions
+                by_policy = any(denied[a].get("by_organization_policy") for a in refused)
+                raise RuleNotAssessable(
+                    f"AWS refused a read these checks depend on ({', '.join(refused)})"
+                    + (
+                        ", because of a policy set by the organization that manages this account "
+                        "(a service control policy), whatever rights the assessment role has"
+                        if by_policy
+                        else ""
+                    )
+                    + ". Prowler reports a pass when that happens, so its result was not used."
+                )
+        if m.if_empty and not any(r["check_id"] in m.checks for r in rows):
+            raise RuleNotAssessable(m.if_empty)
+        return set()
+
 
 def _build(mapped: MappedRule) -> type[ProwlerRule]:
     return type(
@@ -101,7 +151,9 @@ def _build(mapped: MappedRule) -> type[ProwlerRule]:
         {
             "rule_id": mapped.rule_id,
             "check_family": mapped.family,
-            "title": mapped.one,
+            # Neutral: also the heading of a "not assessed" note, where a count
+            # ("1 AWS user can...") would read as a finding.
+            "title": mapped.many.replace("{n} ", ""),
             "impact": mapped.impact,
             "exposure": mapped.exposure,
             "remediation_key": mapped.remediation,

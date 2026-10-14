@@ -38,6 +38,12 @@ class MappedRule:
     unless: str = ""
     #: "region": one affected item per region, not per resource.
     collapse: str = ""
+    #: AWS read actions the checks depend on; refused, the rule is not assessed.
+    needs: tuple[str, ...] = ()
+    #: Why the rule is not assessed when its checks returned nothing.
+    if_empty: str = ""
+    #: A resource failing one of these checks is covered by another finding.
+    except_failing: tuple[str, ...] = ()
 
 
 @dataclass(frozen=True)
@@ -88,6 +94,9 @@ def load(path: Path = DEFAULT_MAP_PATH) -> ProwlerMap:
             privileged=bool(r.get("privileged", False)),
             unless=str(r.get("unless", "")),
             collapse=str(r.get("collapse", "")),
+            needs=tuple(r.get("needs", ())),
+            if_empty=str(r.get("if_empty", "")),
+            except_failing=tuple(r.get("except_failing", ())),
         )
         for r in data.get("rules", [])
     )

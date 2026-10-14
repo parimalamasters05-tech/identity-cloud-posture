@@ -78,7 +78,7 @@
     {% for area in passed_areas %}
     <div class="finding sevbar-low">
       <h4 style="margin-top:0;">{{ area.title }} — no issues found</h4>
-      <p class="meta">We looked for: {{ area.checks | map('lower') | join('; ') }}. None was found.{{ area.note }}</p>
+      <p class="meta">We looked for: {{ area.checks | map('sentence_case') | join('; ') }}. None was found.{{ area.note }}</p>
     </div>
     {% endfor %}
   {% endif %}

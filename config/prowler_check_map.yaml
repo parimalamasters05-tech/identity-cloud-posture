@@ -17,6 +17,19 @@
 #   evidence   One plain sentence per affected item. {name} is the resource.
 #   noun       What an affected item is called in the report.
 #   privileged true when the affected item has full control of the account.
+#   needs      AWS read actions the checks depend on. Prowler logs a refused read
+#              and carries on, reporting on the data it did not get. Seen live, an
+#              organization policy denied iam:GetLoginProfile (every user was then
+#              reported as having no console password) and cloudtrail:DescribeTrails
+#              in all but one region (each was then reported as having no trail).
+#              A refused action makes the rule "not assessed"; for a per-region
+#              rule, only the refused regions are left out, with a coverage note.
+#   if_empty   Reason the rule is "not assessed" when Prowler returned no result
+#              for its checks although the service was read. Without it, no
+#              result means nothing of that kind exists (no trails, no buckets).
+#   except_failing  Leave out a resource that fails one of these checks: another
+#              finding already covers it (a public bucket is not also "shared
+#              with another account").
 prowler_version: "5.45.0"
 
 rules:
@@ -34,6 +47,7 @@ rules:
     evidence: "The root user, which has unrestricted control of the whole AWS account, signs in with a password alone."
     remediation: aws.mfa.root
     framework: [PR.AA-03, PR.AA-05]
+    if_empty: &root_unchecked "Prowler checks the root user's second sign-in step only when the root user has access keys, so it could not be confirmed here. Confirm it in the console: IAM > Dashboard > Security recommendations."
 
   - id: AWS-MFA-002
     family: mfa_coverage
@@ -47,6 +61,7 @@ rules:
     evidence: "{name} has a console password and no second sign-in step."
     remediation: aws.mfa.users
     framework: [PR.AA-03]
+    needs: [iam:GetLoginProfile]
 
   - id: AWS-MFA-003
     family: mfa_coverage
@@ -62,6 +77,7 @@ rules:
     evidence: "The root user is protected by an authenticator app. A physical security key cannot be copied or captured by a fake sign-in page."
     remediation: aws.mfa.root_hardware
     framework: [PR.AA-03]
+    if_empty: *root_unchecked
 
   # -- 2. Administrative control ----------------------------------------------
   - id: AWS-ADM-001
@@ -134,6 +150,7 @@ rules:
     evidence: "{name} can still sign in to the console but has not done so within the period Prowler checks (45 days by default)."
     remediation: aws.accounts.remove_unused_logins
     framework: [PR.AA-01]
+    needs: [iam:GetLoginProfile]
 
   - id: AWS-STA-002
     family: stale_accounts
@@ -243,6 +260,7 @@ rules:
     collapse: region
     remediation: aws.logging.enable_trail
     framework: [PR.PS-04, DE.AE-03]
+    needs: [cloudtrail:DescribeTrails]
 
   - id: AWS-LOG-002
     family: logging_readiness
@@ -256,6 +274,7 @@ rules:
     evidence: "The activity trail {name} has log file validation off, so an edited or deleted record could not be detected."
     remediation: aws.logging.enable_validation
     framework: [PR.PS-04]
+    needs: [cloudtrail:DescribeTrails]
 
   - id: AWS-LOG-003
     family: logging_readiness
@@ -269,6 +288,7 @@ rules:
     evidence: "The storage bucket {name}, where the account's activity records are kept, can be read by anyone on the internet."
     remediation: aws.storage.close_public_buckets
     framework: [PR.DS-01, PR.PS-04]
+    needs: [cloudtrail:DescribeTrails]
 
   # -- 7. Access given to other accounts ------------------------------------------------
   - id: AWS-OAU-001
@@ -283,6 +303,7 @@ rules:
     evidence: "The storage bucket {name} has a policy that lets a different AWS account reach it."
     remediation: aws.sharing.review_cross_account
     framework: [PR.AA-05]
+    except_failing: [s3_bucket_public_access, s3_bucket_policy_public_write_access, s3_bucket_public_write_acl, s3_bucket_public_list_acl]
 
   - id: AWS-OAU-002
     family: oauth_grants
@@ -310,3 +331,4 @@ rules:
     collapse: region
     remediation: aws.sharing.enable_access_analyzer
     framework: [PR.AA-05]
+    needs: [access-analyzer:ListAnalyzers]

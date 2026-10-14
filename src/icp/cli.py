@@ -429,6 +429,13 @@ def preflight_m365() -> None:
     type=click.Path(exists=True, dir_okay=False, path_type=Path),
     help="Prowler's json-ocsf results file for one AWS account.",
 )
+@click.option(
+    "--prowler-log",
+    "log_path",
+    type=click.Path(dir_okay=False, path_type=Path),
+    default=None,
+    help="Prowler's log, to find reads AWS refused. Default: prowler.log next to the results.",
+)
 @click.option("--account-alias", default="", help="A name for the account, for the cover. Default: none.")
 @click.option(
     "--keep-prowler-output",
@@ -438,7 +445,12 @@ def preflight_m365() -> None:
 @click.option("--no-encrypt", is_flag=True, help="Write the snapshot unencrypted (test accounts only).")
 @click.pass_context
 def collect_aws(
-    ctx: click.Context, prowler_path: Path, account_alias: str, keep_prowler_output: bool, no_encrypt: bool
+    ctx: click.Context,
+    prowler_path: Path,
+    log_path: Path | None,
+    account_alias: str,
+    keep_prowler_output: bool,
+    no_encrypt: bool,
 ) -> None:
     """AWS: import Prowler's results for one account into a snapshot.
 
@@ -453,11 +465,19 @@ def collect_aws(
     from icp.storage.snapshot_store import SnapshotStore
 
     settings = _settings(ctx)
+    log_path = log_path or prowler_path.with_name("prowler.log")
+    if not log_path.exists():
+        click.secho(
+            f"  no Prowler log at {log_path}: reads AWS refused cannot be detected, so the checks "
+            "that depend on them will be reported as not assessed.",
+            fg="yellow",
+        )
     try:
         snapshot = import_prowler(
             prowler_path,
             tenant_id=os.environ.get("ICP_AWS_TENANT_LABEL", "aws"),
             account_alias=account_alias,
+            log_path=log_path if log_path.exists() else None,
         )
     except ProwlerImportError as exc:
         _fail(str(exc))
@@ -478,16 +498,24 @@ def collect_aws(
     )
     for error in snapshot.errors:
         click.secho(f"  not assessed: {error.collector}: {error.message}", fg="yellow")
+    for action, info in (snapshot.artifacts.get("aws.denied") or {}).items():
+        why = (
+            " by an organization policy (service control policy)" if info["by_organization_policy"] else ""
+        )
+        click.secho(f"  AWS refused {action}{why}: {info['count']} time(s)", fg="yellow")
     if snapshot.started_at:
+        # Prowler stamps every result with the scan's start time.
         click.echo(
-            f"  scan window (UTC): {snapshot.started_at:%Y-%m-%d %H:%M:%S} to "
-            f"{snapshot.collected_at:%H:%M:%S}  -- filter CloudTrail to this and the assessment role"
+            f"  scan started (UTC): {snapshot.started_at:%Y-%m-%d %H:%M:%S}  -- filter CloudTrail from "
+            "this time, for the assessment role"
         )
     # Prowler's file is unencrypted and lists every resource it read; the
     # snapshot now holds what the report needs, encrypted.
     if not keep_prowler_output:
-        prowler_path.unlink()
-        click.echo(f"  deleted Prowler's unencrypted results file: {prowler_path.name}")
+        for leftover in (prowler_path, log_path):
+            if leftover.exists():
+                leftover.unlink()
+                click.echo(f"  deleted Prowler's unencrypted file: {leftover.name}")
 
 
 @cli.command(name="collect-m365")
@@ -863,10 +891,23 @@ def _client_name(override: str, tenant_view) -> str:  # type: ignore[no-untyped-
         )
         return str(tenant_view.organization_name)
     if tenant_view.primary_domain:
+        from icp.models.enums import Platform
+
+        hint = {
+            Platform.AWS: "pass --client-name, or --account-alias when importing with collect-aws",
+            Platform.MICROSOFT_365: "pass --client-name",
+        }.get(
+            tenant_view.platform,
+            "add admin.directory.customer.readonly to the domain-wide delegation entry and collect again",
+        )
         click.secho(
-            f"Cover name: {tenant_view.primary_domain} (the primary domain). To use the "
-            "organization's name instead, add admin.directory.customer.readonly to the "
-            "domain-wide delegation entry and collect again.",
+            f"Cover name: {tenant_view.primary_domain} "
+            + (
+                "(the primary domain). "
+                if tenant_view.platform == Platform.GOOGLE_WORKSPACE
+                else "(no organization name in the snapshot). "
+            )
+            + f"To use the organization's name instead, {hint}.",
             fg="yellow",
         )
         return str(tenant_view.primary_domain)

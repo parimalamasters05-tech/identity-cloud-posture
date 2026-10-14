@@ -85,6 +85,7 @@ class ReportRenderer:
         self.env.filters["severity_label"] = _severity_label
         self.env.filters["duration"] = plain.duration
         self.env.filters["long_date"] = _long_date
+        self.env.filters["sentence_case"] = plain.sentence_case
         self.env.globals["tier_label"] = _tier_label
         self.env.globals["app_kind"] = _app_kind
         self.env.globals["access"] = _access
@@ -561,6 +562,10 @@ _COLLECTOR_AREAS = {
     "m365.cross_tenant_access": "access settings for outside organizations",
     "m365.public_files": "publicly shared OneDrive files",
     "m365.audit_readiness": "the availability of sign-in and audit logs",
+    "aws.iam": "AWS users, roles and policies",
+    "aws.s3": "AWS storage buckets",
+    "aws.cloudtrail": "AWS activity trails",
+    "aws.accessanalyzer": "AWS IAM Access Analyzer",
 }
 
 #: Collectors no check depends on.

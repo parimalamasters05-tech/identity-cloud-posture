@@ -34,3 +34,13 @@ def verb(n: int, singular: str, plural: str) -> str:
 
 def lower_first(text: str) -> str:
     return text[:1].lower() + text[1:] if text else text
+
+
+def sentence_case(text: str) -> str:
+    """A title read mid-sentence: the first word lowered, unless it is an
+    acronym ("AWS users ..." stays). Lowering the whole title once printed
+    "aws users"."""
+    first = text.split(" ", 1)[0]
+    if len(first) > 1 and first[1].isupper():
+        return text
+    return lower_first(text)
