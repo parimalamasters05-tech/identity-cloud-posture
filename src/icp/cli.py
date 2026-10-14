@@ -172,6 +172,16 @@ def assess(ctx: click.Context, snapshot_path: Path | None, tenant: str | None) -
     type=click.Path(exists=True, path_type=Path),
     help="Snapshot to report on. Give it once per platform for one combined report.",
 )
+@click.option(
+    "--previous-snapshot",
+    "previous_paths",
+    multiple=True,
+    type=click.Path(exists=True, path_type=Path),
+    help=(
+        "An earlier snapshot of the same platform. Adds a 'Progress since the previous "
+        "review' section. Give it once per platform to compare."
+    ),
+)
 @click.option("--tenant", help="Use the latest snapshot for this tenant.")
 @click.option(
     "--client-name",
@@ -192,6 +202,7 @@ def assess(ctx: click.Context, snapshot_path: Path | None, tenant: str | None) -
 def report(
     ctx: click.Context,
     snapshot_paths: tuple[Path, ...],
+    previous_paths: tuple[Path, ...],
     tenant: str | None,
     client_name: str,
     assessor: str,
@@ -223,6 +234,25 @@ def report(
         # show the findings the snapshot had, not ones aged by today's date.
         return view, run_rules(view, now=snapshot.collected_at)
 
+    def progress_for(pairs: list) -> list:  # type: ignore[type-arg]
+        """Each earlier snapshot, compared with this report's snapshot of the
+        same platform. Re-assessed from the snapshot, so both sides are judged
+        by today's rules."""
+        from icp.reporting.progress import build as build_progress
+
+        sections = []
+        for path in previous_paths:
+            earlier = assessed(path)
+            match = next((p for p in pairs if p[0].platform == earlier[0].platform), None)
+            if match is None:
+                _fail(f"--previous-snapshot {path.name} is for a platform this report does not cover.")
+                continue
+            try:
+                sections.append(build_progress(earlier, match))
+            except ValueError as exc:
+                _fail(f"--previous-snapshot {path.name}: {exc}.")
+        return sections
+
     if len(snapshot_paths) > 1:
         pairs = [assessed(path) for path in snapshot_paths]
         platforms = [view.platform for view, _ in pairs]
@@ -242,6 +272,7 @@ def report(
             client_name=client_name,
             assessor=assessor,
             engagement_ref=engagement_ref,
+            progress=progress_for(pairs),
         )
         click.echo("Combined report for: " + ", ".join(str(p).replace("_", " ") for p in platforms))
     else:
@@ -254,8 +285,11 @@ def report(
             client_name=client_name,
             assessor=assessor,
             engagement_ref=engagement_ref,
+            progress=progress_for([(tenant_view, result)]),
         )
 
+    if previous_paths:
+        click.echo(f"Progress section: compared with {len(previous_paths)} earlier snapshot(s).")
     click.secho(f"HTML report: {rendered.html_path}", fg="green")
     if rendered.pdf_path:
         click.secho(f"PDF report:  {rendered.pdf_path}", fg="green")

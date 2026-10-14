@@ -100,6 +100,7 @@ class ReportRenderer:
         client_name: str,
         assessor: str,
         engagement_ref: str = "",
+        progress: list[dict[str, Any]] | None = None,
     ) -> dict[str, Any]:
         actionable = [f for f in result.findings if f.severity != Severity.INFO]
         coverage_notes = [f for f in result.findings if f.severity == Severity.INFO]
@@ -186,6 +187,8 @@ class ReportRenderer:
             # A single-platform report is a combined report with one part: the
             # same templates render both, so their wording cannot drift apart.
             "combined": False,
+            # Before-and-after, when the run was given an earlier snapshot.
+            "progress": progress or [],
             "parts": [self._part(tenant, engagement_ref)],
         }
 
@@ -214,6 +217,7 @@ class ReportRenderer:
         client_name: str,
         assessor: str,
         engagement_ref: str = "",
+        progress: list[dict[str, Any]] | None = None,
     ) -> dict[str, Any]:
         """One report for a client on several platforms (the brief's week 5:
         "one command against a mixed-platform client produces one coherent report").
@@ -334,6 +338,8 @@ class ReportRenderer:
             "degraded_areas": degraded_areas,
             "rules_failed": [x for _, r in assessed for x in r.rules_failed],
             "combined": True,
+            # Before-and-after, when the run was given an earlier snapshot.
+            "progress": progress or [],
             "parts": parts,
         }
 
@@ -346,9 +352,14 @@ class ReportRenderer:
         assessor: str,
         engagement_ref: str = "",
         basename: str | None = None,
+        progress: list[dict[str, Any]] | None = None,
     ) -> RenderResult:
         context = self.build_combined_context(
-            assessed, client_name=client_name, assessor=assessor, engagement_ref=engagement_ref
+            assessed,
+            client_name=client_name,
+            assessor=assessor,
+            engagement_ref=engagement_ref,
+            progress=progress,
         )
         html = self.env.get_template("report.html").render(**context)
 
@@ -457,9 +468,15 @@ class ReportRenderer:
         assessor: str,
         engagement_ref: str = "",
         basename: str | None = None,
+        progress: list[dict[str, Any]] | None = None,
     ) -> RenderResult:
         context = self.build_context(
-            tenant, result, client_name=client_name, assessor=assessor, engagement_ref=engagement_ref
+            tenant,
+            result,
+            client_name=client_name,
+            assessor=assessor,
+            engagement_ref=engagement_ref,
+            progress=progress,
         )
         html = self.env.get_template("report.html").render(**context)
 
@@ -607,6 +624,7 @@ def _app_kind(app: Application) -> str:
         "assessor": "This assessment (remove afterwards)",
         "app_only": "Works without a user",
         "microsoft": "Microsoft's own",
+        "microsoft_published": "Published by Microsoft",
     }.get(app.first_party_kind or "", "Third-party")
 
 

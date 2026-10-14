@@ -195,3 +195,20 @@ def test_a_clean_age_check_says_the_dates_were_there(m365, tenant, result):
         assert any("last sign-in dates" in n for n in notes)
     google = ReportRenderer().build_context(tenant, result, client_name="Lab", assessor="T")
     assert all(a["note"] == "" for a in google["passed_areas"])
+
+
+def test_an_app_microsoft_publishes_from_another_tenant_is_labelled_but_still_checked():
+    """Seen live: Graph Explorer, verified as Microsoft Corporation, read "Third-party"."""
+    from copy import deepcopy
+
+    from tests.rules.test_m365_rules import _artifacts
+
+    from icp.reporting.renderer import _app_kind
+
+    artifacts = deepcopy(_artifacts())
+    [sp] = [s for s in artifacts["m365.service_principals"] if s["displayName"] == "Posture OAuth Test"]
+    sp["verifiedPublisher"] = {"displayName": "Microsoft Corporation", "verifiedPublisherId": "5206095"}
+    tenant, _, by_rule = _run(artifacts)
+    [app] = [a for a in tenant.applications if a.name == "Posture OAuth Test"]
+    assert _app_kind(app) == "Published by Microsoft"
+    assert "M365-OAU-001" in by_rule, "a label must not exempt it from the checks"

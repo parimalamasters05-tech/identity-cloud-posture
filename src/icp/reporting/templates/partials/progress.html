@@ -1,0 +1,52 @@
+{# Shown only when the run was given an earlier snapshot to compare with. #}
+{% if progress %}
+<section class="page-break">
+  <h2>Progress since the previous review</h2>
+  <p>
+    Each finding from the earlier review is compared with this one. This shows what changed
+    between the two readings, not why: a finding can close because it was fixed, or because the
+    account or file it named no longer exists.
+  </p>
+
+  {% for item in progress %}
+  <h3>{% if combined or progress | length > 1 %}{{ item.platform.name }}: {% endif %}{{ item.previous_at.strftime('%d %B %Y, %H:%M UTC') }} to {{ item.current_at.strftime('%d %B %Y, %H:%M UTC') }}</h3>
+  <table>
+    <thead>
+      <tr><th>Resolved</th><th>Improved</th><th>Worse</th><th>New</th><th>Unchanged</th><th>Total risk score</th></tr>
+    </thead>
+    <tbody>
+      <tr>
+        <td>{{ item.counts.resolved }}</td>
+        <td>{{ item.counts.improved }}</td>
+        <td>{{ item.counts.regressed }}</td>
+        <td>{{ item.counts.new }}</td>
+        <td>{{ item.counts.persisting }}</td>
+        <td>{{ item.risk.previous }} to {{ item.risk.current }}{% if item.risk.change_pct %}
+          ({{ 'down' if item.risk.change_pct < 0 else 'up' }} {{ item.risk.change_pct | abs }}%){% endif %}</td>
+      </tr>
+    </tbody>
+  </table>
+
+  <table>
+    <thead>
+      <tr><th style="width:13%;">Outcome</th><th style="width:13%;">Severity</th><th style="width:38%;">Finding</th><th>What changed</th></tr>
+    </thead>
+    <tbody>
+      {% for row in item.rows %}
+      <tr class="avoid-break">
+        <td><strong>{{ row.outcome }}</strong></td>
+        <td><span class="sev sev-{{ row.finding.severity }}">{{ row.finding.severity | severity_label }}</span></td>
+        <td>{{ row.finding.title }}</td>
+        <td class="meta">{{ row.detail }}</td>
+      </tr>
+      {% endfor %}
+    </tbody>
+  </table>
+  <p class="meta">
+    Earlier snapshot <span class="mono">{{ item.previous_snapshot_id }}</span>. A resolved row shows
+    the finding as it stood in the earlier review. The total risk score adds up the score of every
+    open finding on each date, using the scoring set out in the methodology section.
+  </p>
+  {% endfor %}
+</section>
+{% endif %}

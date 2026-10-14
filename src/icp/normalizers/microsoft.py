@@ -218,6 +218,17 @@ def _delegated_grants(
                 else (person.label if person else None),
                 scopes=_scopes(str(g.get("scope") or "").split()),
                 is_first_party=first_party,
+                # A label only (seen live: Graph Explorer, which Microsoft
+                # publishes from another of its tenants, read "Third-party").
+                # It is still checked like any other app: staff choose what to
+                # grant it.
+                first_party_kind=(
+                    "microsoft_published"
+                    if not first_party
+                    and (sp.get("verifiedPublisher") or {}).get("verifiedPublisherId")
+                    and (sp.get("verifiedPublisher") or {}).get("displayName") == "Microsoft Corporation"
+                    else None
+                ),
                 is_anonymous_app=not first_party
                 and not (sp.get("verifiedPublisher") or {}).get("displayName"),
             )
@@ -281,7 +292,7 @@ def _applications(tenant: NormalizedTenant) -> list[Application]:
                 # Microsoft's own components (seen live: "SharePoint Online Web
                 # Client Extensibility") are listed, labelled as Microsoft's, not
                 # as third-party; they raise no finding.
-                first_party_kind="microsoft" if grants[0].is_first_party else None,
+                first_party_kind="microsoft" if grants[0].is_first_party else grants[0].first_party_kind,
                 is_anonymous=grants[0].is_anonymous_app,
                 users=users,
                 active_users=sum(1 for u in users if u == "*" or (u in people and not people[u].suspended)),

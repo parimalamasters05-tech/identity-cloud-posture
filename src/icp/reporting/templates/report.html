@@ -80,6 +80,7 @@
 {% include "partials/cover.html" %}
 {% include "partials/executive_summary.html" %}
 {% include "partials/action_plan.html" %}
+{% include "partials/progress.html" %}
 {% include "partials/findings.html" %}
 {# Per platform: what "connected" means, and what is recorded about it, differs. #}
 {% for part in parts %}{% with applications = part.applications, token_log = part.token_log, platform = part.platform %}{% include "partials/applications.html" %}{% endwith %}{% endfor %}
