@@ -496,6 +496,36 @@ remediations:
     verification: "Entra ID > External Identities > External collaboration settings: 'Guest invite settings' is not set to anyone in the organization including guests."
     owner_hint: IT administrator
 
+  m365.sharing.limit_outside_trust:
+    title: Accept outside sign-in checks only from organizations you choose
+    impact: >
+      When the checks another organization does at sign-in are accepted from
+      every organization, a guest is not asked for a second step here. Your
+      protection then depends on how careful each guest's own organization is.
+    steps:
+      - "Entra admin center > Entra ID > External Identities > Cross-tenant access settings > Default settings > Edit inbound defaults > Trust settings."
+      - "Clear every box under 'Trust multifactor authentication from Microsoft Entra tenants' and the two device options, then Save."
+      - "For a partner organization you work with closely and trust: Organizational settings > Add organization, then turn the same options on for that organization only."
+    verification: "Cross-tenant access settings > Default settings > Inbound access > Trust settings: all three options are off. Any organization with them on is listed by name under Organizational settings."
+    owner_hint: IT administrator
+    references:
+      - https://learn.microsoft.com/entra/external-id/cross-tenant-access-settings-b2b-collaboration
+
+  m365.sharing.limit_shared_channels:
+    title: Allow shared Teams channels only with organizations you choose
+    impact: >
+      People added to a shared channel from another organization are not
+      guests, so they never appear in your user list. Open to every
+      organization, that is access nobody reviews.
+    steps:
+      - "Entra admin center > Entra ID > External Identities > Cross-tenant access settings > Default settings > Edit inbound defaults > B2B direct connect."
+      - "Under 'External users and groups', choose 'Block access', then Save."
+      - "For each organization you share channels with on purpose: Organizational settings > Add organization > Inbound access > B2B direct connect > Allow access."
+    verification: "Cross-tenant access settings > Default settings > Inbound access > B2B direct connect: 'Block access'. Each organization allowed is listed by name under Organizational settings."
+    owner_hint: IT administrator
+    references:
+      - https://learn.microsoft.com/entra/external-id/cross-tenant-access-settings-b2b-direct-connect
+
   m365.logging.enable_logs:
     title: Make sure activity logs are available
     impact: >

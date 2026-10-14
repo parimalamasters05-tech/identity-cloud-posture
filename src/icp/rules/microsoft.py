@@ -793,6 +793,108 @@ class M365GuestInvitesUnrestricted(M365Rule):
         ]
 
 
+def _cross_tenant_default(tenant: NormalizedTenant) -> dict:
+    """The settings that apply to every outside organization not given its own."""
+    settings = _require_policy(tenant).get("cross_tenant_access")
+    if not settings:
+        raise RuleNotAssessable(
+            "The access settings for outside organizations were not read when this configuration "
+            "was captured. A new collection includes them."
+        )
+    return dict(settings.get("default") or {})
+
+
+def _open_to_all(setting: dict | None) -> bool:
+    """Allowed, for all users: the shape Microsoft uses for "every organization"."""
+    users = (setting or {}).get("usersAndGroups") or {}
+    targets = {str(t.get("target")) for t in users.get("targets") or []}
+    return users.get("accessType") == "allowed" and "AllUsers" in targets
+
+
+_TRUSTED_CLAIMS = (
+    ("isMfaAccepted", "second sign-in step"),
+    ("isCompliantDeviceAccepted", "device compliance check"),
+    ("isHybridAzureADJoinedDeviceAccepted", "company-device check"),
+)
+
+
+@register
+class M365OutsideSignInChecksTrusted(M365Rule):
+    rule_id = "M365-SHR-004"
+    requires_collectors = ("m365.cross_tenant_access",)
+    check_family = CheckFamily.EXTERNAL_SHARING
+    title = "Sign-in checks done by any outside organization are accepted"
+    impact = 2
+    exposure = 3
+    remediation_key = "m365.sharing.limit_outside_trust"
+    framework_refs = ("PR.AA-03", "PR.AA-05")
+    default_effort_hours = 0.5
+
+    def evaluate(self, tenant: NormalizedTenant, ctx: RuleContext) -> list[Finding]:
+        trust = _cross_tenant_default(tenant).get("inboundTrust") or {}
+        accepted = [label for key, label in _TRUSTED_CLAIMS if trust.get(key)]
+        if not accepted:
+            return []
+        listed = accepted[0] if len(accepted) == 1 else f"{', '.join(accepted[:-1])} and {accepted[-1]}"
+        return [
+            self.make_finding(
+                tenant,
+                ctx,
+                title=f"The {listed} done by any outside organization is accepted in place of your own",
+                entities=[_setting("Access settings for outside organizations")],
+                evidence=[
+                    Evidence(
+                        collector="m365.cross_tenant_access",
+                        pointer="/m365.cross_tenant_access/default/inboundTrust",
+                        summary=(
+                            f"The default for every outside organization accepts its {listed}. A guest "
+                            "from any organization is then not asked again here, so your protection is "
+                            "only as strong as the weakest organization a guest comes from."
+                        ),
+                        observed_values={key: bool(trust.get(key)) for key, _ in _TRUSTED_CLAIMS},
+                    )
+                ],
+            )
+        ]
+
+
+@register
+class M365SharedChannelsOpenToAll(M365Rule):
+    rule_id = "M365-SHR-005"
+    requires_collectors = ("m365.cross_tenant_access",)
+    check_family = CheckFamily.EXTERNAL_SHARING
+    title = "Shared channels open to every outside organization"
+    impact = 3
+    exposure = 3
+    remediation_key = "m365.sharing.limit_shared_channels"
+    framework_refs = ("PR.AA-05", "PR.DS-01")
+    default_effort_hours = 0.5
+
+    def evaluate(self, tenant: NormalizedTenant, ctx: RuleContext) -> list[Finding]:
+        if not _open_to_all(_cross_tenant_default(tenant).get("b2bDirectConnectInbound")):
+            return []
+        return [
+            self.make_finding(
+                tenant,
+                ctx,
+                title="People from any outside organization can be added to shared Teams channels",
+                entities=[_setting("Access settings for outside organizations")],
+                evidence=[
+                    Evidence(
+                        collector="m365.cross_tenant_access",
+                        pointer="/m365.cross_tenant_access/default/b2bDirectConnectInbound",
+                        summary=(
+                            "The default for every outside organization allows its people into shared "
+                            "Teams channels. They are not added as guests, so they do not appear in "
+                            "your user list and are missed by any review of guest accounts."
+                        ),
+                        observed_values={"b2bDirectConnectInbound": "allowed for all users"},
+                    )
+                ],
+            )
+        ]
+
+
 # -- 6. Logging ------------------------------------------------------------------------------
 
 

@@ -60,6 +60,12 @@ PROBES: tuple[Probe, ...] = (
     Probe(
         "SharePointTenantSettings.Read.All", "organization sharing setting", "admin/sharepoint/settings", {}
     ),
+    Probe(
+        "Policy.Read.All",
+        "access settings for outside organizations",
+        "policies/crossTenantAccessPolicy/default",
+        {},
+    ),
     Probe("Sites.Read.All", "sites (metadata only)", "sites/root", {"$select": "id"}),
 )
 

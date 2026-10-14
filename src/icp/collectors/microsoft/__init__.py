@@ -285,6 +285,26 @@ def _sharepoint_settings(c: GraphReadOnly, _ctx: dict[str, Any]) -> dict[str, An
     )
 
 
+_CROSS_TENANT_FIELDS = (
+    "inboundTrust",
+    "b2bCollaborationInbound",
+    "b2bCollaborationOutbound",
+    "b2bDirectConnectInbound",
+    "b2bDirectConnectOutbound",
+)
+
+
+def _cross_tenant_access(c: GraphReadOnly, _ctx: dict[str, Any]) -> dict[str, Any]:
+    """How far other organizations are trusted: the default that applies to
+    every outside organization, and any organization given its own settings."""
+    default = c.get("policies/crossTenantAccessPolicy/default")
+    partners = c.paginate("policies/crossTenantAccessPolicy/partners")
+    return {
+        "default": _keep(default, (*_CROSS_TENANT_FIELDS, "isServiceDefault")),
+        "partners": [_keep(p, ("tenantId", *_CROSS_TENANT_FIELDS)) for p in partners],
+    }
+
+
 def _public_files(c: GraphReadOnly, ctx: dict[str, Any]) -> list[dict[str, Any]]:
     """OneDrive items shared through an "Anyone" link, per user.
 
@@ -375,6 +395,7 @@ COLLECTORS: tuple[tuple[str, Callable[[GraphReadOnly, dict[str, Any]], Any]], ..
     ("m365.applications", _applications),
     ("m365.policies", _policies),
     ("m365.sharepoint_settings", _sharepoint_settings),
+    ("m365.cross_tenant_access", _cross_tenant_access),
     ("m365.public_files", _public_files),
     ("m365.audit_readiness", _audit_readiness),
 )
@@ -393,6 +414,7 @@ COLLECTOR_PERMISSIONS: dict[str, str] = {
     "m365.applications": "Application.Read.All",
     "m365.policies": "Policy.Read.All",
     "m365.sharepoint_settings": "SharePointTenantSettings.Read.All",
+    "m365.cross_tenant_access": "Policy.Read.All",
     "m365.public_files": "Sites.Read.All",
     "m365.audit_readiness": "AuditLog.Read.All",
 }

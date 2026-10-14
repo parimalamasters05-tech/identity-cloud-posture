@@ -443,6 +443,8 @@ def _policy(snapshot: Snapshot, domain: str) -> DomainPolicy:
                 for x in grants.get("low_impact_classifications", [])
                 if x.get("permissionName")
             ),
+            # None when the snapshot predates this collector, or it failed.
+            "cross_tenant_access": snapshot.artifact("m365.cross_tenant_access"),
             "sharing_capability": capability,
             "resharing_by_guests": sharing.get("isResharingByExternalUsersEnabled"),
         },

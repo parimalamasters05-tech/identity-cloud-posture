@@ -104,6 +104,8 @@ effort_hours:
   m365.sharing.close_anyone_links: {base: 0.25, per_item: 0.1, cap: 8.0}
   m365.sharing.restrict_org_setting: 0.5
   m365.sharing.restrict_guest_invites: 0.5
+  m365.sharing.limit_outside_trust: 0.5
+  m365.sharing.limit_shared_channels: 0.5
   m365.logging.enable_logs: 2.0
   m365.apps.review_delegated: 1.0
   # No portal button for one person's consent; a short script per account.

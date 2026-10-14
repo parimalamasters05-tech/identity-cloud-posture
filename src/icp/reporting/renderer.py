@@ -558,6 +558,7 @@ _COLLECTOR_AREAS = {
     "m365.applications": "application sign-in credentials",
     "m365.policies": "sign-in and consent policies",
     "m365.sharepoint_settings": "SharePoint and OneDrive sharing settings",
+    "m365.cross_tenant_access": "access settings for outside organizations",
     "m365.public_files": "publicly shared OneDrive files",
     "m365.audit_readiness": "the availability of sign-in and audit logs",
 }

@@ -109,6 +109,7 @@
     {% for part in parts %}{% if part.tenant.mfa_report_date %}<li>Which second factors each person uses (security keys and passkeys) comes from Google's daily security report, which Google publishes one to three days late. This assessment used the report for {{ part.tenant.mfa_report_date | long_date }}, so a key or passkey added after that date is not reflected.</li>{% endif %}{% endfor %}
     <li>Configuration and metadata only. No message or file content was accessed, so this report cannot say anything about what your data contains.</li>
     {% for part in parts %}<li>{{ part.platform.licence_note }}</li>{% endfor %}
+    {% for part in parts %}{% if part.platform.name == "Microsoft 365" %}<li>Administrator roles that someone is eligible to switch on for a limited time (Privileged Identity Management, which needs a Microsoft Entra ID P2 licence) were not examined. The administrator counts in this report are of roles held permanently.</li>{% endif %}{% endfor %}
     <li>Findings marked medium or low confidence are inferred from indirect signals and should be confirmed before acting.</li>
   </ul>
 </section>

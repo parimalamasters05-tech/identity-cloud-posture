@@ -186,6 +186,23 @@ def _artifacts() -> dict:
             ],
         },
         "m365.sharepoint_settings": {"sharingCapability": "externalUserAndGuestSharing"},
+        # Microsoft's defaults: nothing trusted, shared channels blocked.
+        "m365.cross_tenant_access": {
+            "default": {
+                "inboundTrust": {
+                    "isMfaAccepted": False,
+                    "isCompliantDeviceAccepted": False,
+                    "isHybridAzureADJoinedDeviceAccepted": False,
+                },
+                "b2bDirectConnectInbound": {
+                    "usersAndGroups": {
+                        "accessType": "blocked",
+                        "targets": [{"target": "AllUsers", "targetType": "user"}],
+                    }
+                },
+            },
+            "partners": [],
+        },
         "m365.public_files": [
             {
                 "id": "f1",
@@ -418,7 +435,7 @@ def test_every_microsoft_rule_names_the_sources_it_needs():
     from icp.rules import all_rules
 
     rules = [r for r in all_rules() if Platform.MICROSOFT_365 in r.platforms]
-    assert len(rules) == 19
+    assert len(rules) == 21
     assert [r.rule_id for r in rules if not r.requires_collectors] == []
 
 
@@ -540,3 +557,43 @@ def test_the_admin_fix_covers_roles_the_template_leaves_out():
     entry = RemediationLibrary.load_default().entries["m365.mfa.enforce_admins"]
     steps = " ".join(entry.steps)
     assert "does not cover this role" in steps and "Directory roles" in steps
+
+
+# -- Access settings for outside organizations (cross-tenant access) --------------------
+
+
+def test_microsofts_default_outside_access_settings_raise_nothing(seeded):
+    _, result, by_rule = seeded
+    assert "M365-SHR-004" not in by_rule and "M365-SHR-005" not in by_rule
+    assert not {"M365-SHR-004", "M365-SHR-005"} & set(result.unassessable)
+
+
+def test_accepting_every_organizations_sign_in_checks_is_flagged():
+    artifacts = deepcopy(_artifacts())
+    artifacts["m365.cross_tenant_access"]["default"]["inboundTrust"]["isMfaAccepted"] = True
+    _, _, by_rule = _run(artifacts)
+    [finding] = by_rule["M365-SHR-004"]
+    assert finding.severity.value == "low"
+    assert "second sign-in step done by any outside organization" in finding.title
+    assert "M365-SHR-005" not in by_rule
+
+
+def test_shared_channels_open_to_every_organization_are_flagged():
+    artifacts = deepcopy(_artifacts())
+    artifacts["m365.cross_tenant_access"]["default"]["b2bDirectConnectInbound"]["usersAndGroups"][
+        "accessType"
+    ] = "allowed"
+    _, _, by_rule = _run(artifacts)
+    [finding] = by_rule["M365-SHR-005"]
+    assert finding.severity.value == "medium"
+    assert "do not appear in your user list" in finding.evidence[0].summary
+
+
+def test_a_snapshot_taken_before_this_check_says_not_assessed_not_clean():
+    """The saved snapshots predate the collector: a missing reading is not a pass."""
+    artifacts = deepcopy(_artifacts())
+    del artifacts["m365.cross_tenant_access"]
+    _, result, by_rule = _run(artifacts)
+    assert "M365-SHR-004" not in by_rule and "M365-SHR-005" not in by_rule
+    assert {"M365-SHR-004", "M365-SHR-005"} <= set(result.unassessable)
+    assert "M365-SHR-001" in by_rule  # the rest of the sharing family still runs
