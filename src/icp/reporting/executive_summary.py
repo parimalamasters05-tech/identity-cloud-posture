@@ -22,6 +22,7 @@ from icp.reporting.plain import count, duration, lower_first, verb
 from icp.reporting.platform_text import for_platform
 from icp.reporting.remediation import RemediationLibrary
 from icp.risk.ranking import posture_rating, rank
+from icp.rules.microsoft import readable_kinds
 
 #: Plain-language framing per check family, for the headline risk paragraphs.
 _FAMILY_FRAMING = {
@@ -90,6 +91,12 @@ def _app(finding: Finding) -> str:
     """The application a per-app finding is about, from its title."""
     match = re.search(r"'([^']+)'", finding.title)
     return f"'{match.group(1)}'" if match else "An outside application"
+
+
+def _kinds(finding: Finding) -> str:
+    """What the application reads ('mail'), from the permissions in evidence."""
+    held = str(finding.evidence[0].observed_values.get("permissions", "")) if finding.evidence else ""
+    return readable_kinds(p for p in held.split(", ") if p)
 
 
 #: What is wrong, in one plain sentence with the real count. Replaces the rule's
@@ -201,7 +208,7 @@ _WHAT: dict[str, Callable[[Finding, int], str]] = {
         "staff's mail and files, and whatever access they gave to outside applications."
     ),
     "M365-SVC-001": lambda f, _n: (
-        f"{_app(f)} can read every person's mail or files by itself, with no one signed in."
+        f"{_app(f)} can read every person's {_kinds(f)} by itself, with no one signed in."
     ),
     "M365-SVC-002": lambda _f, n: (
         f"{count(n, 'application password', start=True)} {verb(n, 'stays', 'stay')} valid for "
@@ -218,7 +225,7 @@ _WHAT: dict[str, Callable[[Finding, int], str]] = {
         "Anyone in the organization, including outside guests, can invite more outside people in."
     ),
     "M365-OAU-001": lambda f, n: (
-        f"{_app(f)}, an outside application, can read the mail or files of "
+        f"{_app(f)}, an outside application, can read the {_kinds(f)} of "
         f"{count(n, 'person', 'people')} in your organization."
     ),
     "M365-OAU-002": lambda _f, n: (

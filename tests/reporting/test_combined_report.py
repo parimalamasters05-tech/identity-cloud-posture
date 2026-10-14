@@ -160,3 +160,20 @@ def test_the_same_work_takes_the_same_time_on_both_platforms(combined):
     google, m365 = public[Platform.GOOGLE_WORKSPACE], public[Platform.MICROSOFT_365]
     per_item = lambda f: (f.effort_hours - 0.25) / f.entity_count  # noqa: E731
     assert per_item(google) == pytest.approx(per_item(m365))
+
+
+def test_each_platforms_access_statement_is_its_own_paragraph(combined, tenant, result):
+    """They shared one paragraph and ran together: "explained below.Microsoft 365."."""
+    context, _, _ = combined
+    html = ReportRenderer().env.get_template("report.html").render(**context)
+    assert html.count("<p><strong>Google Workspace.</strong>") == 1
+    assert html.count("<p><strong>Microsoft 365.</strong>") == 1
+    section = html.split("How the assessment ran")[1].split("The tool performs")[0]
+    assert section.count("<p>") == section.count("</p>") + 1  # the shared closing paragraph opens last
+
+
+def test_the_summary_says_what_the_application_reads(combined):
+    context, _, _ = combined
+    for risk in context["summary"].headline_risks:
+        if "Backup Sync Test" in risk.paragraph:
+            assert "mail or files" not in risk.paragraph

@@ -64,8 +64,8 @@
     encrypted at rest and destroyed at the end of the retention window agreed in the engagement,
     with a written deletion attestation issued at that point.
     {% else %}
-    The snapshot supporting this report is stored encrypted. The tool deletes snapshots older
-    than its retention setting and writes a deletion record when it does.
+    The snapshot supporting this report is stored encrypted. Snapshots older than the tool's
+    retention setting are deleted when its purge step is run, which writes a deletion record.
     {% endif %}
     We hold no copy of any message or file content, because none was collected.
   </p>

@@ -3,15 +3,19 @@
   <h2>Methodology and scoring</h2>
 
   <h3>How the assessment ran</h3>
-  <p>
-    {# One access statement per platform; a single-platform report has one part. #}
+  {# One access statement per platform; a single-platform report has one part.
+     Combined, each gets its own paragraph: in one paragraph they ran together
+     ("explained below.Microsoft 365."). #}
+  {% if not combined %}<p>{% endif %}
     {% for part in parts %}
-    {% if combined %}<strong>{{ part.platform.name }}.</strong>{% endif %}
+    {% if combined %}<p><strong>{{ part.platform.name }}.</strong>{% endif %}
     {{ part.platform.retrieval }}
     {% if part.write_capable_scopes %}All but {{ 'one are' if part.write_capable_scopes | length == 1 else (part.write_capable_scopes | length) ~ ' are' }}
     read-only {{ part.platform.permission_noun }}s; the exception{{ 's are' if part.write_capable_scopes | length > 1 else ' is' }} explained
     below.{% else %}All are read-only {{ part.platform.permission_noun }}s.{% endif %}
+    {% if combined %}</p>{% endif %}
     {% endfor %}
+  {% if combined %}<p>{% endif %}
     The tool performs read and list operations only: state-changing requests are blocked before
     they leave the tool, and every request is logged.
     Responses were written to a timestamped snapshot, and every finding in this report was

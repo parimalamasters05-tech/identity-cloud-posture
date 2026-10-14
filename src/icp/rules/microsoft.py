@@ -11,6 +11,7 @@ Every rule here was seeded and seen on the dev tenant on 6 Oct 2026.
 
 from __future__ import annotations
 
+from collections.abc import Iterable
 from datetime import datetime, timedelta
 
 from icp.models.enums import CheckFamily, Confidence, Platform, ScopeTier
@@ -21,6 +22,32 @@ from icp.rules.base import Rule, RuleContext, RuleNotAssessable, entity_from_ide
 
 M365 = (Platform.MICROSOFT_365,)
 _DATA_TIERS = (ScopeTier.FULL_DATA_READ, ScopeTier.FULL_DATA_WRITE, ScopeTier.ADMIN_EQUIVALENT)
+
+#: What a permission reads, by its name. Mail.Read was once reported as "mail or
+#: files": it does not reach OneDrive.
+_KINDS = (
+    ("Mail.", "mail"),
+    ("Files.", "files"),
+    ("Sites.", "files"),
+    ("Calendars.", "calendars"),
+    ("Contacts.", "contacts"),
+    ("Chat.", "chats"),
+    ("ChannelMessage.", "chats"),
+)
+
+
+def readable_kinds(permissions: Iterable[str]) -> str:
+    """'mail', 'mail and files', or 'data' when the names do not say."""
+    kinds: list[str] = []
+    for permission in permissions:
+        kind = next((k for prefix, k in _KINDS if permission.startswith(prefix)), "other data")
+        if kind not in kinds:
+            kinds.append(kind)
+    kinds.sort(key=lambda k: k == "other data")
+    if not kinds or kinds == ["other data"]:
+        return "data"
+    return kinds[0] if len(kinds) == 1 else f"{', '.join(kinds[:-1])} and {kinds[-1]}"
+
 
 _NO_SIGN_IN_DATA = (
     "Microsoft had not yet recorded a last sign-in time for any account in this organization, "
@@ -243,7 +270,14 @@ class M365NoOrganizationWideMfa(M365Rule):
         raw = _require_policy(tenant)
         if tenant.policy and tenant.policy.mfa_enforced_org_wide:
             return []
-        report_only = [p["name"] for p in raw.get("conditional_access", []) if p.get("state") != "enabled"]
+        # Named, with their state: "1 policy is present but not switched on" was
+        # read as contradicting the enabled administrator policy on another page.
+        report_only = [
+            f"'{p['name']}' ({'report-only' if 'Reporting' in str(p.get('state')) else 'off'})"
+            for p in raw.get("conditional_access", [])
+            if p.get("state") != "enabled" and "mfa" in (p.get("grant") or [])
+        ]
+        admin_only = [f"'{p['name']}'" for p in raw.get("admin_mfa_policies", [])]
         return [
             self.make_finding(
                 tenant,
@@ -259,9 +293,14 @@ class M365NoOrganizationWideMfa(M365Rule):
                             "requires a second sign-in step for all users. Whether each account uses one is "
                             "left to the individual."
                             + (
-                                f" {plural(len(report_only), 'policy is', 'policies are')} present but "
-                                "not switched on (report-only or off)."
+                                f" Present but not enforced: {', '.join(report_only)}."
                                 if report_only
+                                else ""
+                            )
+                            + (
+                                f" {', '.join(admin_only)} is switched on, but applies to "
+                                "administrator roles only."
+                                if admin_only
                                 else ""
                             )
                         ),
@@ -533,7 +572,7 @@ class M365AppOnlyDataAccess(M365Rule):
                 self.make_finding(
                     tenant,
                     ctx,
-                    title=f"'{name}' can read every user's data without anyone signed in",
+                    title=f"'{name}' can read every user's {readable_kinds(perms)} without anyone signed in",
                     entities=[_app(app_id, name)],
                     evidence=[
                         Evidence(
@@ -543,6 +582,12 @@ class M365AppOnlyDataAccess(M365Rule):
                                 f"'{name}' holds {', '.join(perms)} as an application permission: it applies to "
                                 "every user in the organization, works at any time, and needs no one to sign in. "
                                 "Anyone holding this app's secret or certificate has the same access."
+                                + (
+                                    " This review cannot see whether an Exchange access policy limits it "
+                                    "to particular mailboxes."
+                                    if any(p.startswith("Mail.") for p in perms)
+                                    else ""
+                                )
                             ),
                             observed_values={"permissions": ", ".join(perms)},
                         )
@@ -817,7 +862,7 @@ class M365BroadDelegatedApps(M365Rule):
                 self.make_finding(
                     tenant,
                     ctx,
-                    title=f"'{name}' can read the mail or files of {who}",
+                    title=f"'{name}' can read the {readable_kinds(broad)} of {who}",
                     entities=[entity_from_identity(u) for u in holders] or [_app(app_id, name)],
                     evidence=[
                         Evidence(

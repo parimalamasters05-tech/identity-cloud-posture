@@ -424,8 +424,9 @@ remediations:
   m365.apps.review_app_only:
     title: Remove organization-wide data access from applications
     impact: >
-      This application can read every person's mail or files at any time,
-      without anyone signing in. Anyone who obtains its password or
+      This application can read data belonging to every person in the
+      organization at any time, without anyone signing in. The evidence below
+      names what it can read. Anyone who obtains its password or
       certificate gets the same access.
     steps:
       - "Entra admin center > Entra ID > Enterprise apps > select the application > Permissions."

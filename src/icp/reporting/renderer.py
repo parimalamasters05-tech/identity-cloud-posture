@@ -404,7 +404,10 @@ class ReportRenderer:
                     and tenant.coverage.get("sign_in_data_available")
                 )
                 note = (
-                    " Microsoft supplied last sign-in dates, so the unused-account checks ran."
+                    " Microsoft had recorded a sign-in for "
+                    f"{tenant.coverage.get('users_with_sign_in_data')} of "
+                    f"{tenant.coverage.get('users_total')} accounts, so the unused-account checks "
+                    "ran; an account with no sign-in on record is judged by when it was created."
                     if dated
                     else ""
                 )

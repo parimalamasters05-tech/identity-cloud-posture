@@ -491,3 +491,33 @@ def test_offline_access_is_not_described_as_unconditional(seeded):
     summary = by_rule["M365-OAU-001"][0].evidence[0].summary
     assert "at any time" not in summary
     assert "until that access is removed" in summary
+
+
+# -- Found by the second review of the combined report (13 Oct 2026) --------------------
+
+
+def test_what_an_application_reads_comes_from_its_permission_names(seeded):
+    """Mail.Read was reported as "mail or files"; it does not reach OneDrive."""
+    from icp.rules.microsoft import readable_kinds
+
+    assert readable_kinds(["Mail.Read"]) == "mail"
+    assert readable_kinds(["Mail.Read", "Files.Read.All", "Sites.Read.All"]) == "mail and files"
+    assert readable_kinds(["Directory.ReadWrite.All"]) == "data"
+    assert readable_kinds(["Directory.ReadWrite.All", "Mail.Read"]) == "mail and other data"
+    _, _, by_rule = seeded
+    [app_only] = by_rule["M365-SVC-001"]
+    assert app_only.title == "'Backup Sync Test' can read every user's mail without anyone signed in"
+    assert "cannot see whether an Exchange access policy" in app_only.evidence[0].summary
+    assert by_rule["M365-OAU-001"][0].title.startswith("'Posture OAuth Test' can read the mail of ")
+
+
+def test_the_org_wide_finding_names_each_policy_and_its_state():
+    """ "1 policy is present but not switched on" read as contradicting the
+    enabled administrator policy reported elsewhere."""
+    artifacts = deepcopy(_artifacts())
+    artifacts["m365.policies"]["conditional_access"][1]["state"] = "enabledForReportingButNotEnforced"
+    _, _, by_rule = _run(artifacts)
+    summary = by_rule["M365-MFA-004"][0].evidence[0].summary
+    assert "'Require multifactor authentication for all users' (report-only)" in summary
+    assert "'Require multifactor authentication for admins' is switched on, but applies to" in summary
+    assert "report-only or off" not in summary
