@@ -17,13 +17,22 @@
     {% if engagement_ref %}
     <tr><th>Engagement reference</th><td class="mono">{{ engagement_ref }}</td></tr>
     {% endif %}
+    {% if combined %}
+    {# One row per platform: with three platforms, separate "captured" and
+       "snapshot" rows pushed the coverage box and disclaimer onto page 2. #}
     {% for part in parts %}
-    <tr><th>Configuration captured</th><td>{% if combined %}{{ part.platform.name }}: {% endif %}{{ part.scope_statement.point_in_time.strftime('%d %B %Y, %H:%M UTC') }}</td></tr>
+    <tr><th>{% if loop.first %}Captured (UTC) and snapshot{% endif %}</th><td>{{ part.platform.name }}: {{ part.scope_statement.point_in_time.strftime('%d %b %Y, %H:%M') }} &middot; <span class="mono">{{ part.snapshot.snapshot_id }}</span></td></tr>
+    {% endfor %}
+    <tr><th>Report generated</th><td>{{ generated_at.strftime('%d %B %Y') }}</td></tr>
+    {% else %}
+    {% for part in parts %}
+    <tr><th>Configuration captured</th><td>{{ part.scope_statement.point_in_time.strftime('%d %B %Y, %H:%M UTC') }}</td></tr>
     {% endfor %}
     <tr><th>Report generated</th><td>{{ generated_at.strftime('%d %B %Y') }}</td></tr>
     {% for part in parts %}
-    <tr><th>Snapshot reference</th><td>{% if combined %}{{ part.platform.name }}: {% endif %}<span class="mono">{{ part.snapshot.snapshot_id }}</span></td></tr>
+    <tr><th>Snapshot reference</th><td><span class="mono">{{ part.snapshot.snapshot_id }}</span></td></tr>
     {% endfor %}
+    {% endif %}
   </table>
 
   <table class="scope-columns">

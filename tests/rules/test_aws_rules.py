@@ -317,7 +317,7 @@ def test_the_aws_report_reads_plainly_on_the_cover_and_in_clean_areas(tmp_path):
     renderer = ReportRenderer()
     context = renderer.build_context(tenant, result, client_name="Lab", assessor="T")
     cover = _text(renderer.env.get_template("partials/cover.html").render(**context))
-    assert "AWS IAM Access Analyzer" in cover and _violations(cover, EVERYWHERE) == []
+    assert "IAM Access Analyzer" in cover and _violations(cover, EVERYWHERE) == []
     findings = _text(renderer.env.get_template("partials/findings.html").render(**context))
     looked_for = " ".join(re.findall(r"We looked for: [^.]*", findings))
     assert looked_for and "aws " not in looked_for

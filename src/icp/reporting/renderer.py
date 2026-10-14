@@ -562,10 +562,10 @@ _COLLECTOR_AREAS = {
     "m365.cross_tenant_access": "access settings for outside organizations",
     "m365.public_files": "publicly shared OneDrive files",
     "m365.audit_readiness": "the availability of sign-in and audit logs",
-    "aws.iam": "AWS users, roles and policies",
-    "aws.s3": "AWS storage buckets",
-    "aws.cloudtrail": "AWS activity trails",
-    "aws.accessanalyzer": "AWS IAM Access Analyzer",
+    "aws.iam": "users, roles and policies",
+    "aws.s3": "storage buckets",
+    "aws.cloudtrail": "activity trails",
+    "aws.accessanalyzer": "IAM Access Analyzer",
 }
 
 #: Collectors no check depends on.
