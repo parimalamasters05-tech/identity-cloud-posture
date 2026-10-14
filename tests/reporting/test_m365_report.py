@@ -212,3 +212,32 @@ def test_an_app_microsoft_publishes_from_another_tenant_is_labelled_but_still_ch
     [app] = [a for a in tenant.applications if a.name == "Posture OAuth Test"]
     assert _app_kind(app) == "Published by Microsoft"
     assert "M365-OAU-001" in by_rule, "a label must not exempt it from the checks"
+
+
+# -- Review of the three-platform report (14 Oct 2026) -------------------------------
+
+
+def test_the_admin_fix_does_not_tell_you_to_create_a_policy_that_exists():
+    from icp.reporting.remediation import RemediationLibrary
+
+    steps = RemediationLibrary.load_default().entries["m365.mfa.enforce_admins"].steps
+    assert "mysignins.microsoft.com" in steps[0], "registering a method comes first"
+    assert "If the evidence names an enabled policy, it already exists" in steps[1]
+
+
+def test_the_summary_counts_the_apps_the_inventory_calls_third_party():
+    """Graph Explorer was counted as third-party in the summary and labelled
+    'Published by Microsoft' in the inventory."""
+    from copy import deepcopy
+
+    from tests.rules.test_m365_rules import _artifacts
+
+    from icp.reporting.executive_summary import _third_party_apps
+
+    artifacts = deepcopy(_artifacts())
+    tenant, _, _ = _run(artifacts)
+    before = _third_party_apps(tenant)
+    [sp] = [s for s in artifacts["m365.service_principals"] if s["displayName"] == "Posture OAuth Test"]
+    sp["verifiedPublisher"] = {"displayName": "Microsoft Corporation", "verifiedPublisherId": "5206095"}
+    tenant, _, _ = _run(artifacts)
+    assert _third_party_apps(tenant) == before - 1

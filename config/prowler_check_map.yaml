@@ -258,8 +258,11 @@ rules:
     impact: 3
     exposure: 3
     noun: region
-    one: Account activity is not being recorded in 1 AWS region
-    many: "Account activity is not being recorded in {n} AWS regions"
+    # Prowler checks for a trail that is logging in each region. With none,
+    # AWS still keeps 90 days of basic history, so "activity is not recorded"
+    # overstated it (review of 14 Oct).
+    one: No activity trail (CloudTrail) is recording in 1 AWS region
+    many: "No activity trail (CloudTrail) is recording in {n} AWS regions"
     evidence: "No activity trail is recording in {name}. AWS keeps 90 days of basic history by itself; after that there would be nothing to investigate with."
     collapse: region
     remediation: aws.logging.enable_trail

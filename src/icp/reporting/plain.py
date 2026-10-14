@@ -36,11 +36,15 @@ def lower_first(text: str) -> str:
     return text[:1].lower() + text[1:] if text else text
 
 
+#: Names kept capitalised mid-sentence ("google developer tools" was printed).
+_PROPER_NOUNS = frozenset({"Google", "Microsoft", "Entra", "OneDrive", "SharePoint", "Drive"})
+
+
 def sentence_case(text: str) -> str:
     """A title read mid-sentence: the first word lowered, unless it is an
     acronym ("AWS users ..." stays). Lowering the whole title once printed
     "aws users"."""
     first = text.split(" ", 1)[0]
-    if len(first) > 1 and first[1].isupper():
+    if (len(first) > 1 and first[1].isupper()) or first in _PROPER_NOUNS:
         return text
     return lower_first(text)

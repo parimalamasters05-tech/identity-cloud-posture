@@ -315,10 +315,9 @@ remediations:
       over with one stolen or guessed password. Whoever holds it controls every
       mailbox, file and account in the organization.
     steps:
-      - "Entra admin center > Entra ID > Conditional Access > Policies > Create new policy from templates."
-      - "Choose 'Require multifactor authentication for admins', review the roles it covers, and set the policy to 'On'."
-      - "The template covers 14 administrator roles, not all of them. Where the evidence above says the policy 'does not cover this role' (Global Reader is one), open the policy > Users > Include > Directory roles and add that role."
-      - "Before switching it on, ask each administrator named in the findings to add the Microsoft Authenticator app at mysignins.microsoft.com > Security info."
+      - "First, have each administrator named in the findings add the Microsoft Authenticator app at mysignins.microsoft.com > Security info. This is the fix whether or not a policy already exists: a policy asks for a second step, but only the person can set one up."
+      - "Entra admin center > Entra ID > Conditional Access > Policies. If the evidence names an enabled policy, it already exists: open it and go to the next step. If not: Create new policy from templates > 'Require multifactor authentication for admins' > set it to 'On'."
+      - "The template covers 14 administrator roles, not all of them. Where the evidence says the policy 'does not cover this role' (Global Reader is one), open the policy > Users > Include > Directory roles and add that role."
       - "Exclude one emergency access account, kept offline with a long password, so a mistake cannot lock everyone out."
     verification: "Entra ID > Users > select each administrator named in the findings > Authentication methods: a method other than Password is listed. Conditional Access > the policy > Users: every role those administrators hold is included."
     owner_hint: IT administrator
@@ -681,7 +680,8 @@ remediations:
     steps:
       - "IAM > Users > the user named in the findings > Permissions."
       - "If the person does not need to administer the whole account, remove 'AdministratorAccess' and add a policy for the job they do."
-      - "If they do, put them in an administrators group instead, so the list of administrators is in one place: IAM > User groups."
+      - "If they do, do not leave the rights on their everyday sign-in. Give them administrator rights only when needed: a permission set in IAM Identity Center, or an administrator role they switch into (IAM > Roles > Create role > This account, with a second sign-in step required)."
+      - "In a test account, remove deliberately broad rights as soon as the test is finished."
     verification: "IAM > Policies > AdministratorAccess > Entities attached: no individual users are listed."
     owner_hint: IT administrator
 

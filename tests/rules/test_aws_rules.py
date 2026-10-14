@@ -160,7 +160,7 @@ def test_scoring_titles_and_evidence_read_plainly(seeded):
     assert root.severity.value == "critical" and root.privileged_entity_count == 1
     assert root.title == "The account's root user has no second sign-in step"
     [regions] = by_rule["AWS-LOG-001"]
-    assert regions.title == "Account activity is not being recorded in 2 AWS regions"
+    assert regions.title == "No activity trail (CloudTrail) is recording in 2 AWS regions"
     problems = []
     for findings in by_rule.values():
         for f in findings:
@@ -266,7 +266,7 @@ def test_regions_aws_refused_to_show_are_left_out_and_named(tmp_path):
     _, tenant, result, by_rule = _run(log=_trail_refusal_log(tmp_path, ["us-west-2"]))
     [finding] = by_rule["AWS-LOG-001"]
     assert [e.label for e in finding.affected_entities] == ["us-east-1"]
-    assert finding.title == "Account activity is not being recorded in 1 AWS region"
+    assert finding.title == "No activity trail (CloudTrail) is recording in 1 AWS region"
     [gap] = [g for g in tenant.coverage_gaps if g.key == "aws-refused-aws-log-001"]
     assert "us-west-2" in gap.reason and "covers us-east-1 only" in gap.reason
     assert gap.key in result.partial_coverage
@@ -320,7 +320,7 @@ def test_the_aws_report_reads_plainly_on_the_cover_and_in_clean_areas(tmp_path):
     assert "IAM Access Analyzer" in cover and _violations(cover, EVERYWHERE) == []
     findings = _text(renderer.env.get_template("partials/findings.html").render(**context))
     looked_for = " ".join(re.findall(r"We looked for: [^.]*", findings))
-    assert looked_for and "aws " not in looked_for
+    assert "aws " not in looked_for  # the role area is partly assessed now, so may be absent
 
 
 def test_a_title_mid_sentence_keeps_its_acronym():
@@ -329,6 +329,7 @@ def test_a_title_mid_sentence_keeps_its_acronym():
     assert sentence_case("AWS users have access keys") == "AWS users have access keys"
     assert sentence_case("Super-administrators") == "super-administrators"
     assert sentence_case("OAuth grants") == "OAuth grants"
+    assert sentence_case("Google developer tools") == "Google developer tools"
 
 
 # -- Found in the second live round (14 Oct 2026) ------------------------------------
@@ -356,3 +357,34 @@ def test_the_report_says_roles_used_by_aws_services_were_not_checked():
     assert not any("services are allowed" in line for line in AWS.examined)
     svc = next(r for r in load_map().rules if r.rule_id == "AWS-SVC-001")
     assert "switch into" in svc.one
+
+
+# -- Review of the three-platform report (14 Oct 2026) -------------------------------
+
+
+def test_service_roles_make_the_role_family_partly_assessed_never_clean(seeded):
+    """A clean admin-role result read as covering every role, though roles
+    used by AWS services are not checked."""
+    from icp.models.enums import CheckFamily
+
+    _, tenant, result, _ = seeded
+    [gap] = [g for g in tenant.coverage_gaps if g.key == "aws-service-roles-unchecked"]
+    assert gap.families == (CheckFamily.SERVICE_ACCOUNT_PRIVILEGE,)
+    assert "Lambda" in gap.reason
+    assert gap.key in result.partial_coverage
+
+
+def test_the_trail_finding_says_no_trail_not_no_record(seeded):
+    """AWS keeps 90 days of basic history even with no trail."""
+    _, _, _, by_rule = seeded
+    title = by_rule["AWS-LOG-001"][0].title
+    assert title == "No activity trail (CloudTrail) is recording in 2 AWS regions"
+    assert "not being recorded" not in title
+
+
+def test_admin_rights_are_not_moved_into_a_permanent_group():
+    from icp.reporting.remediation import RemediationLibrary
+
+    steps = " ".join(RemediationLibrary.load_default().entries["aws.admin.reduce_admin_users"].steps)
+    assert "only when needed" in steps and "IAM Identity Center" in steps
+    assert "put them in an administrators group" not in steps

@@ -290,6 +290,19 @@ def build(
     )
 
 
+def _third_party_apps(tenant: NormalizedTenant) -> int:
+    """Outside applications staff connected, as the inventory labels them:
+    Google's and Microsoft's own apps are listed there but not counted here.
+    (Graph Explorer was once counted here and labelled Microsoft's in the table.)"""
+    return len(
+        {
+            g.client_id
+            for g in tenant.grants
+            if not g.is_first_party and g.first_party_kind != "microsoft_published"
+        }
+    )
+
+
 def _aws_account(tenant: NormalizedTenant) -> str:
     """'your AWS account 111122223333 ("lab")'."""
     number = tenant.coverage.get("account_id") or tenant.tenant_id
@@ -299,7 +312,7 @@ def _aws_account(tenant: NormalizedTenant) -> str:
 
 def _opening(tenant: NormalizedTenant, findings: list[Finding], rating: str) -> str:
     users = len(tenant.active_users)
-    apps = len({g.client_id for g in tenant.grants if not g.is_first_party})
+    apps = _third_party_apps(tenant)
     critical = sum(1 for f in findings if f.severity == Severity.CRITICAL)
     high = sum(1 for f in findings if f.severity == Severity.HIGH)
 
@@ -435,11 +448,16 @@ def build_combined(
     clouds = [t for t in tenants if t.platform == Platform.AWS]
     per_platform = ", ".join(f"{len(t.active_users)} in {for_platform(t.platform).name}" for t in staffed)
     users = sum(len(t.active_users) for t in staffed)
-    apps = sum(len({g.client_id for g in t.grants if not g.is_first_party}) for t in staffed)
+    apps = sum(_third_party_apps(t) for t in staffed)
     opening = (
         f"We examined the identity and access configuration of {text.environment}, covering "
         f"{users} active staff accounts ({per_platform})"
-        + (f" and {apps} connected third-party applications" if apps else "")
+        + (
+            f" and {apps} connected third-party applications (the inventory pages also list the "
+            "platforms' own apps and this assessment's, which are not counted)"
+            if apps
+            else ""
+        )
         + "".join(f", and the identity and storage settings of {_aws_account(t)}" for t in clouds)
         + ". The assessment was read-only: nothing in your environments was changed at any point. "
         + _verdict(critical, high, rating)

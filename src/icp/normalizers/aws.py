@@ -11,7 +11,7 @@ from __future__ import annotations
 
 from typing import Any
 
-from icp.models.enums import Platform
+from icp.models.enums import CheckFamily, Platform
 from icp.models.snapshot import Snapshot
 from icp.normalizers.base import CoverageGap, NormalizedTenant
 from icp.risk.prowler_map import load as load_map
@@ -56,6 +56,21 @@ def _refused_regions(snapshot: Snapshot, rows: list[dict[str, Any]]) -> list[Cov
     return gaps
 
 
+#: Always true of a Prowler run: its admin-role check leaves out roles that AWS
+#: services use (seen live: a Lambda role with AdministratorAccess was not
+#: reported). Recorded as partial coverage, so the family is never shown as
+#: "no issues found" for every role.
+_SERVICE_ROLES_UNCHECKED = CoverageGap(
+    key="aws-service-roles-unchecked",
+    families=(CheckFamily.SERVICE_ACCOUNT_PRIVILEGE,),
+    reason=(
+        "Only roles that people or other AWS accounts can switch into were checked. Roles that "
+        "AWS services use (for example a Lambda function's or a server's role) were not checked "
+        "for full administrative rights: Prowler leaves them out."
+    ),
+)
+
+
 def normalize(snapshot: Snapshot) -> NormalizedTenant:
     account = snapshot.artifact("aws.account") or {}
     prowler = snapshot.artifact("aws.prowler") or {}
@@ -68,7 +83,7 @@ def normalize(snapshot: Snapshot) -> NormalizedTenant:
         # The alias is the only name an AWS account has; many have none.
         organization_name=account.get("alias") or None,
         primary_domain=f"AWS account {account_id}",
-        coverage_gaps=_refused_regions(snapshot, rows),
+        coverage_gaps=[*_refused_regions(snapshot, rows), _SERVICE_ROLES_UNCHECKED],
         coverage={
             "account_id": account_id,
             "prowler_version": prowler.get("prowler_version"),
