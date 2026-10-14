@@ -508,7 +508,7 @@ def test_what_an_application_reads_comes_from_its_permission_names(seeded):
     [app_only] = by_rule["M365-SVC-001"]
     assert (
         app_only.title
-        == "'Backup Sync Test' has permission to read every user's mail without anyone signed in"
+        == "'Backup Sync Test' holds organization-wide permission to read mail (mailbox limits not checked)"
     )
     assert "cannot see whether an Exchange access policy" in app_only.evidence[0].summary
     assert by_rule["M365-OAU-001"][0].title.startswith("'Posture OAuth Test' can read the mail of ")

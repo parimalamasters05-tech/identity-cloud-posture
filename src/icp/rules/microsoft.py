@@ -574,9 +574,14 @@ class M365AppOnlyDataAccess(M365Rule):
                     ctx,
                     # "Has permission to", not "can": whether Exchange narrows
                     # it to certain mailboxes is not something this review reads.
+                    # The headline carries the limit of what was checked too.
                     title=(
-                        f"'{name}' has permission to read every user's {readable_kinds(perms)} "
-                        "without anyone signed in"
+                        f"'{name}' holds organization-wide permission to read {readable_kinds(perms)}"
+                        + (
+                            " (mailbox limits not checked)"
+                            if any(p.startswith("Mail.") for p in perms)
+                            else ""
+                        )
                     ),
                     entities=[_app(app_id, name)],
                     evidence=[

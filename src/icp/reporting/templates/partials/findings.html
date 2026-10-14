@@ -91,7 +91,10 @@
   </p>
     {% for entry in coverage_notes %}
     <div class="finding sevbar-low">
-      <h4 style="margin-top:0;"><span class="sev sev-info">Coverage note</span> {% if combined %}{{ platform_name(entry.finding) }}: {% endif %}{{ entry.finding.title }}</h4>
+      {# The label on its own line: beside the heading, some PDF readers joined
+         the two into "COVERAGE NOTEGOOGLE WORKSPACE". #}
+      <p style="margin:0 0 3pt;"><span class="sev sev-info">Coverage note</span></p>
+      <h4 style="margin-top:0;">{% if combined %}{{ platform_name(entry.finding) }}: {% endif %}{{ entry.finding.title }}</h4>
       {% for ev in entry.finding.evidence %}<p>{{ ev.summary }}</p>{% endfor %}
       {% set missed = entry.finding.affected_entities | selectattr('kind', 'equalto', 'user') | list %}
       {% if missed %}
