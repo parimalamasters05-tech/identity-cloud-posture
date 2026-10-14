@@ -208,7 +208,7 @@ _WHAT: dict[str, Callable[[Finding, int], str]] = {
         "staff's mail and files, and whatever access they gave to outside applications."
     ),
     "M365-SVC-001": lambda f, _n: (
-        f"{_app(f)} can read every person's {_kinds(f)} by itself, with no one signed in."
+        f"{_app(f)} has permission to read every person's {_kinds(f)} by itself, with no one signed in."
     ),
     "M365-SVC-002": lambda _f, n: (
         f"{count(n, 'application password', start=True)} {verb(n, 'stays', 'stay')} valid for "

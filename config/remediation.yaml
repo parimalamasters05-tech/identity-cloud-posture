@@ -317,9 +317,10 @@ remediations:
     steps:
       - "Entra admin center > Entra ID > Conditional Access > Policies > Create new policy from templates."
       - "Choose 'Require multifactor authentication for admins', review the roles it covers, and set the policy to 'On'."
+      - "The template covers 14 administrator roles, not all of them. Where the evidence above says the policy 'does not cover this role' (Global Reader is one), open the policy > Users > Include > Directory roles and add that role."
       - "Before switching it on, ask each administrator named in the findings to add the Microsoft Authenticator app at mysignins.microsoft.com > Security info."
       - "Exclude one emergency access account, kept offline with a long password, so a mistake cannot lock everyone out."
-    verification: "Entra ID > Users > select each administrator named in the findings > Authentication methods: a method other than Password is listed."
+    verification: "Entra ID > Users > select each administrator named in the findings > Authentication methods: a method other than Password is listed. Conditional Access > the policy > Users: every role those administrators hold is included."
     owner_hint: IT administrator
     references:
       - https://learn.microsoft.com/entra/identity/conditional-access/policy-old-require-mfa-admin

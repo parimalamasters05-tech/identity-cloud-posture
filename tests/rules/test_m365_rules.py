@@ -490,7 +490,7 @@ def test_offline_access_is_not_described_as_unconditional(seeded):
     _, _, by_rule = seeded
     summary = by_rule["M365-OAU-001"][0].evidence[0].summary
     assert "at any time" not in summary
-    assert "for as long as Microsoft keeps renewing that access" in summary
+    assert "for as long as Microsoft keeps renewing that access, no sign-in policy blocks it" in summary
 
 
 # -- Found by the second review of the combined report (13 Oct 2026) --------------------
@@ -506,7 +506,10 @@ def test_what_an_application_reads_comes_from_its_permission_names(seeded):
     assert readable_kinds(["Directory.ReadWrite.All", "Mail.Read"]) == "mail and other data"
     _, _, by_rule = seeded
     [app_only] = by_rule["M365-SVC-001"]
-    assert app_only.title == "'Backup Sync Test' can read every user's mail without anyone signed in"
+    assert (
+        app_only.title
+        == "'Backup Sync Test' has permission to read every user's mail without anyone signed in"
+    )
     assert "cannot see whether an Exchange access policy" in app_only.evidence[0].summary
     assert by_rule["M365-OAU-001"][0].title.startswith("'Posture OAuth Test' can read the mail of ")
 
@@ -528,3 +531,12 @@ def test_the_consent_finding_says_what_the_low_impact_permission_reads(seeded):
     summary = by_rule["M365-OAU-003"][0].evidence[0].summary
     assert "read their mail without an administrator" in summary
     assert "mail or files" not in summary
+
+
+def test_the_admin_fix_covers_roles_the_template_leaves_out():
+    """The fix said only "use the template", which does not include Global Reader."""
+    from icp.reporting.remediation import RemediationLibrary
+
+    entry = RemediationLibrary.load_default().entries["m365.mfa.enforce_admins"]
+    steps = " ".join(entry.steps)
+    assert "does not cover this role" in steps and "Directory roles" in steps

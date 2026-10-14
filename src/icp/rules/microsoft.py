@@ -572,7 +572,12 @@ class M365AppOnlyDataAccess(M365Rule):
                 self.make_finding(
                     tenant,
                     ctx,
-                    title=f"'{name}' can read every user's {readable_kinds(perms)} without anyone signed in",
+                    # "Has permission to", not "can": whether Exchange narrows
+                    # it to certain mailboxes is not something this review reads.
+                    title=(
+                        f"'{name}' has permission to read every user's {readable_kinds(perms)} "
+                        "without anyone signed in"
+                    ),
                     entities=[_app(app_id, name)],
                     evidence=[
                         Evidence(
@@ -874,8 +879,8 @@ class M365BroadDelegatedApps(M365Rule):
                                 + (
                                     f" For {', '.join(standing)} it can also stay signed in on its own "
                                     "(offline access), so it can keep reading without a new sign-in "
-                                    "for as long as Microsoft keeps renewing that access and nobody "
-                                    "removes it."
+                                    "for as long as Microsoft keeps renewing that access, no sign-in "
+                                    "policy blocks it, and nobody removes it."
                                     if standing
                                     else ""
                                 )
