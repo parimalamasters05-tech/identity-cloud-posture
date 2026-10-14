@@ -1,6 +1,7 @@
 # Client data must never enter a build context, let alone an image layer.
 snapshots/
 output/
+prowler-output/
 evidence/
 private/
 notes/

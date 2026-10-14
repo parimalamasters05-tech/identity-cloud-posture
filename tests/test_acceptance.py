@@ -263,6 +263,12 @@ def test_week4_every_remediation_gives_an_admin_console_path(library: Remediatio
                 "SharePoint admin center",
                 "mysignins.microsoft.com",
                 "Microsoft Purview portal",
+                # AWS Management Console (week 5), by service
+                "IAM >",
+                "IAM Identity Center >",
+                "S3 >",
+                "CloudTrail >",
+                "Security credentials >",
             )
         )
     ]

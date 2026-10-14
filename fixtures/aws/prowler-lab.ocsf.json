@@ -1,0 +1,2631 @@
+[{
+    "message": "MFA is not enabled for root account.",
+    "metadata": {
+        "event_code": "iam_root_mfa_enabled",
+        "product": {
+            "name": "Prowler",
+            "uid": "prowler",
+            "vendor_name": "Prowler",
+            "version": "5.45.0"
+        },
+        "profiles": [
+            "cloud",
+            "datetime"
+        ],
+        "version": "1.5.0"
+    },
+    "severity_id": 5,
+    "severity": "Critical",
+    "status": "New",
+    "status_code": "FAIL",
+    "status_detail": "MFA is not enabled for root account.",
+    "status_id": 1,
+    "unmapped": {
+        "related_url": "",
+        "categories": [
+            "identity-access"
+        ],
+        "depends_on": [],
+        "related_to": [],
+        "additional_urls": [
+            "https://docs.aws.amazon.com/IAM/latest/UserGuide/id_root-user.html#id_root-user_manage_mfa"
+        ],
+        "notes": "",
+        "compliance": {},
+        "scan_id": "01a1261d-0b00-7935-a5a4-0b666e8a7a6f",
+        "provider_uid": "111122223333",
+        "provider": "aws"
+    },
+    "activity_name": "Create",
+    "activity_id": 1,
+    "finding_info": {
+        "analytic": {
+            "category": "iam",
+            "name": "Root account has MFA enabled",
+            "type": "Rule",
+            "type_id": 1,
+            "uid": "iam_root_mfa_enabled"
+        },
+        "created_time": 1791640800,
+        "created_time_dt": "2026-10-10T14:00:00Z",
+        "desc": "**AWS root user** with active credentials is assessed for **MFA activation**. The evaluation considers whether the root identity has a password or access keys and whether **MFA is enabled**.\n\n*If centralized root access is enabled in Organizations, the presence of individual root credentials is also noted.*",
+        "title": "Root account has MFA enabled",
+        "types": [
+            "Software and Configuration Checks/AWS Security Best Practices",
+            "Software and Configuration Checks/Industry and Regulatory Standards/AWS Foundational Security Best Practices",
+            "Software and Configuration Checks/Industry and Regulatory Standards/CIS AWS Foundations Benchmark"
+        ],
+        "uid": "prowler-aws-iam_root_mfa_enabled-111122223333-us-east-1-<root_account>"
+    },
+    "resources": [
+        {
+            "cloud_partition": "aws",
+            "region": "us-east-1",
+            "data": {
+                "details": "",
+                "metadata": {}
+            },
+            "group": {
+                "name": "iam"
+            },
+            "labels": [],
+            "name": "<root_account>",
+            "type": "AwsIamUser",
+            "uid": "arn:aws:iam::111122223333:root"
+        }
+    ],
+    "category_name": "Findings",
+    "category_uid": 2,
+    "class_name": "Detection Finding",
+    "class_uid": 2004,
+    "cloud": {
+        "account": {
+            "name": "lab-account",
+            "type": "AWS Account",
+            "type_id": 10,
+            "uid": "111122223333",
+            "labels": []
+        },
+        "org": {},
+        "provider": "aws",
+        "region": "us-east-1"
+    },
+    "remediation": {
+        "desc": "Enable **MFA** for the root user, preferably **hardware-based** or a dedicated, managed device. Remove root access keys and avoid using root for daily tasks. Apply **least privilege** with IAM Identity Center for admins, and use Organizations to **centralize root access** and eliminate long-lived root credentials.",
+        "references": [
+            "https://hub.prowler.com/check/iam_root_mfa_enabled"
+        ]
+    },
+    "risk_details": "Without **MFA**, compromise of the root password or access keys can lead to full **account takeover**. An attacker with root can disable protections, steal or delete data, change billing, and create persistent admins, undermining confidentiality, integrity, and availability.",
+    "time": 1791640800,
+    "time_dt": "2026-10-10T14:00:00Z",
+    "type_uid": 200401,
+    "type_name": "Detection Finding: Create"
+},{
+    "message": "Root account has a virtual MFA instead of a hardware MFA device enabled.",
+    "metadata": {
+        "event_code": "iam_root_hardware_mfa_enabled",
+        "product": {
+            "name": "Prowler",
+            "uid": "prowler",
+            "vendor_name": "Prowler",
+            "version": "5.45.0"
+        },
+        "profiles": [
+            "cloud",
+            "datetime"
+        ],
+        "version": "1.5.0"
+    },
+    "severity_id": 5,
+    "severity": "Critical",
+    "status": "New",
+    "status_code": "FAIL",
+    "status_detail": "Root account has a virtual MFA instead of a hardware MFA device enabled.",
+    "status_id": 1,
+    "unmapped": {
+        "related_url": "",
+        "categories": [
+            "identity-access"
+        ],
+        "depends_on": [],
+        "related_to": [],
+        "additional_urls": [
+            "https://www.trendmicro.com/trendaivisiononecloudriskmanagement/knowledge-base/aws/IAM/root-hardware-mfa.html",
+            "https://docs.aws.amazon.com/IAM/latest/UserGuide/id_root-user.html#id_root-user_manage_mfa"
+        ],
+        "notes": "",
+        "compliance": {},
+        "scan_id": "01a1261d-0b00-7935-a5a4-0b666e8a7a6f",
+        "provider_uid": "111122223333",
+        "provider": "aws"
+    },
+    "activity_name": "Create",
+    "activity_id": 1,
+    "finding_info": {
+        "analytic": {
+            "category": "iam",
+            "name": "Root account has a hardware MFA device enabled",
+            "type": "Rule",
+            "type_id": 1,
+            "uid": "iam_root_hardware_mfa_enabled"
+        },
+        "created_time": 1791640800,
+        "created_time_dt": "2026-10-10T14:00:00Z",
+        "desc": "**AWS root user** credentials are assessed for **MFA status** and device type. The check detects whether MFA is absent or implemented with a **virtual device** instead of **hardware MFA** on the root user, and notes when centralized root credential management is in effect.",
+        "title": "Root account has a hardware MFA device enabled",
+        "types": [
+            "Software and Configuration Checks/AWS Security Best Practices",
+            "Software and Configuration Checks/Industry and Regulatory Standards/AWS Foundational Security Best Practices",
+            "Software and Configuration Checks/Industry and Regulatory Standards/CIS AWS Foundations Benchmark"
+        ],
+        "uid": "prowler-aws-iam_root_hardware_mfa_enabled-111122223333-us-east-1-<root_account>"
+    },
+    "resources": [
+        {
+            "cloud_partition": "aws",
+            "region": "us-east-1",
+            "data": {
+                "details": "",
+                "metadata": {}
+            },
+            "group": {
+                "name": "iam"
+            },
+            "labels": [],
+            "name": "<root_account>",
+            "type": "AwsIamUser",
+            "uid": "arn:aws:iam::111122223333:root"
+        }
+    ],
+    "category_name": "Findings",
+    "category_uid": 2,
+    "class_name": "Detection Finding",
+    "class_uid": 2004,
+    "cloud": {
+        "account": {
+            "name": "lab-account",
+            "type": "AWS Account",
+            "type_id": 10,
+            "uid": "111122223333",
+            "labels": []
+        },
+        "org": {},
+        "provider": "aws",
+        "region": "us-east-1"
+    },
+    "remediation": {
+        "desc": "Require a **hardware MFA token** for the root user and remove any virtual MFA. Apply **least privilege**: avoid using root, disable access keys, and eliminate long-term credentials. In organizations, **centralize root management**. Keep a controlled break-glass process with strict recovery checks and continuous monitoring.",
+        "references": [
+            "https://hub.prowler.com/check/iam_root_hardware_mfa_enabled"
+        ]
+    },
+    "risk_details": "Without **hardware MFA** on the root user:\n- No MFA: stolen password/keys enable full account takeover.\n- Virtual MFA: device compromise or backup restoration weakens second-factor assurance.\nAn attacker could delete resources, change policies, and disable logging, harming **confidentiality**, **integrity**, and **availability**.",
+    "time": 1791640800,
+    "time_dt": "2026-10-10T14:00:00Z",
+    "type_uid": 200401,
+    "type_name": "Detection Finding: Create"
+},{
+    "message": "User alice.test has Console Password enabled but MFA disabled.",
+    "metadata": {
+        "event_code": "iam_user_mfa_enabled_console_access",
+        "product": {
+            "name": "Prowler",
+            "uid": "prowler",
+            "vendor_name": "Prowler",
+            "version": "5.45.0"
+        },
+        "profiles": [
+            "cloud",
+            "datetime"
+        ],
+        "version": "1.5.0"
+    },
+    "severity_id": 4,
+    "severity": "High",
+    "status": "New",
+    "status_code": "FAIL",
+    "status_detail": "User alice.test has Console Password enabled but MFA disabled.",
+    "status_id": 1,
+    "unmapped": {
+        "related_url": "",
+        "categories": [
+            "identity-access"
+        ],
+        "depends_on": [],
+        "related_to": [],
+        "additional_urls": [
+            "https://docs.aws.amazon.com/IAM/latest/UserGuide/id_credentials_mfa_enable_virtual.html",
+            "https://www.trendmicro.com/trendaivisiononecloudriskmanagement/knowledge-base/aws/IAM/iam-user-multi-factor-authentication-enabled.html"
+        ],
+        "notes": "",
+        "compliance": {},
+        "scan_id": "01a1261d-0b00-7935-a5a4-0b666e8a7a6f",
+        "provider_uid": "111122223333",
+        "provider": "aws"
+    },
+    "activity_name": "Create",
+    "activity_id": 1,
+    "finding_info": {
+        "analytic": {
+            "category": "iam",
+            "name": "IAM user has MFA enabled for console access or no console password is set",
+            "type": "Rule",
+            "type_id": 1,
+            "uid": "iam_user_mfa_enabled_console_access"
+        },
+        "created_time": 1791640800,
+        "created_time_dt": "2026-10-10T14:00:00Z",
+        "desc": "**IAM users** that have a console password are expected to have **multi-factor authentication** enabled. The evaluation identifies users who can sign in to the AWS Management Console but do not have an active MFA device associated.",
+        "title": "IAM user has MFA enabled for console access or no console password is set",
+        "types": [
+            "Software and Configuration Checks/AWS Security Best Practices",
+            "Software and Configuration Checks/Industry and Regulatory Standards/AWS Foundational Security Best Practices",
+            "Software and Configuration Checks/Industry and Regulatory Standards/CIS AWS Foundations Benchmark",
+            "TTPs/Initial Access",
+            "TTPs/Credential Access"
+        ],
+        "uid": "prowler-aws-iam_user_mfa_enabled_console_access-111122223333-us-east-1-alice.test"
+    },
+    "resources": [
+        {
+            "cloud_partition": "aws",
+            "region": "us-east-1",
+            "data": {
+                "details": "",
+                "metadata": {}
+            },
+            "group": {
+                "name": "iam"
+            },
+            "labels": [],
+            "name": "alice.test",
+            "type": "AwsIamUser",
+            "uid": "arn:aws:iam::111122223333:user/alice.test"
+        }
+    ],
+    "category_name": "Findings",
+    "category_uid": 2,
+    "class_name": "Detection Finding",
+    "class_uid": 2004,
+    "cloud": {
+        "account": {
+            "name": "lab-account",
+            "type": "AWS Account",
+            "type_id": 10,
+            "uid": "111122223333",
+            "labels": []
+        },
+        "org": {},
+        "provider": "aws",
+        "region": "us-east-1"
+    },
+    "remediation": {
+        "desc": "Enforce **MFA** for all console-capable IAM users; prefer **phishing-resistant** authenticators (FIDO2/security keys) and register backups. Remove console passwords for users that don't need them and favor **federation/SSO**. Apply least privilege and require MFA for sensitive actions to prevent unauthorized changes.",
+        "references": [
+            "https://hub.prowler.com/check/iam_user_mfa_enabled_console_access"
+        ]
+    },
+    "risk_details": "Without **MFA**, a stolen or brute-forced password grants full interactive access. Attackers can: - Change policies or keys - Exfiltrate data - Create backdoor users - Disable logging. This enables account takeover, threatens confidentiality and integrity, and can disrupt availability.",
+    "time": 1791640800,
+    "time_dt": "2026-10-10T14:00:00Z",
+    "type_uid": 200401,
+    "type_name": "Detection Finding: Create"
+},{
+    "message": "User bob.admin has Console Password enabled and MFA enabled.",
+    "metadata": {
+        "event_code": "iam_user_mfa_enabled_console_access",
+        "product": {
+            "name": "Prowler",
+            "uid": "prowler",
+            "vendor_name": "Prowler",
+            "version": "5.45.0"
+        },
+        "profiles": [
+            "cloud",
+            "datetime"
+        ],
+        "version": "1.5.0"
+    },
+    "severity_id": 4,
+    "severity": "High",
+    "status": "New",
+    "status_code": "PASS",
+    "status_detail": "User bob.admin has Console Password enabled and MFA enabled.",
+    "status_id": 1,
+    "unmapped": {
+        "related_url": "",
+        "categories": [
+            "identity-access"
+        ],
+        "depends_on": [],
+        "related_to": [],
+        "additional_urls": [
+            "https://docs.aws.amazon.com/IAM/latest/UserGuide/id_credentials_mfa_enable_virtual.html",
+            "https://www.trendmicro.com/trendaivisiononecloudriskmanagement/knowledge-base/aws/IAM/iam-user-multi-factor-authentication-enabled.html"
+        ],
+        "notes": "",
+        "compliance": {},
+        "scan_id": "01a1261d-0b00-7935-a5a4-0b666e8a7a6f",
+        "provider_uid": "111122223333",
+        "provider": "aws"
+    },
+    "activity_name": "Create",
+    "activity_id": 1,
+    "finding_info": {
+        "analytic": {
+            "category": "iam",
+            "name": "IAM user has MFA enabled for console access or no console password is set",
+            "type": "Rule",
+            "type_id": 1,
+            "uid": "iam_user_mfa_enabled_console_access"
+        },
+        "created_time": 1791640800,
+        "created_time_dt": "2026-10-10T14:00:00Z",
+        "desc": "**IAM users** that have a console password are expected to have **multi-factor authentication** enabled. The evaluation identifies users who can sign in to the AWS Management Console but do not have an active MFA device associated.",
+        "title": "IAM user has MFA enabled for console access or no console password is set",
+        "types": [
+            "Software and Configuration Checks/AWS Security Best Practices",
+            "Software and Configuration Checks/Industry and Regulatory Standards/AWS Foundational Security Best Practices",
+            "Software and Configuration Checks/Industry and Regulatory Standards/CIS AWS Foundations Benchmark",
+            "TTPs/Initial Access",
+            "TTPs/Credential Access"
+        ],
+        "uid": "prowler-aws-iam_user_mfa_enabled_console_access-111122223333-us-east-1-bob.admin"
+    },
+    "resources": [
+        {
+            "cloud_partition": "aws",
+            "region": "us-east-1",
+            "data": {
+                "details": "",
+                "metadata": {}
+            },
+            "group": {
+                "name": "iam"
+            },
+            "labels": [],
+            "name": "bob.admin",
+            "type": "AwsIamUser",
+            "uid": "arn:aws:iam::111122223333:user/bob.admin"
+        }
+    ],
+    "category_name": "Findings",
+    "category_uid": 2,
+    "class_name": "Detection Finding",
+    "class_uid": 2004,
+    "cloud": {
+        "account": {
+            "name": "lab-account",
+            "type": "AWS Account",
+            "type_id": 10,
+            "uid": "111122223333",
+            "labels": []
+        },
+        "org": {},
+        "provider": "aws",
+        "region": "us-east-1"
+    },
+    "remediation": {
+        "desc": "Enforce **MFA** for all console-capable IAM users; prefer **phishing-resistant** authenticators (FIDO2/security keys) and register backups. Remove console passwords for users that don't need them and favor **federation/SSO**. Apply least privilege and require MFA for sensitive actions to prevent unauthorized changes.",
+        "references": [
+            "https://hub.prowler.com/check/iam_user_mfa_enabled_console_access"
+        ]
+    },
+    "risk_details": "Without **MFA**, a stolen or brute-forced password grants full interactive access. Attackers can: - Change policies or keys - Exfiltrate data - Create backdoor users - Disable logging. This enables account takeover, threatens confidentiality and integrity, and can disrupt availability.",
+    "time": 1791640800,
+    "time_dt": "2026-10-10T14:00:00Z",
+    "type_uid": 200401,
+    "type_name": "Detection Finding: Create"
+},{
+    "message": "User <root_account> does not have access keys.",
+    "metadata": {
+        "event_code": "iam_no_root_access_key",
+        "product": {
+            "name": "Prowler",
+            "uid": "prowler",
+            "vendor_name": "Prowler",
+            "version": "5.45.0"
+        },
+        "profiles": [
+            "cloud",
+            "datetime"
+        ],
+        "version": "1.5.0"
+    },
+    "severity_id": 5,
+    "severity": "Critical",
+    "status": "New",
+    "status_code": "PASS",
+    "status_detail": "User <root_account> does not have access keys.",
+    "status_id": 1,
+    "unmapped": {
+        "related_url": "",
+        "categories": [
+            "identity-access"
+        ],
+        "depends_on": [],
+        "related_to": [],
+        "additional_urls": [
+            "https://docs.aws.amazon.com/IAM/latest/UserGuide/id_credentials_access-keys.html",
+            "https://docs.aws.amazon.com/IAM/latest/UserGuide/id_credentials_getting-report.html",
+            "https://www.trendmicro.com/trendaivisiononecloudriskmanagement/knowledge-base/aws/IAM/root-account-access-keys-present.html"
+        ],
+        "notes": "",
+        "compliance": {},
+        "scan_id": "01a1261d-0b00-7935-a5a4-0b666e8a7a6f",
+        "provider_uid": "111122223333",
+        "provider": "aws"
+    },
+    "activity_name": "Create",
+    "activity_id": 1,
+    "finding_info": {
+        "analytic": {
+            "category": "iam",
+            "name": "Root account has no active access keys",
+            "type": "Rule",
+            "type_id": 1,
+            "uid": "iam_no_root_access_key"
+        },
+        "created_time": 1791640800,
+        "created_time_dt": "2026-10-10T14:00:00Z",
+        "desc": "**AWS root user** is evaluated for **active access keys**. It identifies whether the root identity has one or two programmatic credentials and notes when organization-level root credential management is present.",
+        "title": "Root account has no active access keys",
+        "types": [
+            "Software and Configuration Checks/AWS Security Best Practices",
+            "Software and Configuration Checks/Industry and Regulatory Standards/AWS Foundational Security Best Practices",
+            "Software and Configuration Checks/Industry and Regulatory Standards/CIS AWS Foundations Benchmark",
+            "TTPs/Credential Access"
+        ],
+        "uid": "prowler-aws-iam_no_root_access_key-111122223333-us-east-1-<root_account>"
+    },
+    "resources": [
+        {
+            "cloud_partition": "aws",
+            "region": "us-east-1",
+            "data": {
+                "details": "",
+                "metadata": {}
+            },
+            "group": {
+                "name": "iam"
+            },
+            "labels": [],
+            "name": "<root_account>",
+            "type": "AwsIamAccessKey",
+            "uid": "arn:aws:iam::111122223333:root"
+        }
+    ],
+    "category_name": "Findings",
+    "category_uid": 2,
+    "class_name": "Detection Finding",
+    "class_uid": 2004,
+    "cloud": {
+        "account": {
+            "name": "lab-account",
+            "type": "AWS Account",
+            "type_id": 10,
+            "uid": "111122223333",
+            "labels": []
+        },
+        "org": {},
+        "provider": "aws",
+        "region": "us-east-1"
+    },
+    "remediation": {
+        "desc": "Delete and prohibit **root access keys**. Use **IAM roles** and temporary credentials with **least privilege** for all automation. Enable **MFA on root**, limit root to break-glass use, and continuously monitor for any new root keys. *Where applicable*, apply organization-wide controls to enforce this.",
+        "references": [
+            "https://hub.prowler.com/check/iam_no_root_access_key"
+        ]
+    },
+    "risk_details": "**Root access keys** provide unrestricted API access. If exposed or misused, attackers can:\n- Turn off logging and alter policies (**integrity**)\n- Read or export data (**confidentiality**)\n- Delete resources and lock out admins (**availability**)\nLong-lived keys can persist and may bypass console-only MFA.",
+    "time": 1791640800,
+    "time_dt": "2026-10-10T14:00:00Z",
+    "type_uid": 200401,
+    "type_name": "Detection Finding: Create"
+},{
+    "message": "Root user in the account was last accessed 12 days ago.",
+    "metadata": {
+        "event_code": "iam_avoid_root_usage",
+        "product": {
+            "name": "Prowler",
+            "uid": "prowler",
+            "vendor_name": "Prowler",
+            "version": "5.45.0"
+        },
+        "profiles": [
+            "cloud",
+            "datetime"
+        ],
+        "version": "1.5.0"
+    },
+    "severity_id": 4,
+    "severity": "High",
+    "status": "New",
+    "status_code": "PASS",
+    "status_detail": "Root user in the account was last accessed 12 days ago.",
+    "status_id": 1,
+    "unmapped": {
+        "related_url": "",
+        "categories": [
+            "identity-access"
+        ],
+        "depends_on": [],
+        "related_to": [],
+        "additional_urls": [
+            "https://docs.aws.amazon.com/IAM/latest/UserGuide/root-user-best-practices.html",
+            "https://www.trendmicro.com/trendaivisiononecloudriskmanagement/knowledge-base/aws/IAM/root-account-used-recently.html"
+        ],
+        "notes": "",
+        "compliance": {},
+        "scan_id": "01a1261d-0b00-7935-a5a4-0b666e8a7a6f",
+        "provider_uid": "111122223333",
+        "provider": "aws"
+    },
+    "activity_name": "Create",
+    "activity_id": 1,
+    "finding_info": {
+        "analytic": {
+            "category": "iam",
+            "name": "AWS account root user has not been used in the last day",
+            "type": "Rule",
+            "type_id": 1,
+            "uid": "iam_avoid_root_usage"
+        },
+        "created_time": 1791640800,
+        "created_time_dt": "2026-10-10T14:00:00Z",
+        "desc": "**AWS IAM root user** activity is assessed by inspecting `last-used` timestamps for the root password and access keys. The finding indicates when the root identity has been used recently for console or programmatic access.",
+        "title": "AWS account root user has not been used in the last day",
+        "types": [
+            "Software and Configuration Checks/AWS Security Best Practices",
+            "Software and Configuration Checks/Industry and Regulatory Standards/AWS Foundational Security Best Practices",
+            "Software and Configuration Checks/Industry and Regulatory Standards/CIS AWS Foundations Benchmark"
+        ],
+        "uid": "prowler-aws-iam_avoid_root_usage-111122223333-us-east-1-<root_account>"
+    },
+    "resources": [
+        {
+            "cloud_partition": "aws",
+            "region": "us-east-1",
+            "data": {
+                "details": "",
+                "metadata": {}
+            },
+            "group": {
+                "name": "iam"
+            },
+            "labels": [],
+            "name": "<root_account>",
+            "type": "AwsIamUser",
+            "uid": "arn:aws:iam::111122223333:root"
+        }
+    ],
+    "category_name": "Findings",
+    "category_uid": 2,
+    "class_name": "Detection Finding",
+    "class_uid": 2004,
+    "cloud": {
+        "account": {
+            "name": "lab-account",
+            "type": "AWS Account",
+            "type_id": 10,
+            "uid": "111122223333",
+            "labels": []
+        },
+        "org": {},
+        "provider": "aws",
+        "region": "us-east-1"
+    },
+    "remediation": {
+        "desc": "Minimize `root` usage by applying **least privilege** with admin roles or federated SSO and temporary credentials.\n- Enforce **MFA** on root\n- Avoid or remove root access keys\n- Require multi-person approval\n- **Monitor and alert** on any root sign-in\n- Use org guardrails for **defense in depth**",
+        "references": [
+            "https://hub.prowler.com/check/iam_avoid_root_usage"
+        ]
+    },
+    "risk_details": "Recent **root usage** expands blast radius:\n- Data exfiltration (**confidentiality**)\n- Policy/key tampering (**integrity**)\n- Resource deletion and billing changes (**availability**)\nRoutine use reduces anomaly visibility and eases **account takeover** impact.",
+    "time": 1791640800,
+    "time_dt": "2026-10-10T14:00:00Z",
+    "type_uid": 200401,
+    "type_name": "Detection Finding: Create"
+},{
+    "message": "IAM User bob.admin has AdministratorAccess policy attached.",
+    "metadata": {
+        "event_code": "iam_user_administrator_access_policy",
+        "product": {
+            "name": "Prowler",
+            "uid": "prowler",
+            "vendor_name": "Prowler",
+            "version": "5.45.0"
+        },
+        "profiles": [
+            "cloud",
+            "datetime"
+        ],
+        "version": "1.5.0"
+    },
+    "severity_id": 5,
+    "severity": "Critical",
+    "status": "New",
+    "status_code": "FAIL",
+    "status_detail": "IAM User bob.admin has AdministratorAccess policy attached.",
+    "status_id": 1,
+    "unmapped": {
+        "related_url": "",
+        "categories": [
+            "identity-access"
+        ],
+        "depends_on": [],
+        "related_to": [],
+        "additional_urls": [
+            "https://www.trendmicro.com/trendaivisiononecloudriskmanagement/knowledge-base/aws/IAM/admin-permissions.html",
+            "https://docs.aws.amazon.com/IAM/latest/UserGuide/id_users.html",
+            "https://docs.aws.amazon.com/IAM/latest/UserGuide/best-practices.html"
+        ],
+        "notes": "",
+        "compliance": {},
+        "scan_id": "01a1261d-0b00-7935-a5a4-0b666e8a7a6f",
+        "provider_uid": "111122223333",
+        "provider": "aws"
+    },
+    "activity_name": "Create",
+    "activity_id": 1,
+    "finding_info": {
+        "analytic": {
+            "category": "iam",
+            "name": "IAM user does not have AdministratorAccess policy attached",
+            "type": "Rule",
+            "type_id": 1,
+            "uid": "iam_user_administrator_access_policy"
+        },
+        "created_time": 1791640800,
+        "created_time_dt": "2026-10-10T14:00:00Z",
+        "desc": "**IAM users** are evaluated for a direct attachment of the AWS managed policy `AdministratorAccess`. The finding identifies identities where this policy appears among the user's attached policies.",
+        "title": "IAM user does not have AdministratorAccess policy attached",
+        "types": [
+            "Software and Configuration Checks/Industry and Regulatory Standards/AWS Foundational Security Best Practices",
+            "Software and Configuration Checks/Industry and Regulatory Standards/CIS AWS Foundations Benchmark",
+            "TTPs/Privilege Escalation"
+        ],
+        "uid": "prowler-aws-iam_user_administrator_access_policy-111122223333-us-east-1-bob.admin"
+    },
+    "resources": [
+        {
+            "cloud_partition": "aws",
+            "region": "us-east-1",
+            "data": {
+                "details": "",
+                "metadata": {}
+            },
+            "group": {
+                "name": "iam"
+            },
+            "labels": [],
+            "name": "bob.admin",
+            "type": "AwsIamUser",
+            "uid": "arn:aws:iam::111122223333:user/bob.admin"
+        }
+    ],
+    "category_name": "Findings",
+    "category_uid": 2,
+    "class_name": "Detection Finding",
+    "class_uid": 2004,
+    "cloud": {
+        "account": {
+            "name": "lab-account",
+            "type": "AWS Account",
+            "type_id": 10,
+            "uid": "111122223333",
+            "labels": []
+        },
+        "org": {},
+        "provider": "aws",
+        "region": "us-east-1"
+    },
+    "remediation": {
+        "desc": "Remove direct `AdministratorAccess` from users.\n- Apply **least privilege** with scoped policies\n- Use **federation** and **roles** for temporary admin access\n- Enforce **separation of duties** and approvals\n- Add guardrails (SCPs, permissions boundaries)\n- Require **MFA** and rotate any remaining long-lived credentials",
+        "references": [
+            "https://hub.prowler.com/check/iam_user_administrator_access_policy"
+        ]
+    },
+    "risk_details": "Assigning an IAM user full admin rights concentrates power in long-lived credentials. If compromised, attackers gain:\n- **Confidentiality**: read/export all data\n- **Integrity**: change configs, policies, code\n- **Availability**: delete resources, disrupt services\nAlso enables persistence and uncontrolled spend.",
+    "time": 1791640800,
+    "time_dt": "2026-10-10T14:00:00Z",
+    "type_uid": 200401,
+    "type_name": "Detection Finding: Create"
+},{
+    "message": "IAM User alice.test does not have AdministratorAccess policy.",
+    "metadata": {
+        "event_code": "iam_user_administrator_access_policy",
+        "product": {
+            "name": "Prowler",
+            "uid": "prowler",
+            "vendor_name": "Prowler",
+            "version": "5.45.0"
+        },
+        "profiles": [
+            "cloud",
+            "datetime"
+        ],
+        "version": "1.5.0"
+    },
+    "severity_id": 5,
+    "severity": "Critical",
+    "status": "New",
+    "status_code": "PASS",
+    "status_detail": "IAM User alice.test does not have AdministratorAccess policy.",
+    "status_id": 1,
+    "unmapped": {
+        "related_url": "",
+        "categories": [
+            "identity-access"
+        ],
+        "depends_on": [],
+        "related_to": [],
+        "additional_urls": [
+            "https://www.trendmicro.com/trendaivisiononecloudriskmanagement/knowledge-base/aws/IAM/admin-permissions.html",
+            "https://docs.aws.amazon.com/IAM/latest/UserGuide/id_users.html",
+            "https://docs.aws.amazon.com/IAM/latest/UserGuide/best-practices.html"
+        ],
+        "notes": "",
+        "compliance": {},
+        "scan_id": "01a1261d-0b00-7935-a5a4-0b666e8a7a6f",
+        "provider_uid": "111122223333",
+        "provider": "aws"
+    },
+    "activity_name": "Create",
+    "activity_id": 1,
+    "finding_info": {
+        "analytic": {
+            "category": "iam",
+            "name": "IAM user does not have AdministratorAccess policy attached",
+            "type": "Rule",
+            "type_id": 1,
+            "uid": "iam_user_administrator_access_policy"
+        },
+        "created_time": 1791640800,
+        "created_time_dt": "2026-10-10T14:00:00Z",
+        "desc": "**IAM users** are evaluated for a direct attachment of the AWS managed policy `AdministratorAccess`. The finding identifies identities where this policy appears among the user's attached policies.",
+        "title": "IAM user does not have AdministratorAccess policy attached",
+        "types": [
+            "Software and Configuration Checks/Industry and Regulatory Standards/AWS Foundational Security Best Practices",
+            "Software and Configuration Checks/Industry and Regulatory Standards/CIS AWS Foundations Benchmark",
+            "TTPs/Privilege Escalation"
+        ],
+        "uid": "prowler-aws-iam_user_administrator_access_policy-111122223333-us-east-1-alice.test"
+    },
+    "resources": [
+        {
+            "cloud_partition": "aws",
+            "region": "us-east-1",
+            "data": {
+                "details": "",
+                "metadata": {}
+            },
+            "group": {
+                "name": "iam"
+            },
+            "labels": [],
+            "name": "alice.test",
+            "type": "AwsIamUser",
+            "uid": "arn:aws:iam::111122223333:user/alice.test"
+        }
+    ],
+    "category_name": "Findings",
+    "category_uid": 2,
+    "class_name": "Detection Finding",
+    "class_uid": 2004,
+    "cloud": {
+        "account": {
+            "name": "lab-account",
+            "type": "AWS Account",
+            "type_id": 10,
+            "uid": "111122223333",
+            "labels": []
+        },
+        "org": {},
+        "provider": "aws",
+        "region": "us-east-1"
+    },
+    "remediation": {
+        "desc": "Remove direct `AdministratorAccess` from users.\n- Apply **least privilege** with scoped policies\n- Use **federation** and **roles** for temporary admin access\n- Enforce **separation of duties** and approvals\n- Add guardrails (SCPs, permissions boundaries)\n- Require **MFA** and rotate any remaining long-lived credentials",
+        "references": [
+            "https://hub.prowler.com/check/iam_user_administrator_access_policy"
+        ]
+    },
+    "risk_details": "Assigning an IAM user full admin rights concentrates power in long-lived credentials. If compromised, attackers gain:\n- **Confidentiality**: read/export all data\n- **Integrity**: change configs, policies, code\n- **Availability**: delete resources, disrupt services\nAlso enables persistence and uncontrolled spend.",
+    "time": 1791640800,
+    "time_dt": "2026-10-10T14:00:00Z",
+    "type_uid": 200401,
+    "type_name": "Detection Finding: Create"
+},{
+    "message": "Custom Policy arn:aws:iam::111122223333:policy/everything-policy is attached and allows '*:*' administrative privileges.",
+    "metadata": {
+        "event_code": "iam_customer_attached_policy_no_administrative_privileges",
+        "product": {
+            "name": "Prowler",
+            "uid": "prowler",
+            "vendor_name": "Prowler",
+            "version": "5.45.0"
+        },
+        "profiles": [
+            "cloud",
+            "datetime"
+        ],
+        "version": "1.5.0"
+    },
+    "severity_id": 4,
+    "severity": "High",
+    "status": "New",
+    "status_code": "FAIL",
+    "status_detail": "Custom Policy arn:aws:iam::111122223333:policy/everything-policy is attached and allows '*:*' administrative privileges.",
+    "status_id": 1,
+    "unmapped": {
+        "related_url": "",
+        "categories": [
+            "identity-access"
+        ],
+        "depends_on": [],
+        "related_to": [],
+        "additional_urls": [
+            "https://www.trendmicro.com/trendaivisiononecloudriskmanagement/knowledge-base/aws/IAM/iam-policy-for-administration.html",
+            "http://docs.aws.amazon.com/IAM/latest/UserGuide/best-practices.html"
+        ],
+        "notes": "CAF Security Epic: IAM",
+        "compliance": {},
+        "scan_id": "01a1261d-0b00-7935-a5a4-0b666e8a7a6f",
+        "provider_uid": "111122223333",
+        "provider": "aws"
+    },
+    "activity_name": "Create",
+    "activity_id": 1,
+    "finding_info": {
+        "analytic": {
+            "category": "iam",
+            "name": "Attached IAM customer-managed policy does not allow '*:*' administrative privileges",
+            "type": "Rule",
+            "type_id": 1,
+            "uid": "iam_customer_attached_policy_no_administrative_privileges"
+        },
+        "created_time": 1791640800,
+        "created_time_dt": "2026-10-10T14:00:00Z",
+        "desc": "Attached **customer-managed IAM policies** are evaluated for statements granting full admin access via `Action: \"*\"`, `Resource: \"*\"`, i.e., `*:*`. Only policies you created and attached to identities are considered.",
+        "title": "Attached IAM customer-managed policy does not allow '*:*' administrative privileges",
+        "types": [
+            "Software and Configuration Checks/AWS Security Best Practices",
+            "Software and Configuration Checks/Industry and Regulatory Standards/AWS Foundational Security Best Practices",
+            "Software and Configuration Checks/Industry and Regulatory Standards/CIS AWS Foundations Benchmark",
+            "TTPs/Privilege Escalation"
+        ],
+        "uid": "prowler-aws-iam_customer_attached_policy_no_administrative_privileges-111122223333-us-east-1-everything-policy"
+    },
+    "resources": [
+        {
+            "cloud_partition": "aws",
+            "region": "us-east-1",
+            "data": {
+                "details": "",
+                "metadata": {}
+            },
+            "group": {
+                "name": "iam"
+            },
+            "labels": [],
+            "name": "everything-policy",
+            "type": "AwsIamPolicy",
+            "uid": "arn:aws:iam::111122223333:policy/everything-policy"
+        }
+    ],
+    "category_name": "Findings",
+    "category_uid": 2,
+    "class_name": "Detection Finding",
+    "class_uid": 2004,
+    "cloud": {
+        "account": {
+            "name": "lab-account",
+            "type": "AWS Account",
+            "type_id": 10,
+            "uid": "111122223333",
+            "labels": []
+        },
+        "org": {},
+        "provider": "aws",
+        "region": "us-east-1"
+    },
+    "remediation": {
+        "desc": "Enforce **least privilege**: replace wildcards with specific actions, scope `Resource` to needed ARNs, and add restrictive `Condition`s. Prefer role-based access and separation of duties. Use **permissions boundaries** and organization guardrails, and regularly review policies with policy validation and Access Analyzer.",
+        "references": [
+            "https://hub.prowler.com/check/iam_customer_attached_policy_no_administrative_privileges"
+        ]
+    },
+    "risk_details": "**Unrestricted admin access** lets any attached principal perform any action on any resource, enabling data exfiltration, policy tampering, credential creation, logging disablement, and destructive deletions-compromising **confidentiality, integrity, and availability** across the account.",
+    "time": 1791640800,
+    "time_dt": "2026-10-10T14:00:00Z",
+    "type_uid": 200401,
+    "type_name": "Detection Finding: Create"
+},{
+    "message": "User alice.test has logged into the console in the past 45 days.",
+    "metadata": {
+        "event_code": "iam_user_console_access_unused",
+        "product": {
+            "name": "Prowler",
+            "uid": "prowler",
+            "vendor_name": "Prowler",
+            "version": "5.45.0"
+        },
+        "profiles": [
+            "cloud",
+            "datetime"
+        ],
+        "version": "1.5.0"
+    },
+    "severity_id": 3,
+    "severity": "Medium",
+    "status": "New",
+    "status_code": "PASS",
+    "status_detail": "User alice.test has logged into the console in the past 45 days.",
+    "status_id": 1,
+    "unmapped": {
+        "related_url": "",
+        "categories": [
+            "identity-access"
+        ],
+        "depends_on": [],
+        "related_to": [],
+        "additional_urls": [
+            "https://docs.aws.amazon.com/IAM/latest/UserGuide/id_credentials_finding-unused.html",
+            "https://docs.aws.amazon.com/securityhub/latest/userguide/iam-controls.html"
+        ],
+        "notes": "",
+        "compliance": {},
+        "scan_id": "01a1261d-0b00-7935-a5a4-0b666e8a7a6f",
+        "provider_uid": "111122223333",
+        "provider": "aws"
+    },
+    "activity_name": "Create",
+    "activity_id": 1,
+    "finding_info": {
+        "analytic": {
+            "category": "iam",
+            "name": "IAM user console access is disabled, used within the configured inactivity period, or never used",
+            "type": "Rule",
+            "type_id": 1,
+            "uid": "iam_user_console_access_unused"
+        },
+        "created_time": 1791640800,
+        "created_time_dt": "2026-10-10T14:00:00Z",
+        "desc": "**IAM users** with console access are evaluated by `password_last_used`. Inactivity beyond `max_console_access_days` (default `45`) marks **stale console access**.\n\n*Users without console access are excluded*.",
+        "title": "IAM user console access is disabled, used within the configured inactivity period, or never used",
+        "types": [
+            "Software and Configuration Checks/AWS Security Best Practices",
+            "Software and Configuration Checks/Industry and Regulatory Standards/AWS Foundational Security Best Practices",
+            "Software and Configuration Checks/Industry and Regulatory Standards/CIS AWS Foundations Benchmark",
+            "TTPs/Initial Access"
+        ],
+        "uid": "prowler-aws-iam_user_console_access_unused-111122223333-us-east-1-alice.test"
+    },
+    "resources": [
+        {
+            "cloud_partition": "aws",
+            "region": "us-east-1",
+            "data": {
+                "details": "",
+                "metadata": {}
+            },
+            "group": {
+                "name": "iam"
+            },
+            "labels": [],
+            "name": "alice.test",
+            "type": "AwsIamUser",
+            "uid": "arn:aws:iam::111122223333:user/alice.test"
+        }
+    ],
+    "category_name": "Findings",
+    "category_uid": 2,
+    "class_name": "Detection Finding",
+    "class_uid": 2004,
+    "cloud": {
+        "account": {
+            "name": "lab-account",
+            "type": "AWS Account",
+            "type_id": 10,
+            "uid": "111122223333",
+            "labels": []
+        },
+        "org": {},
+        "provider": "aws",
+        "region": "us-east-1"
+    },
+    "remediation": {
+        "desc": "Remove or disable console passwords for users inactive beyond your window (e.g., `45` days). Prefer roles or federation over long-lived IAM users. Enforce **least privilege**, require **MFA** for remaining console users, and run periodic reviews and deprovisioning to prevent unused credentials.",
+        "references": [
+            "https://hub.prowler.com/check/iam_user_console_access_unused"
+        ]
+    },
+    "risk_details": "**Dormant console credentials** stay valid and invite **password spraying**, **credential stuffing**, and breach reuse. Compromise yields interactive access for data discovery/exfiltration and unauthorized IAM or resource changes, degrading **confidentiality** and **integrity**, and risking **availability**.",
+    "time": 1791640800,
+    "time_dt": "2026-10-10T14:00:00Z",
+    "type_uid": 200401,
+    "type_name": "Detection Finding: Create"
+},{
+    "message": "User carol.svc has not used access key 1 in the last 45 days (90 days).",
+    "metadata": {
+        "event_code": "iam_user_accesskey_unused",
+        "product": {
+            "name": "Prowler",
+            "uid": "prowler",
+            "vendor_name": "Prowler",
+            "version": "5.45.0"
+        },
+        "profiles": [
+            "cloud",
+            "datetime"
+        ],
+        "version": "1.5.0"
+    },
+    "severity_id": 3,
+    "severity": "Medium",
+    "status": "New",
+    "status_code": "FAIL",
+    "status_detail": "User carol.svc has not used access key 1 in the last 45 days (90 days).",
+    "status_id": 1,
+    "unmapped": {
+        "related_url": "",
+        "categories": [
+            "secrets"
+        ],
+        "depends_on": [],
+        "related_to": [],
+        "additional_urls": [
+            "https://docs.aws.amazon.com/IAM/latest/UserGuide/id_credentials_finding-unused.html",
+            "https://docs.aws.amazon.com/securityhub/latest/userguide/iam-controls.html",
+            "https://www.trendmicro.com/trendaivisiononecloudriskmanagement-staging/knowledge-base/aws/IAM/access-keys-rotated-45-days.html"
+        ],
+        "notes": "",
+        "compliance": {},
+        "scan_id": "01a1261d-0b00-7935-a5a4-0b666e8a7a6f",
+        "provider_uid": "111122223333",
+        "provider": "aws"
+    },
+    "activity_name": "Create",
+    "activity_id": 1,
+    "finding_info": {
+        "analytic": {
+            "category": "iam",
+            "name": "IAM user does not have unused access keys older than 45 days",
+            "type": "Rule",
+            "type_id": 1,
+            "uid": "iam_user_accesskey_unused"
+        },
+        "created_time": 1791640800,
+        "created_time_dt": "2026-10-10T14:00:00Z",
+        "desc": "**IAM users** are evaluated for **active access keys** whose `last-used` timestamp exceeds `max_unused_access_keys_days` (default `45`). Users without access keys, or whose keys were used within this window, are reported separately.",
+        "title": "IAM user does not have unused access keys older than 45 days",
+        "types": [
+            "Software and Configuration Checks/AWS Security Best Practices",
+            "Software and Configuration Checks/Industry and Regulatory Standards/AWS Foundational Security Best Practices",
+            "Software and Configuration Checks/Industry and Regulatory Standards/CIS AWS Foundations Benchmark"
+        ],
+        "uid": "prowler-aws-iam_user_accesskey_unused-111122223333-us-east-1-carol.svc"
+    },
+    "resources": [
+        {
+            "cloud_partition": "aws",
+            "region": "us-east-1",
+            "data": {
+                "details": "",
+                "metadata": {}
+            },
+            "group": {
+                "name": "iam"
+            },
+            "labels": [],
+            "name": "carol.svc",
+            "type": "AwsIamUser",
+            "uid": "arn:aws:iam::111122223333:user/carol.svc"
+        }
+    ],
+    "category_name": "Findings",
+    "category_uid": 2,
+    "class_name": "Detection Finding",
+    "class_uid": 2004,
+    "cloud": {
+        "account": {
+            "name": "lab-account",
+            "type": "AWS Account",
+            "type_id": 10,
+            "uid": "111122223333",
+            "labels": []
+        },
+        "org": {},
+        "provider": "aws",
+        "region": "us-east-1"
+    },
+    "remediation": {
+        "desc": "Disable or delete **unused access keys** promptly and prefer **IAM roles** with temporary credentials. Enforce **least privilege**, rotation, and time-bounded access. Monitor `last-used` metadata and automate deactivation of idle keys. Use federation/SSO to avoid long-lived user keys.",
+        "references": [
+            "https://hub.prowler.com/check/iam_user_accesskey_unused"
+        ]
+    },
+    "risk_details": "Active yet unused keys expand the attack surface. If leaked, adversaries gain API access for data exfiltration, unauthorized changes, and resource abuse, harming **confidentiality**, **integrity**, and **availability**. Stale credentials also enable persistence and unexpected cost spikes.",
+    "time": 1791640800,
+    "time_dt": "2026-10-10T14:00:00Z",
+    "type_uid": 200401,
+    "type_name": "Detection Finding: Create"
+},{
+    "message": "User carol.svc does not have access keys older than 90 days.",
+    "metadata": {
+        "event_code": "iam_rotate_access_key_90_days",
+        "product": {
+            "name": "Prowler",
+            "uid": "prowler",
+            "vendor_name": "Prowler",
+            "version": "5.45.0"
+        },
+        "profiles": [
+            "cloud",
+            "datetime"
+        ],
+        "version": "1.5.0"
+    },
+    "severity_id": 3,
+    "severity": "Medium",
+    "status": "New",
+    "status_code": "PASS",
+    "status_detail": "User carol.svc does not have access keys older than 90 days.",
+    "status_id": 1,
+    "unmapped": {
+        "related_url": "",
+        "categories": [
+            "secrets"
+        ],
+        "depends_on": [],
+        "related_to": [],
+        "additional_urls": [
+            "https://docs.aws.amazon.com/IAM/latest/UserGuide/id_credentials_getting-report.html",
+            "https://www.trendmicro.com/trendaivisiononecloudriskmanagement/knowledge-base/aws/IAM/access-keys-rotated-90-days.html"
+        ],
+        "notes": "",
+        "compliance": {},
+        "scan_id": "01a1261d-0b00-7935-a5a4-0b666e8a7a6f",
+        "provider_uid": "111122223333",
+        "provider": "aws"
+    },
+    "activity_name": "Create",
+    "activity_id": 1,
+    "finding_info": {
+        "analytic": {
+            "category": "iam",
+            "name": "IAM user does not have active access keys older than 90 days",
+            "type": "Rule",
+            "type_id": 1,
+            "uid": "iam_rotate_access_key_90_days"
+        },
+        "created_time": 1791640800,
+        "created_time_dt": "2026-10-10T14:00:00Z",
+        "desc": "**IAM user access keys** are assessed via the credential report. For each active key, the `last_rotated` timestamp is compared to `90 days`; keys exceeding this age are identified. Users without keys or with only recent rotations are noted.",
+        "title": "IAM user does not have active access keys older than 90 days",
+        "types": [
+            "Software and Configuration Checks/AWS Security Best Practices",
+            "Software and Configuration Checks/Industry and Regulatory Standards/AWS Foundational Security Best Practices",
+            "Software and Configuration Checks/Industry and Regulatory Standards/CIS AWS Foundations Benchmark"
+        ],
+        "uid": "prowler-aws-iam_rotate_access_key_90_days-111122223333-us-east-1-carol.svc"
+    },
+    "resources": [
+        {
+            "cloud_partition": "aws",
+            "region": "us-east-1",
+            "data": {
+                "details": "",
+                "metadata": {}
+            },
+            "group": {
+                "name": "iam"
+            },
+            "labels": [],
+            "name": "carol.svc",
+            "type": "AwsIamUser",
+            "uid": "arn:aws:iam::111122223333:user/carol.svc"
+        }
+    ],
+    "category_name": "Findings",
+    "category_uid": 2,
+    "class_name": "Detection Finding",
+    "class_uid": 2004,
+    "cloud": {
+        "account": {
+            "name": "lab-account",
+            "type": "AWS Account",
+            "type_id": 10,
+            "uid": "111122223333",
+            "labels": []
+        },
+        "org": {},
+        "provider": "aws",
+        "region": "us-east-1"
+    },
+    "remediation": {
+        "desc": "Apply **least privilege** and limit static credentials:\n- Rotate active access keys at or before `90 days`\n- Prefer **IAM roles** with short-lived tokens\n- Maintain only one active key during rotation; delete the old one\n- Monitor `last_used` and remove dormant keys\n- Automate alerts and periodic reviews of key age",
+        "references": [
+            "https://hub.prowler.com/check/iam_rotate_access_key_90_days"
+        ]
+    },
+    "risk_details": "Long-lived access keys widen the attack window. If a key is leaked in code, logs, or tooling, lack of rotation keeps it valid for abuse, enabling unauthorized API calls, data exfiltration, and tampering. This degrades **confidentiality** and **integrity** and can impact **availability** and cost through destructive or excessive operations.",
+    "time": 1791640800,
+    "time_dt": "2026-10-10T14:00:00Z",
+    "type_uid": 200401,
+    "type_name": "Detection Finding: Create"
+},{
+    "message": "IAM Role icp-assessment does not have AdministratorAccess policy.",
+    "metadata": {
+        "event_code": "iam_role_administratoraccess_policy",
+        "product": {
+            "name": "Prowler",
+            "uid": "prowler",
+            "vendor_name": "Prowler",
+            "version": "5.45.0"
+        },
+        "profiles": [
+            "cloud",
+            "datetime"
+        ],
+        "version": "1.5.0"
+    },
+    "severity_id": 4,
+    "severity": "High",
+    "status": "New",
+    "status_code": "PASS",
+    "status_detail": "IAM Role icp-assessment does not have AdministratorAccess policy.",
+    "status_id": 1,
+    "unmapped": {
+        "related_url": "",
+        "categories": [
+            "identity-access"
+        ],
+        "depends_on": [],
+        "related_to": [],
+        "additional_urls": [
+            "https://docs.aws.amazon.com/IAM/latest/UserGuide/access_policies_job-functions.html#jf_administrator",
+            "https://docs.aws.amazon.com/IAM/latest/UserGuide/best-practices.html#grant-least-privilege"
+        ],
+        "notes": "CAF Security Epic: IAM",
+        "compliance": {},
+        "scan_id": "01a1261d-0b00-7935-a5a4-0b666e8a7a6f",
+        "provider_uid": "111122223333",
+        "provider": "aws"
+    },
+    "activity_name": "Create",
+    "activity_id": 1,
+    "finding_info": {
+        "analytic": {
+            "category": "iam",
+            "name": "IAM role does not have AdministratorAccess policy attached",
+            "type": "Rule",
+            "type_id": 1,
+            "uid": "iam_role_administratoraccess_policy"
+        },
+        "created_time": 1791640800,
+        "created_time_dt": "2026-10-10T14:00:00Z",
+        "desc": "**IAM roles** (excluding service roles) are evaluated for attachment of the AWS-managed `AdministratorAccess` policy.\n\nAttachment indicates the role holds unrestricted permissions across services and resources.",
+        "title": "IAM role does not have AdministratorAccess policy attached",
+        "types": [
+            "Software and Configuration Checks/AWS Security Best Practices",
+            "Software and Configuration Checks/Industry and Regulatory Standards/AWS Foundational Security Best Practices",
+            "Software and Configuration Checks/Industry and Regulatory Standards/CIS AWS Foundations Benchmark"
+        ],
+        "uid": "prowler-aws-iam_role_administratoraccess_policy-111122223333-us-east-1-icp-assessment"
+    },
+    "resources": [
+        {
+            "cloud_partition": "aws",
+            "region": "us-east-1",
+            "data": {
+                "details": "",
+                "metadata": {}
+            },
+            "group": {
+                "name": "iam"
+            },
+            "labels": [],
+            "name": "icp-assessment",
+            "type": "AwsIamRole",
+            "uid": "arn:aws:iam::111122223333:role/icp-assessment"
+        }
+    ],
+    "category_name": "Findings",
+    "category_uid": 2,
+    "class_name": "Detection Finding",
+    "class_uid": 2004,
+    "cloud": {
+        "account": {
+            "name": "lab-account",
+            "type": "AWS Account",
+            "type_id": 10,
+            "uid": "111122223333",
+            "labels": []
+        },
+        "org": {},
+        "provider": "aws",
+        "region": "us-east-1"
+    },
+    "remediation": {
+        "desc": "Apply **least privilege**: avoid attaching `AdministratorAccess` to roles. Grant only task-scoped permissions with custom policies and enforce **separation of duties**.\n\nUse **permissions boundaries**, **SCPs**, and policy conditions to constrain power. Require MFA for break-glass admins, time-bound elevation with approval, and refine access using **Access Analyzer**.",
+        "references": [
+            "https://hub.prowler.com/check/iam_role_administratoraccess_policy"
+        ]
+    },
+    "risk_details": "Granting full administrative permissions on a role undermines confidentiality, integrity, and availability. If the role is assumed or its credentials are stolen, an attacker can read sensitive data, change policies, disable auditing, delete resources and backups, and create new privileged identities, enabling swift account takeover.",
+    "time": 1791640800,
+    "time_dt": "2026-10-10T14:00:00Z",
+    "type_uid": 200401,
+    "type_name": "Detection Finding: Create"
+},{
+    "message": "S3 Bucket icp-test-public has public access due to bucket policy.",
+    "metadata": {
+        "event_code": "s3_bucket_public_access",
+        "product": {
+            "name": "Prowler",
+            "uid": "prowler",
+            "vendor_name": "Prowler",
+            "version": "5.45.0"
+        },
+        "profiles": [
+            "cloud",
+            "datetime"
+        ],
+        "version": "1.5.0"
+    },
+    "severity_id": 5,
+    "severity": "Critical",
+    "status": "New",
+    "status_code": "FAIL",
+    "status_detail": "S3 Bucket icp-test-public has public access due to bucket policy.",
+    "status_id": 1,
+    "unmapped": {
+        "related_url": "",
+        "categories": [
+            "internet-exposed"
+        ],
+        "depends_on": [],
+        "related_to": [],
+        "additional_urls": [
+            "https://docs.aws.amazon.com/id_id/kitchensink/latest/testguide/access-control-block-public-access.html",
+            "https://docs.aws.amazon.com/AmazonS3/latest/userguide/access-control-block-public-access.html"
+        ],
+        "notes": "",
+        "compliance": {},
+        "scan_id": "01a1261d-0b00-7935-a5a4-0b666e8a7a6f",
+        "provider_uid": "111122223333",
+        "provider": "aws"
+    },
+    "activity_name": "Create",
+    "activity_id": 1,
+    "finding_info": {
+        "analytic": {
+            "category": "s3",
+            "name": "S3 bucket is not publicly accessible to Everyone or Authenticated Users",
+            "type": "Rule",
+            "type_id": 1,
+            "uid": "s3_bucket_public_access"
+        },
+        "created_time": 1791640800,
+        "created_time_dt": "2026-10-10T14:00:00Z",
+        "desc": "**Amazon S3 buckets** are evaluated for **public access** via ACLs and bucket policies. The check identifies account or bucket `PublicAccessBlock` protections (`IgnorePublicAcls`, `RestrictPublicBuckets`) and flags buckets granting group access to `AllUsers` or `AuthenticatedUsers`, or with a public bucket policy.",
+        "title": "S3 bucket is not publicly accessible to Everyone or Authenticated Users",
+        "types": [
+            "Software and Configuration Checks/AWS Security Best Practices/Network Reachability",
+            "Software and Configuration Checks/Industry and Regulatory Standards/AWS Foundational Security Best Practices",
+            "Software and Configuration Checks/Industry and Regulatory Standards/CIS AWS Foundations Benchmark",
+            "Effects/Data Exposure"
+        ],
+        "uid": "prowler-aws-s3_bucket_public_access-111122223333-us-east-1-icp-test-public"
+    },
+    "resources": [
+        {
+            "cloud_partition": "aws",
+            "region": "us-east-1",
+            "data": {
+                "details": "",
+                "metadata": {}
+            },
+            "group": {
+                "name": "s3"
+            },
+            "labels": [],
+            "name": "icp-test-public",
+            "type": "AwsS3Bucket",
+            "uid": "arn:aws:s3:::icp-test-public"
+        }
+    ],
+    "category_name": "Findings",
+    "category_uid": 2,
+    "class_name": "Detection Finding",
+    "class_uid": 2004,
+    "cloud": {
+        "account": {
+            "name": "lab-account",
+            "type": "AWS Account",
+            "type_id": 10,
+            "uid": "111122223333",
+            "labels": []
+        },
+        "org": {},
+        "provider": "aws",
+        "region": "us-east-1"
+    },
+    "remediation": {
+        "desc": "Enforce defense in depth: enable **S3 Block Public Access** at org/account and bucket levels (`BlockPublicAcls`, `IgnorePublicAcls`, `BlockPublicPolicy`, `RestrictPublicBuckets`). Apply **least privilege** with explicit principals; avoid ACLs via Object Ownership. Use private access patterns (e.g., CloudFront OAC or presigned URLs) and monitor with analyzers.",
+        "references": [
+            "https://hub.prowler.com/check/s3_bucket_public_access"
+        ]
+    },
+    "risk_details": "Publicly accessible buckets jeopardize **confidentiality** through unauthenticated reads, **integrity** through write or ACL changes, and **availability** via object deletion or overwrite. Attackers can mass-exfiltrate data, host malware, or pivot after discovering secrets stored in objects.",
+    "time": 1791640800,
+    "time_dt": "2026-10-10T14:00:00Z",
+    "type_uid": 200401,
+    "type_name": "Detection Finding: Create"
+},{
+    "message": "S3 Bucket icp-test-private is not public.",
+    "metadata": {
+        "event_code": "s3_bucket_public_access",
+        "product": {
+            "name": "Prowler",
+            "uid": "prowler",
+            "vendor_name": "Prowler",
+            "version": "5.45.0"
+        },
+        "profiles": [
+            "cloud",
+            "datetime"
+        ],
+        "version": "1.5.0"
+    },
+    "severity_id": 5,
+    "severity": "Critical",
+    "status": "New",
+    "status_code": "PASS",
+    "status_detail": "S3 Bucket icp-test-private is not public.",
+    "status_id": 1,
+    "unmapped": {
+        "related_url": "",
+        "categories": [
+            "internet-exposed"
+        ],
+        "depends_on": [],
+        "related_to": [],
+        "additional_urls": [
+            "https://docs.aws.amazon.com/id_id/kitchensink/latest/testguide/access-control-block-public-access.html",
+            "https://docs.aws.amazon.com/AmazonS3/latest/userguide/access-control-block-public-access.html"
+        ],
+        "notes": "",
+        "compliance": {},
+        "scan_id": "01a1261d-0b00-7935-a5a4-0b666e8a7a6f",
+        "provider_uid": "111122223333",
+        "provider": "aws"
+    },
+    "activity_name": "Create",
+    "activity_id": 1,
+    "finding_info": {
+        "analytic": {
+            "category": "s3",
+            "name": "S3 bucket is not publicly accessible to Everyone or Authenticated Users",
+            "type": "Rule",
+            "type_id": 1,
+            "uid": "s3_bucket_public_access"
+        },
+        "created_time": 1791640800,
+        "created_time_dt": "2026-10-10T14:00:00Z",
+        "desc": "**Amazon S3 buckets** are evaluated for **public access** via ACLs and bucket policies. The check identifies account or bucket `PublicAccessBlock` protections (`IgnorePublicAcls`, `RestrictPublicBuckets`) and flags buckets granting group access to `AllUsers` or `AuthenticatedUsers`, or with a public bucket policy.",
+        "title": "S3 bucket is not publicly accessible to Everyone or Authenticated Users",
+        "types": [
+            "Software and Configuration Checks/AWS Security Best Practices/Network Reachability",
+            "Software and Configuration Checks/Industry and Regulatory Standards/AWS Foundational Security Best Practices",
+            "Software and Configuration Checks/Industry and Regulatory Standards/CIS AWS Foundations Benchmark",
+            "Effects/Data Exposure"
+        ],
+        "uid": "prowler-aws-s3_bucket_public_access-111122223333-us-east-1-icp-test-private"
+    },
+    "resources": [
+        {
+            "cloud_partition": "aws",
+            "region": "us-east-1",
+            "data": {
+                "details": "",
+                "metadata": {}
+            },
+            "group": {
+                "name": "s3"
+            },
+            "labels": [],
+            "name": "icp-test-private",
+            "type": "AwsS3Bucket",
+            "uid": "arn:aws:s3:::icp-test-private"
+        }
+    ],
+    "category_name": "Findings",
+    "category_uid": 2,
+    "class_name": "Detection Finding",
+    "class_uid": 2004,
+    "cloud": {
+        "account": {
+            "name": "lab-account",
+            "type": "AWS Account",
+            "type_id": 10,
+            "uid": "111122223333",
+            "labels": []
+        },
+        "org": {},
+        "provider": "aws",
+        "region": "us-east-1"
+    },
+    "remediation": {
+        "desc": "Enforce defense in depth: enable **S3 Block Public Access** at org/account and bucket levels (`BlockPublicAcls`, `IgnorePublicAcls`, `BlockPublicPolicy`, `RestrictPublicBuckets`). Apply **least privilege** with explicit principals; avoid ACLs via Object Ownership. Use private access patterns (e.g., CloudFront OAC or presigned URLs) and monitor with analyzers.",
+        "references": [
+            "https://hub.prowler.com/check/s3_bucket_public_access"
+        ]
+    },
+    "risk_details": "Publicly accessible buckets jeopardize **confidentiality** through unauthenticated reads, **integrity** through write or ACL changes, and **availability** via object deletion or overwrite. Attackers can mass-exfiltrate data, host malware, or pivot after discovering secrets stored in objects.",
+    "time": 1791640800,
+    "time_dt": "2026-10-10T14:00:00Z",
+    "type_uid": 200401,
+    "type_name": "Detection Finding: Create"
+},{
+    "message": "S3 Bucket icp-test-public does not allow public write access in the bucket policy.",
+    "metadata": {
+        "event_code": "s3_bucket_policy_public_write_access",
+        "product": {
+            "name": "Prowler",
+            "uid": "prowler",
+            "vendor_name": "Prowler",
+            "version": "5.45.0"
+        },
+        "profiles": [
+            "cloud",
+            "datetime"
+        ],
+        "version": "1.5.0"
+    },
+    "severity_id": 5,
+    "severity": "Critical",
+    "status": "New",
+    "status_code": "PASS",
+    "status_detail": "S3 Bucket icp-test-public does not allow public write access in the bucket policy.",
+    "status_id": 1,
+    "unmapped": {
+        "related_url": "",
+        "categories": [
+            "internet-exposed"
+        ],
+        "depends_on": [],
+        "related_to": [],
+        "additional_urls": [
+            "https://docs.aws.amazon.com/IAM/latest/UserGuide/reference_policies_examples_s3_rw-bucket.html"
+        ],
+        "notes": "",
+        "compliance": {},
+        "scan_id": "01a1261d-0b00-7935-a5a4-0b666e8a7a6f",
+        "provider_uid": "111122223333",
+        "provider": "aws"
+    },
+    "activity_name": "Create",
+    "activity_id": 1,
+    "finding_info": {
+        "analytic": {
+            "category": "s3",
+            "name": "S3 bucket policy does not allow public write access",
+            "type": "Rule",
+            "type_id": 1,
+            "uid": "s3_bucket_policy_public_write_access"
+        },
+        "created_time": 1791640800,
+        "created_time_dt": "2026-10-10T14:00:00Z",
+        "desc": "**Amazon S3 bucket policies** are evaluated for **public write permissions** (e.g., `s3:PutObject`, `s3:Delete*`, or `s3:*`). Account or bucket **Public Access Block** that restricts public buckets is considered when determining exposure.",
+        "title": "S3 bucket policy does not allow public write access",
+        "types": [
+            "Software and Configuration Checks/AWS Security Best Practices",
+            "Software and Configuration Checks/Industry and Regulatory Standards/AWS Foundational Security Best Practices",
+            "Software and Configuration Checks/Industry and Regulatory Standards/CIS AWS Foundations Benchmark",
+            "Effects/Data Destruction",
+            "TTPs/Initial Access"
+        ],
+        "uid": "prowler-aws-s3_bucket_policy_public_write_access-111122223333-us-east-1-icp-test-public"
+    },
+    "resources": [
+        {
+            "cloud_partition": "aws",
+            "region": "us-east-1",
+            "data": {
+                "details": "",
+                "metadata": {}
+            },
+            "group": {
+                "name": "s3"
+            },
+            "labels": [],
+            "name": "icp-test-public",
+            "type": "AwsS3Bucket",
+            "uid": "arn:aws:s3:::icp-test-public"
+        }
+    ],
+    "category_name": "Findings",
+    "category_uid": 2,
+    "class_name": "Detection Finding",
+    "class_uid": 2004,
+    "cloud": {
+        "account": {
+            "name": "lab-account",
+            "type": "AWS Account",
+            "type_id": 10,
+            "uid": "111122223333",
+            "labels": []
+        },
+        "org": {},
+        "provider": "aws",
+        "region": "us-east-1"
+    },
+    "remediation": {
+        "desc": "Restrict writes to trusted principals using **least privilege**; avoid `Principal: \"*\"`. Enable **Public Access Block** at account and bucket levels for defense in depth. Prefer IAM roles over broad bucket policies, require private access paths, and enable versioning to recover from unwanted changes.",
+        "references": [
+            "https://hub.prowler.com/check/s3_bucket_policy_public_write_access"
+        ]
+    },
+    "risk_details": "Public write access lets anyone upload, overwrite, or delete objects, undermining **integrity** and **availability**. Attackers can plant malware, stage phishing content, poison data, or wipe buckets, causing outages and potential legal and cost impacts from storage abuse and content hosting.",
+    "time": 1791640800,
+    "time_dt": "2026-10-10T14:00:00Z",
+    "type_uid": 200401,
+    "type_name": "Detection Finding: Create"
+},{
+    "message": "S3 Bucket icp-test-public is not publicly writable.",
+    "metadata": {
+        "event_code": "s3_bucket_public_write_acl",
+        "product": {
+            "name": "Prowler",
+            "uid": "prowler",
+            "vendor_name": "Prowler",
+            "version": "5.45.0"
+        },
+        "profiles": [
+            "cloud",
+            "datetime"
+        ],
+        "version": "1.5.0"
+    },
+    "severity_id": 5,
+    "severity": "Critical",
+    "status": "New",
+    "status_code": "PASS",
+    "status_detail": "S3 Bucket icp-test-public is not publicly writable.",
+    "status_id": 1,
+    "unmapped": {
+        "related_url": "",
+        "categories": [
+            "internet-exposed"
+        ],
+        "depends_on": [],
+        "related_to": [],
+        "additional_urls": [
+            "https://docs.aws.amazon.com/AmazonS3/latest/userguide/access-control-block-public-access.html",
+            "https://www.trendmicro.com/trendaivisiononecloudriskmanagement-staging/knowledge-base/aws/S3/s3-bucket-public-write-access.html"
+        ],
+        "notes": "",
+        "compliance": {},
+        "scan_id": "01a1261d-0b00-7935-a5a4-0b666e8a7a6f",
+        "provider_uid": "111122223333",
+        "provider": "aws"
+    },
+    "activity_name": "Create",
+    "activity_id": 1,
+    "finding_info": {
+        "analytic": {
+            "category": "s3",
+            "name": "S3 bucket ACL does not grant write access to Everyone or any AWS customer",
+            "type": "Rule",
+            "type_id": 1,
+            "uid": "s3_bucket_public_write_acl"
+        },
+        "created_time": 1791640800,
+        "created_time_dt": "2026-10-10T14:00:00Z",
+        "desc": "**Amazon S3 buckets** are assessed for ACL grants that allow **public write** access to `AllUsers` or `AuthenticatedUsers` via `WRITE`, `WRITE_ACP`, or `FULL_CONTROL`. Effective **Block Public Access** at account or bucket level (`ignore_public_acls`, `restrict_public_buckets`) is considered.",
+        "title": "S3 bucket ACL does not grant write access to Everyone or any AWS customer",
+        "types": [
+            "Software and Configuration Checks/AWS Security Best Practices",
+            "Software and Configuration Checks/Industry and Regulatory Standards/AWS Foundational Security Best Practices",
+            "Software and Configuration Checks/Industry and Regulatory Standards/CIS AWS Foundations Benchmark",
+            "TTPs/Initial Access/Unauthorized Access",
+            "Effects/Data Destruction"
+        ],
+        "uid": "prowler-aws-s3_bucket_public_write_acl-111122223333-us-east-1-icp-test-public"
+    },
+    "resources": [
+        {
+            "cloud_partition": "aws",
+            "region": "us-east-1",
+            "data": {
+                "details": "",
+                "metadata": {}
+            },
+            "group": {
+                "name": "s3"
+            },
+            "labels": [],
+            "name": "icp-test-public",
+            "type": "AwsS3Bucket",
+            "uid": "arn:aws:s3:::icp-test-public"
+        }
+    ],
+    "category_name": "Findings",
+    "category_uid": 2,
+    "class_name": "Detection Finding",
+    "class_uid": 2004,
+    "cloud": {
+        "account": {
+            "name": "lab-account",
+            "type": "AWS Account",
+            "type_id": 10,
+            "uid": "111122223333",
+            "labels": []
+        },
+        "org": {},
+        "provider": "aws",
+        "region": "us-east-1"
+    },
+    "remediation": {
+        "desc": "Apply **least privilege** to S3 writes. Enable account-level **Block Public Access** and use **Object Ownership** to disable ACLs. Grant write only to fixed principals via bucket policies with tight conditions (e.g., org IDs, VPC endpoints). Add **versioning** and monitoring for defense-in-depth.",
+        "references": [
+            "https://hub.prowler.com/check/s3_bucket_public_write_acl"
+        ]
+    },
+    "risk_details": "Public or cross-account writes enable object tampering, **log poisoning**, and ACL changes via `WRITE_ACP`, undermining **integrity** and causing covert **data exposure**. Attackers can plant malware, deface content, and inflate **costs**, impacting **availability** through overwrites or prefix flooding.",
+    "time": 1791640800,
+    "time_dt": "2026-10-10T14:00:00Z",
+    "type_uid": 200401,
+    "type_name": "Detection Finding: Create"
+},{
+    "message": "S3 Bucket icp-test-public is not publicly listable.",
+    "metadata": {
+        "event_code": "s3_bucket_public_list_acl",
+        "product": {
+            "name": "Prowler",
+            "uid": "prowler",
+            "vendor_name": "Prowler",
+            "version": "5.45.0"
+        },
+        "profiles": [
+            "cloud",
+            "datetime"
+        ],
+        "version": "1.5.0"
+    },
+    "severity_id": 5,
+    "severity": "Critical",
+    "status": "New",
+    "status_code": "PASS",
+    "status_detail": "S3 Bucket icp-test-public is not publicly listable.",
+    "status_id": 1,
+    "unmapped": {
+        "related_url": "",
+        "categories": [
+            "internet-exposed"
+        ],
+        "depends_on": [],
+        "related_to": [],
+        "additional_urls": [
+            "https://docs.aws.amazon.com/AmazonS3/latest/userguide/access-control-block-public-access.html",
+            "https://www.trendmicro.com/trendaivisiononecloudriskmanagement-staging/knowledge-base/aws/S3/s3-bucket-public-read-access.html"
+        ],
+        "notes": "",
+        "compliance": {},
+        "scan_id": "01a1261d-0b00-7935-a5a4-0b666e8a7a6f",
+        "provider_uid": "111122223333",
+        "provider": "aws"
+    },
+    "activity_name": "Create",
+    "activity_id": 1,
+    "finding_info": {
+        "analytic": {
+            "category": "s3",
+            "name": "S3 bucket is not publicly listable by Everyone or any authenticated AWS user",
+            "type": "Rule",
+            "type_id": 1,
+            "uid": "s3_bucket_public_list_acl"
+        },
+        "created_time": 1791640800,
+        "created_time_dt": "2026-10-10T14:00:00Z",
+        "desc": "**Amazon S3 buckets** are evaluated for **public listing via ACLs**. Grants of `READ`, `READ_ACP`, or `FULL_CONTROL` to the `AllUsers` or `AuthenticatedUsers` groups are identified. Effective **Block Public Access** at account or bucket level (notably `IgnorePublicAcls` and `RestrictPublicBuckets`) is considered in the evaluation.",
+        "title": "S3 bucket is not publicly listable by Everyone or any authenticated AWS user",
+        "types": [
+            "Software and Configuration Checks/AWS Security Best Practices/Network Reachability",
+            "Software and Configuration Checks/Industry and Regulatory Standards/AWS Foundational Security Best Practices",
+            "Effects/Data Exposure",
+            "TTPs/Initial Access/Unauthorized Access"
+        ],
+        "uid": "prowler-aws-s3_bucket_public_list_acl-111122223333-us-east-1-icp-test-public"
+    },
+    "resources": [
+        {
+            "cloud_partition": "aws",
+            "region": "us-east-1",
+            "data": {
+                "details": "",
+                "metadata": {}
+            },
+            "group": {
+                "name": "s3"
+            },
+            "labels": [],
+            "name": "icp-test-public",
+            "type": "AwsS3Bucket",
+            "uid": "arn:aws:s3:::icp-test-public"
+        }
+    ],
+    "category_name": "Findings",
+    "category_uid": 2,
+    "class_name": "Detection Finding",
+    "class_uid": 2004,
+    "cloud": {
+        "account": {
+            "name": "lab-account",
+            "type": "AWS Account",
+            "type_id": 10,
+            "uid": "111122223333",
+            "labels": []
+        },
+        "org": {},
+        "provider": "aws",
+        "region": "us-east-1"
+    },
+    "remediation": {
+        "desc": "Enable account-level **S3 Block Public Access** (`BlockPublicAcls`, `IgnorePublicAcls`, `BlockPublicPolicy`, `RestrictPublicBuckets`).\n- Remove ACL grants to `AllUsers`/`AuthenticatedUsers`; apply **least privilege** with IAM/bucket policies.\n- Favor private patterns (VPC endpoints, CloudFront OAC, presigned URLs) and disable ACLs via Object Ownership.",
+        "references": [
+            "https://hub.prowler.com/check/s3_bucket_public_list_acl"
+        ]
+    },
+    "risk_details": "**Public listability** reveals object names, counts, and structure, enabling reconnaissance and targeted scraping. `READ_ACP` exposes permission details for further abuse. With `FULL_CONTROL`, attackers could alter ACLs and disrupt access, undermining **confidentiality** and risking **integrity** and **availability**.",
+    "time": 1791640800,
+    "time_dt": "2026-10-10T14:00:00Z",
+    "type_uid": 200401,
+    "type_name": "Detection Finding: Create"
+},{
+    "message": "Block Public Access is not configured for the account 111122223333.",
+    "metadata": {
+        "event_code": "s3_account_level_public_access_blocks",
+        "product": {
+            "name": "Prowler",
+            "uid": "prowler",
+            "vendor_name": "Prowler",
+            "version": "5.45.0"
+        },
+        "profiles": [
+            "cloud",
+            "datetime"
+        ],
+        "version": "1.5.0"
+    },
+    "severity_id": 4,
+    "severity": "High",
+    "status": "New",
+    "status_code": "FAIL",
+    "status_detail": "Block Public Access is not configured for the account 111122223333.",
+    "status_id": 1,
+    "unmapped": {
+        "related_url": "",
+        "categories": [
+            "internet-exposed"
+        ],
+        "depends_on": [],
+        "related_to": [],
+        "additional_urls": [
+            "https://docs.aws.amazon.com/AmazonS3/latest/userguide/access-control-block-public-access.html"
+        ],
+        "notes": "",
+        "compliance": {},
+        "scan_id": "01a1261d-0b00-7935-a5a4-0b666e8a7a6f",
+        "provider_uid": "111122223333",
+        "provider": "aws"
+    },
+    "activity_name": "Create",
+    "activity_id": 1,
+    "finding_info": {
+        "analytic": {
+            "category": "s3",
+            "name": "S3 account-level Block Public Access ignores public ACLs and restricts public buckets",
+            "type": "Rule",
+            "type_id": 1,
+            "uid": "s3_account_level_public_access_blocks"
+        },
+        "created_time": 1791640800,
+        "created_time_dt": "2026-10-10T14:00:00Z",
+        "desc": "**Amazon S3** account-level **Block Public Access** is assessed for `ignore_public_acls` and `restrict_public_buckets` to confirm centralized blocking of ACL-based public access and limiting buckets with public policies to in-account principals.",
+        "title": "S3 account-level Block Public Access ignores public ACLs and restricts public buckets",
+        "types": [
+            "Software and Configuration Checks/AWS Security Best Practices",
+            "Software and Configuration Checks/Industry and Regulatory Standards/AWS Foundational Security Best Practices",
+            "Software and Configuration Checks/Industry and Regulatory Standards/CIS AWS Foundations Benchmark",
+            "Effects/Data Exposure"
+        ],
+        "uid": "prowler-aws-s3_account_level_public_access_blocks-111122223333-us-east-1-111122223333"
+    },
+    "resources": [
+        {
+            "cloud_partition": "aws",
+            "region": "us-east-1",
+            "data": {
+                "details": "",
+                "metadata": {}
+            },
+            "group": {
+                "name": "s3"
+            },
+            "labels": [],
+            "name": "111122223333",
+            "type": "AwsS3AccountPublicAccessBlock",
+            "uid": "arn:aws:s3:us-east-1:111122223333:account"
+        }
+    ],
+    "category_name": "Findings",
+    "category_uid": 2,
+    "class_name": "Detection Finding",
+    "class_uid": 2004,
+    "cloud": {
+        "account": {
+            "name": "lab-account",
+            "type": "AWS Account",
+            "type_id": 10,
+            "uid": "111122223333",
+            "labels": []
+        },
+        "org": {},
+        "provider": "aws",
+        "region": "us-east-1"
+    },
+    "remediation": {
+        "desc": "Turn on account-level **Block Public Access** (prefer enabling all four: `block_public_acls`, `ignore_public_acls`, `block_public_policy`, `restrict_public_buckets`) to enforce least privilege. For legitimate access, use private buckets with **CloudFront**, VPC endpoints, or presigned URLs. Regularly review policies with IAM Access Analyzer.",
+        "references": [
+            "https://hub.prowler.com/check/s3_account_level_public_access_blocks"
+        ]
+    },
+    "risk_details": "Absent these settings, **public ACLs** and broad bucket policies may grant internet or cross-account access. This risks:\n- Confidentiality: bulk data exfiltration\n- Integrity: object overwrite/tampering\n- Availability: malicious deletions or malware hosting, triggering takedowns",
+    "time": 1791640800,
+    "time_dt": "2026-10-10T14:00:00Z",
+    "type_uid": 200401,
+    "type_name": "Detection Finding: Create"
+},{
+    "message": "S3 Bucket icp-test-private has a bucket policy allowing cross account access.",
+    "metadata": {
+        "event_code": "s3_bucket_cross_account_access",
+        "product": {
+            "name": "Prowler",
+            "uid": "prowler",
+            "vendor_name": "Prowler",
+            "version": "5.45.0"
+        },
+        "profiles": [
+            "cloud",
+            "datetime"
+        ],
+        "version": "1.5.0"
+    },
+    "severity_id": 4,
+    "severity": "High",
+    "status": "New",
+    "status_code": "FAIL",
+    "status_detail": "S3 Bucket icp-test-private has a bucket policy allowing cross account access.",
+    "status_id": 1,
+    "unmapped": {
+        "related_url": "",
+        "categories": [
+            "identity-access",
+            "trust-boundaries"
+        ],
+        "depends_on": [],
+        "related_to": [],
+        "additional_urls": [
+            "https://docs.aws.amazon.com/securityhub/latest/userguide/s3-controls.html#s3-6",
+            "https://docs.aws.amazon.com/AmazonS3/latest/userguide/access-control-block-public-access.html"
+        ],
+        "notes": "This check supports the `trusted_account_ids` configuration in config.yaml to allow specific cross-account access without triggering a finding.",
+        "compliance": {},
+        "scan_id": "01a1261d-0b00-7935-a5a4-0b666e8a7a6f",
+        "provider_uid": "111122223333",
+        "provider": "aws"
+    },
+    "activity_name": "Create",
+    "activity_id": 1,
+    "finding_info": {
+        "analytic": {
+            "category": "s3",
+            "name": "S3 bucket policy does not allow cross-account access",
+            "type": "Rule",
+            "type_id": 1,
+            "uid": "s3_bucket_cross_account_access"
+        },
+        "created_time": 1791640800,
+        "created_time_dt": "2026-10-10T14:00:00Z",
+        "desc": "**Amazon S3 bucket policies** are analyzed for statements that grant **cross-account access**.\n\nAny policy that names principals outside the owning account (other account IDs or `Principal: \"*\"`) is treated as cross-account; absence of a policy implies no cross-account grants.",
+        "title": "S3 bucket policy does not allow cross-account access",
+        "types": [
+            "Software and Configuration Checks/AWS Security Best Practices",
+            "Software and Configuration Checks/Industry and Regulatory Standards/AWS Foundational Security Best Practices",
+            "TTPs/Initial Access/Unauthorized Access",
+            "Effects/Data Exposure"
+        ],
+        "uid": "prowler-aws-s3_bucket_cross_account_access-111122223333-us-east-1-icp-test-private"
+    },
+    "resources": [
+        {
+            "cloud_partition": "aws",
+            "region": "us-east-1",
+            "data": {
+                "details": "",
+                "metadata": {}
+            },
+            "group": {
+                "name": "s3"
+            },
+            "labels": [],
+            "name": "icp-test-private",
+            "type": "AwsS3Bucket",
+            "uid": "arn:aws:s3:::icp-test-private"
+        }
+    ],
+    "category_name": "Findings",
+    "category_uid": 2,
+    "class_name": "Detection Finding",
+    "class_uid": 2004,
+    "cloud": {
+        "account": {
+            "name": "lab-account",
+            "type": "AWS Account",
+            "type_id": 10,
+            "uid": "111122223333",
+            "labels": []
+        },
+        "org": {},
+        "provider": "aws",
+        "region": "us-east-1"
+    },
+    "remediation": {
+        "desc": "Enforce **least privilege**: limit bucket policy `Principal` to your account or approved org IDs with fixed values; avoid wildcards.\n\nUse **role-based cross-account access** with scoped permissions when needed. Add **defense-in-depth** conditions (private networks, TLS), and periodically review for unintended external access.",
+        "references": [
+            "https://hub.prowler.com/check/s3_bucket_cross_account_access"
+        ]
+    },
+    "risk_details": "Cross-account grants can let external principals read, write, or administer the bucket, impacting:\n- Confidentiality: unauthorized object access/exfiltration\n- Integrity: object tampering, policy or encryption changes\n- Availability: deletions, versioning changes, or lockouts causing data loss and downtime",
+    "time": 1791640800,
+    "time_dt": "2026-10-10T14:00:00Z",
+    "type_uid": 200401,
+    "type_name": "Detection Finding: Create"
+},{
+    "message": "No CloudTrail trails enabled with logging were found.",
+    "metadata": {
+        "event_code": "cloudtrail_multi_region_enabled",
+        "product": {
+            "name": "Prowler",
+            "uid": "prowler",
+            "vendor_name": "Prowler",
+            "version": "5.45.0"
+        },
+        "profiles": [
+            "cloud",
+            "datetime"
+        ],
+        "version": "1.5.0"
+    },
+    "severity_id": 4,
+    "severity": "High",
+    "status": "New",
+    "status_code": "FAIL",
+    "status_detail": "No CloudTrail trails enabled with logging were found.",
+    "status_id": 1,
+    "unmapped": {
+        "related_url": "",
+        "categories": [
+            "logging",
+            "forensics-ready"
+        ],
+        "depends_on": [],
+        "related_to": [],
+        "additional_urls": [
+            "https://docs.aws.amazon.com/awscloudtrail/latest/userguide/cloudtrailconcepts.html#cloudtrail-concepts-management-events"
+        ],
+        "notes": "",
+        "compliance": {},
+        "scan_id": "01a1261d-0b00-7935-a5a4-0b666e8a7a6f",
+        "provider_uid": "111122223333",
+        "provider": "aws"
+    },
+    "activity_name": "Create",
+    "activity_id": 1,
+    "finding_info": {
+        "analytic": {
+            "category": "cloudtrail",
+            "name": "Region has at least one CloudTrail trail logging",
+            "type": "Rule",
+            "type_id": 1,
+            "uid": "cloudtrail_multi_region_enabled"
+        },
+        "created_time": 1791640800,
+        "created_time_dt": "2026-10-10T14:00:00Z",
+        "desc": "**AWS CloudTrail** has at least one trail with `logging` enabled in every region. A **multi-region trail** or a regional trail counts for coverage in that region.",
+        "title": "Region has at least one CloudTrail trail logging",
+        "types": [
+            "Software and Configuration Checks/AWS Security Best Practices",
+            "Software and Configuration Checks/Industry and Regulatory Standards/AWS Foundational Security Best Practices",
+            "Software and Configuration Checks/Industry and Regulatory Standards/CIS AWS Foundations Benchmark"
+        ],
+        "uid": "prowler-aws-cloudtrail_multi_region_enabled-111122223333-us-east-1-111122223333"
+    },
+    "resources": [
+        {
+            "cloud_partition": "aws",
+            "region": "us-east-1",
+            "data": {
+                "details": "",
+                "metadata": {}
+            },
+            "group": {
+                "name": "cloudtrail"
+            },
+            "labels": [],
+            "name": "111122223333",
+            "type": "AwsCloudTrailTrail",
+            "uid": "arn:aws:cloudtrail:us-east-1:111122223333:trail"
+        }
+    ],
+    "category_name": "Findings",
+    "category_uid": 2,
+    "class_name": "Detection Finding",
+    "class_uid": 2004,
+    "cloud": {
+        "account": {
+            "name": "lab-account",
+            "type": "AWS Account",
+            "type_id": 10,
+            "uid": "111122223333",
+            "labels": []
+        },
+        "org": {},
+        "provider": "aws",
+        "region": "us-east-1"
+    },
+    "remediation": {
+        "desc": "Use a **multi-region CloudTrail trail** or per-region trails so `logging` is active in every region, including unused ones.\n\nCentralize logs, enforce **least privilege** to log stores, and add **defense-in-depth** with encryption, integrity validation, and retention. Continuously monitor trail health to catch gaps.",
+        "references": [
+            "https://hub.prowler.com/check/cloudtrail_multi_region_enabled"
+        ]
+    },
+    "risk_details": "Missing coverage in any region creates **visibility gaps**.\n\nAttackers can use lesser-monitored regions to run API actions, hide **unauthorized changes**, and exfiltrate data without audit trails, weakening **detective controls**, hindering **forensics**, and delaying response (confidentiality and integrity).",
+    "time": 1791640800,
+    "time_dt": "2026-10-10T14:00:00Z",
+    "type_uid": 200401,
+    "type_name": "Detection Finding: Create"
+},{
+    "message": "No CloudTrail trails enabled with logging were found.",
+    "metadata": {
+        "event_code": "cloudtrail_multi_region_enabled",
+        "product": {
+            "name": "Prowler",
+            "uid": "prowler",
+            "vendor_name": "Prowler",
+            "version": "5.45.0"
+        },
+        "profiles": [
+            "cloud",
+            "datetime"
+        ],
+        "version": "1.5.0"
+    },
+    "severity_id": 4,
+    "severity": "High",
+    "status": "New",
+    "status_code": "FAIL",
+    "status_detail": "No CloudTrail trails enabled with logging were found.",
+    "status_id": 1,
+    "unmapped": {
+        "related_url": "",
+        "categories": [
+            "logging",
+            "forensics-ready"
+        ],
+        "depends_on": [],
+        "related_to": [],
+        "additional_urls": [
+            "https://docs.aws.amazon.com/awscloudtrail/latest/userguide/cloudtrailconcepts.html#cloudtrail-concepts-management-events"
+        ],
+        "notes": "",
+        "compliance": {},
+        "scan_id": "01a1261d-0b00-7935-a5a4-0b666e8a7a6f",
+        "provider_uid": "111122223333",
+        "provider": "aws"
+    },
+    "activity_name": "Create",
+    "activity_id": 1,
+    "finding_info": {
+        "analytic": {
+            "category": "cloudtrail",
+            "name": "Region has at least one CloudTrail trail logging",
+            "type": "Rule",
+            "type_id": 1,
+            "uid": "cloudtrail_multi_region_enabled"
+        },
+        "created_time": 1791640800,
+        "created_time_dt": "2026-10-10T14:00:00Z",
+        "desc": "**AWS CloudTrail** has at least one trail with `logging` enabled in every region. A **multi-region trail** or a regional trail counts for coverage in that region.",
+        "title": "Region has at least one CloudTrail trail logging",
+        "types": [
+            "Software and Configuration Checks/AWS Security Best Practices",
+            "Software and Configuration Checks/Industry and Regulatory Standards/AWS Foundational Security Best Practices",
+            "Software and Configuration Checks/Industry and Regulatory Standards/CIS AWS Foundations Benchmark"
+        ],
+        "uid": "prowler-aws-cloudtrail_multi_region_enabled-111122223333-us-west-2-111122223333"
+    },
+    "resources": [
+        {
+            "cloud_partition": "aws",
+            "region": "us-west-2",
+            "data": {
+                "details": "",
+                "metadata": {}
+            },
+            "group": {
+                "name": "cloudtrail"
+            },
+            "labels": [],
+            "name": "111122223333",
+            "type": "AwsCloudTrailTrail",
+            "uid": "arn:aws:cloudtrail:us-west-2:111122223333:trail"
+        }
+    ],
+    "category_name": "Findings",
+    "category_uid": 2,
+    "class_name": "Detection Finding",
+    "class_uid": 2004,
+    "cloud": {
+        "account": {
+            "name": "lab-account",
+            "type": "AWS Account",
+            "type_id": 10,
+            "uid": "111122223333",
+            "labels": []
+        },
+        "org": {},
+        "provider": "aws",
+        "region": "us-west-2"
+    },
+    "remediation": {
+        "desc": "Use a **multi-region CloudTrail trail** or per-region trails so `logging` is active in every region, including unused ones.\n\nCentralize logs, enforce **least privilege** to log stores, and add **defense-in-depth** with encryption, integrity validation, and retention. Continuously monitor trail health to catch gaps.",
+        "references": [
+            "https://hub.prowler.com/check/cloudtrail_multi_region_enabled"
+        ]
+    },
+    "risk_details": "Missing coverage in any region creates **visibility gaps**.\n\nAttackers can use lesser-monitored regions to run API actions, hide **unauthorized changes**, and exfiltrate data without audit trails, weakening **detective controls**, hindering **forensics**, and delaying response (confidentiality and integrity).",
+    "time": 1791640800,
+    "time_dt": "2026-10-10T14:00:00Z",
+    "type_uid": 200401,
+    "type_name": "Detection Finding: Create"
+},{
+    "message": "IAM Access Analyzer in account 111122223333 is not enabled.",
+    "metadata": {
+        "event_code": "accessanalyzer_enabled",
+        "product": {
+            "name": "Prowler",
+            "uid": "prowler",
+            "vendor_name": "Prowler",
+            "version": "5.45.0"
+        },
+        "profiles": [
+            "cloud",
+            "datetime"
+        ],
+        "version": "1.5.0"
+    },
+    "severity_id": 2,
+    "severity": "Low",
+    "status": "New",
+    "status_code": "FAIL",
+    "status_detail": "IAM Access Analyzer in account 111122223333 is not enabled.",
+    "status_id": 1,
+    "unmapped": {
+        "related_url": "",
+        "categories": [
+            "identity-access",
+            "trust-boundaries"
+        ],
+        "depends_on": [],
+        "related_to": [],
+        "additional_urls": [
+            "https://docs.aws.amazon.com/IAM/latest/UserGuide/access-analyzer-manage-external.html",
+            "https://aws.amazon.com/iam/access-analyzer/",
+            "https://docs.aws.amazon.com/IAM/latest/UserGuide/access-analyzer-getting-started.html",
+            "https://docs.aws.amazon.com/access-analyzer/latest/APIReference/API_CreateAnalyzer.html",
+            "https://docs.aws.amazon.com/IAM/latest/UserGuide/what-is-access-analyzer.html",
+            "https://docs.aws.amazon.com/IAM/latest/UserGuide/access-analyzer-create-external.html",
+            "https://docs.aws.amazon.com/access-analyzer/latest/APIReference/Welcome.html",
+            "https://docs.aws.amazon.com/IAM/latest/UserGuide/access-analyzer-create-internal.html"
+        ],
+        "notes": "",
+        "compliance": {},
+        "scan_id": "01a1261d-0b00-7935-a5a4-0b666e8a7a6f",
+        "provider_uid": "111122223333",
+        "provider": "aws"
+    },
+    "activity_name": "Create",
+    "activity_id": 1,
+    "finding_info": {
+        "analytic": {
+            "category": "accessanalyzer",
+            "name": "IAM Access Analyzer is enabled",
+            "type": "Rule",
+            "type_id": 1,
+            "uid": "accessanalyzer_enabled"
+        },
+        "created_time": 1791640800,
+        "created_time_dt": "2026-10-10T14:00:00Z",
+        "desc": "**IAM Access Analyzer** presence and status are evaluated per account and Region. An analyzer in `ACTIVE` state indicates continuous analysis of supported resources and IAM activity to identify external, internal, and unused access.",
+        "title": "IAM Access Analyzer is enabled",
+        "types": [
+            "Software and Configuration Checks/AWS Security Best Practices",
+            "Software and Configuration Checks/Industry and Regulatory Standards/AWS Foundational Security Best Practices"
+        ],
+        "uid": "prowler-aws-accessanalyzer_enabled-111122223333-us-east-1-analyzer/unknown"
+    },
+    "resources": [
+        {
+            "cloud_partition": "aws",
+            "region": "us-east-1",
+            "data": {
+                "details": "",
+                "metadata": {}
+            },
+            "group": {
+                "name": "accessanalyzer"
+            },
+            "labels": [],
+            "name": "analyzer/unknown",
+            "type": "Other",
+            "uid": "arn:aws:accessanalyzer:us-east-1:111122223333:analyzer"
+        }
+    ],
+    "category_name": "Findings",
+    "category_uid": 2,
+    "class_name": "Detection Finding",
+    "class_uid": 2004,
+    "cloud": {
+        "account": {
+            "name": "lab-account",
+            "type": "AWS Account",
+            "type_id": 10,
+            "uid": "111122223333",
+            "labels": []
+        },
+        "org": {},
+        "provider": "aws",
+        "region": "us-east-1"
+    },
+    "remediation": {
+        "desc": "Enable **IAM Access Analyzer** across all accounts and active Regions (*or organization-wide*). Operate on least privilege: continuously review findings, remove unintended access, and trim unused permissions. Use archive rules sparingly, integrate reviews into change/CI/CD workflows, and enforce separation of duties on policy changes.",
+        "references": [
+            "https://hub.prowler.com/check/accessanalyzer_enabled"
+        ]
+    },
+    "risk_details": "Without an active analyzer, visibility into unintended public, cross-account, or risky internal access is lost. Adversaries can exploit exposed S3, snapshots, KMS keys, or permissive role trusts for data exfiltration and escalation. Unused permissions persist, enlarging the attack surface. This degrades confidentiality and integrity.",
+    "time": 1791640800,
+    "time_dt": "2026-10-10T14:00:00Z",
+    "type_uid": 200401,
+    "type_name": "Detection Finding: Create"
+},{
+    "message": "IAM Access Analyzer in account 111122223333 is not enabled.",
+    "metadata": {
+        "event_code": "accessanalyzer_enabled",
+        "product": {
+            "name": "Prowler",
+            "uid": "prowler",
+            "vendor_name": "Prowler",
+            "version": "5.45.0"
+        },
+        "profiles": [
+            "cloud",
+            "datetime"
+        ],
+        "version": "1.5.0"
+    },
+    "severity_id": 2,
+    "severity": "Low",
+    "status": "New",
+    "status_code": "FAIL",
+    "status_detail": "IAM Access Analyzer in account 111122223333 is not enabled.",
+    "status_id": 1,
+    "unmapped": {
+        "related_url": "",
+        "categories": [
+            "identity-access",
+            "trust-boundaries"
+        ],
+        "depends_on": [],
+        "related_to": [],
+        "additional_urls": [
+            "https://docs.aws.amazon.com/IAM/latest/UserGuide/access-analyzer-manage-external.html",
+            "https://aws.amazon.com/iam/access-analyzer/",
+            "https://docs.aws.amazon.com/IAM/latest/UserGuide/access-analyzer-getting-started.html",
+            "https://docs.aws.amazon.com/access-analyzer/latest/APIReference/API_CreateAnalyzer.html",
+            "https://docs.aws.amazon.com/IAM/latest/UserGuide/what-is-access-analyzer.html",
+            "https://docs.aws.amazon.com/IAM/latest/UserGuide/access-analyzer-create-external.html",
+            "https://docs.aws.amazon.com/access-analyzer/latest/APIReference/Welcome.html",
+            "https://docs.aws.amazon.com/IAM/latest/UserGuide/access-analyzer-create-internal.html"
+        ],
+        "notes": "",
+        "compliance": {},
+        "scan_id": "01a1261d-0b00-7935-a5a4-0b666e8a7a6f",
+        "provider_uid": "111122223333",
+        "provider": "aws"
+    },
+    "activity_name": "Create",
+    "activity_id": 1,
+    "finding_info": {
+        "analytic": {
+            "category": "accessanalyzer",
+            "name": "IAM Access Analyzer is enabled",
+            "type": "Rule",
+            "type_id": 1,
+            "uid": "accessanalyzer_enabled"
+        },
+        "created_time": 1791640800,
+        "created_time_dt": "2026-10-10T14:00:00Z",
+        "desc": "**IAM Access Analyzer** presence and status are evaluated per account and Region. An analyzer in `ACTIVE` state indicates continuous analysis of supported resources and IAM activity to identify external, internal, and unused access.",
+        "title": "IAM Access Analyzer is enabled",
+        "types": [
+            "Software and Configuration Checks/AWS Security Best Practices",
+            "Software and Configuration Checks/Industry and Regulatory Standards/AWS Foundational Security Best Practices"
+        ],
+        "uid": "prowler-aws-accessanalyzer_enabled-111122223333-us-west-2-analyzer/unknown"
+    },
+    "resources": [
+        {
+            "cloud_partition": "aws",
+            "region": "us-west-2",
+            "data": {
+                "details": "",
+                "metadata": {}
+            },
+            "group": {
+                "name": "accessanalyzer"
+            },
+            "labels": [],
+            "name": "analyzer/unknown",
+            "type": "Other",
+            "uid": "arn:aws:accessanalyzer:us-west-2:111122223333:analyzer"
+        }
+    ],
+    "category_name": "Findings",
+    "category_uid": 2,
+    "class_name": "Detection Finding",
+    "class_uid": 2004,
+    "cloud": {
+        "account": {
+            "name": "lab-account",
+            "type": "AWS Account",
+            "type_id": 10,
+            "uid": "111122223333",
+            "labels": []
+        },
+        "org": {},
+        "provider": "aws",
+        "region": "us-west-2"
+    },
+    "remediation": {
+        "desc": "Enable **IAM Access Analyzer** across all accounts and active Regions (*or organization-wide*). Operate on least privilege: continuously review findings, remove unintended access, and trim unused permissions. Use archive rules sparingly, integrate reviews into change/CI/CD workflows, and enforce separation of duties on policy changes.",
+        "references": [
+            "https://hub.prowler.com/check/accessanalyzer_enabled"
+        ]
+    },
+    "risk_details": "Without an active analyzer, visibility into unintended public, cross-account, or risky internal access is lost. Adversaries can exploit exposed S3, snapshots, KMS keys, or permissive role trusts for data exfiltration and escalation. Unused permissions persist, enlarging the attack surface. This degrades confidentiality and integrity.",
+    "time": 1791640800,
+    "time_dt": "2026-10-10T14:00:00Z",
+    "type_uid": 200401,
+    "type_name": "Detection Finding: Create"
+},{
+    "message": "IAM password policy does not require minimum length of 14 characters.",
+    "metadata": {
+        "event_code": "iam_password_policy_minimum_length_14",
+        "product": {
+            "name": "Prowler",
+            "uid": "prowler",
+            "vendor_name": "Prowler",
+            "version": "5.45.0"
+        },
+        "profiles": [
+            "cloud",
+            "datetime"
+        ],
+        "version": "1.5.0"
+    },
+    "severity_id": 3,
+    "severity": "Medium",
+    "status": "New",
+    "status_code": "FAIL",
+    "status_detail": "IAM password policy does not require minimum length of 14 characters.",
+    "status_id": 1,
+    "unmapped": {
+        "related_url": "",
+        "categories": [
+            "identity-access"
+        ],
+        "depends_on": [],
+        "related_to": [],
+        "additional_urls": [
+            "https://docs.aws.amazon.com/config/latest/developerguide/iam-password-policy.html",
+            "https://docs.aws.amazon.com/IAM/latest/UserGuide/id_credentials_passwords_account-policy.html",
+            "https://docs.aws.amazon.com/sdk-for-ruby/v3/api/Aws/IAM/Resource.html"
+        ],
+        "notes": "",
+        "compliance": {},
+        "scan_id": "01a1261d-0b00-7935-a5a4-0b666e8a7a6f",
+        "provider_uid": "111122223333",
+        "provider": "aws"
+    },
+    "activity_name": "Create",
+    "activity_id": 1,
+    "finding_info": {
+        "analytic": {
+            "category": "iam",
+            "name": "IAM password policy requires passwords to be at least 14 characters long",
+            "type": "Rule",
+            "type_id": 1,
+            "uid": "iam_password_policy_minimum_length_14"
+        },
+        "created_time": 1791640800,
+        "created_time_dt": "2026-10-10T14:00:00Z",
+        "desc": "**IAM password policy** is assessed for the **minimum password length** setting, confirming it meets `>= 14` characters for IAM console users.",
+        "title": "IAM password policy requires passwords to be at least 14 characters long",
+        "types": [
+            "Software and Configuration Checks/Industry and Regulatory Standards/CIS AWS Foundations Benchmark",
+            "Software and Configuration Checks/Industry and Regulatory Standards/AWS Foundational Security Best Practices"
+        ],
+        "uid": "prowler-aws-iam_password_policy_minimum_length_14-111122223333-us-east-1-password-policy"
+    },
+    "resources": [
+        {
+            "cloud_partition": "aws",
+            "region": "us-east-1",
+            "data": {
+                "details": "",
+                "metadata": {}
+            },
+            "group": {
+                "name": "iam"
+            },
+            "labels": [],
+            "name": "password-policy",
+            "type": "AwsIamPolicy",
+            "uid": "arn:aws:iam:us-east-1:111122223333:password-policy"
+        }
+    ],
+    "category_name": "Findings",
+    "category_uid": 2,
+    "class_name": "Detection Finding",
+    "class_uid": 2004,
+    "cloud": {
+        "account": {
+            "name": "lab-account",
+            "type": "AWS Account",
+            "type_id": 10,
+            "uid": "111122223333",
+            "labels": []
+        },
+        "org": {},
+        "provider": "aws",
+        "region": "us-east-1"
+    },
+    "remediation": {
+        "desc": "Set the **minimum password length** to `>= 14` (prefer `16+`).\n- Require mixed character types and prevent reuse\n- Enforce **MFA** for all console users\n- Prefer SSO over local IAM users\n- Apply least privilege and monitor authentication events",
+        "references": [
+            "https://hub.prowler.com/check/iam_password_policy_minimum_length_14"
+        ]
+    },
+    "risk_details": "Low minimum length reduces entropy, easing **brute force** and **credential stuffing**. Compromised IAM users enable console access, unauthorized changes, and lateral movement, leading to data exposure (confidentiality) and tampering (integrity).",
+    "time": 1791640800,
+    "time_dt": "2026-10-10T14:00:00Z",
+    "type_uid": 200401,
+    "type_name": "Detection Finding: Create"
+}]

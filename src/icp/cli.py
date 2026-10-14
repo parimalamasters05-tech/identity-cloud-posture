@@ -421,6 +421,75 @@ def preflight_m365() -> None:
     click.secho("All permissions work.", fg="green")
 
 
+@cli.command(name="collect-aws")
+@click.option(
+    "--prowler-output",
+    "prowler_path",
+    required=True,
+    type=click.Path(exists=True, dir_okay=False, path_type=Path),
+    help="Prowler's json-ocsf results file for one AWS account.",
+)
+@click.option("--account-alias", default="", help="A name for the account, for the cover. Default: none.")
+@click.option(
+    "--keep-prowler-output",
+    is_flag=True,
+    help="Keep Prowler's unencrypted results file after import (default: delete it).",
+)
+@click.option("--no-encrypt", is_flag=True, help="Write the snapshot unencrypted (test accounts only).")
+@click.pass_context
+def collect_aws(
+    ctx: click.Context, prowler_path: Path, account_alias: str, keep_prowler_output: bool, no_encrypt: bool
+) -> None:
+    """AWS: import Prowler's results for one account into a snapshot.
+
+    Prowler reads the account (the `prowler` service, through the read-only
+    role); this turns its results file into an encrypted snapshot like the
+    other platforms'. This command makes no request to AWS. Tenant label for
+    file names: ICP_AWS_TENANT_LABEL (default "aws").
+    """
+    import os
+
+    from icp.collectors.aws import ProwlerImportError, import_prowler
+    from icp.storage.snapshot_store import SnapshotStore
+
+    settings = _settings(ctx)
+    try:
+        snapshot = import_prowler(
+            prowler_path,
+            tenant_id=os.environ.get("ICP_AWS_TENANT_LABEL", "aws"),
+            account_alias=account_alias,
+        )
+    except ProwlerImportError as exc:
+        _fail(str(exc))
+
+    encrypt = settings.encrypt_at_rest and not no_encrypt
+    try:
+        path = SnapshotStore(settings.snapshot_dir, encrypt=encrypt).save(snapshot)
+    except Exception as exc:
+        _fail(f"{type(exc).__name__}: {exc}")
+
+    prowler = snapshot.artifacts["aws.prowler"]
+    rows = prowler["results"]
+    click.secho(f"Snapshot written: {path}", fg="green")
+    click.echo(
+        f"  account: {snapshot.artifacts['aws.account']['account_id']}   Prowler {prowler['prowler_version']}   "
+        f"results kept: {len(rows)} ({sum(1 for r in rows if r['status'] == 'FAIL')} failed) "
+        f"from {len({r['check_id'] for r in rows})} of {len(prowler['checks_mapped'])} mapped checks"
+    )
+    for error in snapshot.errors:
+        click.secho(f"  not assessed: {error.collector}: {error.message}", fg="yellow")
+    if snapshot.started_at:
+        click.echo(
+            f"  scan window (UTC): {snapshot.started_at:%Y-%m-%d %H:%M:%S} to "
+            f"{snapshot.collected_at:%H:%M:%S}  -- filter CloudTrail to this and the assessment role"
+        )
+    # Prowler's file is unencrypted and lists every resource it read; the
+    # snapshot now holds what the report needs, encrypted.
+    if not keep_prowler_output:
+        prowler_path.unlink()
+        click.echo(f"  deleted Prowler's unencrypted results file: {prowler_path.name}")
+
+
 @cli.command(name="collect-m365")
 @click.option("--no-encrypt", is_flag=True, help="Write the snapshot unencrypted (dev tenants only).")
 @click.pass_context

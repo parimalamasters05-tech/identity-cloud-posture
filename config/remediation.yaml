@@ -595,3 +595,240 @@ remediations:
       - "Set 'Users can register applications' to No. Administrators can still register applications when needed."
     verification: "Entra ID > Users > User settings shows 'Users can register applications: No'."
     owner_hint: IT administrator
+
+  # -- AWS ---------------------------------------------------------------------
+  # Findings come from Prowler (config/prowler_check_map.yaml). Console paths
+  # are for the AWS Management Console, signed in as an administrator.
+
+  aws.mfa.root:
+    title: Add a second sign-in step to the root user
+    impact: >
+      The root user can do anything in the AWS account, including closing it
+      and removing every other administrator. With a password alone, one
+      stolen or guessed password hands over the whole account.
+    steps:
+      - "Sign in to the AWS Management Console as the root user (the email address the account was opened with)."
+      - "Click the account name at the top right > Security credentials > Multi-factor authentication (MFA) > Assign MFA device."
+      - "Choose 'Passkey or security key' if you have one, otherwise 'Authenticator app', and follow the prompts."
+      - "Store the root password and the device somewhere only two named people can reach, and stop using the root user for daily work."
+    verification: "IAM > Dashboard > Security recommendations: 'Root user has MFA' shows a green tick."
+    owner_hint: Account owner
+    references:
+      - https://docs.aws.amazon.com/IAM/latest/UserGuide/enable-mfa-for-root.html
+
+  aws.mfa.root_hardware:
+    title: Protect the root user with a physical security key
+    impact: >
+      An authenticator app can be tricked by a convincing fake sign-in page,
+      and is lost with the phone. A physical security key cannot be copied
+      or captured that way.
+    steps:
+      - "Buy two security keys (one main, one spare)."
+      - "Sign in as the root user > account name at the top right > Security credentials > Multi-factor authentication (MFA) > Assign MFA device > 'Passkey or security key'. Register both keys."
+      - "Remove the authenticator app from the root user once both keys work."
+    verification: "Security credentials > Multi-factor authentication (MFA): the devices listed for the root user are security keys."
+    owner_hint: Account owner
+
+  aws.mfa.users:
+    title: Require a second sign-in step for every AWS user
+    impact: >
+      A person who signs in to AWS with a password alone can be impersonated
+      with one stolen or reused password, with whatever rights that person
+      has in the account.
+    steps:
+      - "Tell each person named in the findings to sign in, click their name at the top right > Security credentials > Multi-factor authentication (MFA) > Assign MFA device."
+      - "For an account nobody uses to sign in to the console, remove its password instead: IAM > Users > the user > Security credentials > Console sign-in > Manage console access > Disable."
+      - "Longer term, move people to IAM Identity Center, where a second step can be required for everyone in one place."
+    verification: "IAM > Users: the 'MFA' column shows a device for every user that has a console password."
+    owner_hint: IT administrator
+    references:
+      - https://docs.aws.amazon.com/IAM/latest/UserGuide/id_credentials_mfa_enable_virtual.html
+
+  aws.admin.remove_root_keys:
+    title: Delete the root user's access keys
+    impact: >
+      A root access key is a password for programs that gives unrestricted
+      control of the account and cannot be limited in any way. If it leaks
+      from a script or a laptop, the whole account goes with it.
+    steps:
+      - "Find out what uses the key first: Security credentials > Access keys shows when and where it was last used."
+      - "Create a role or user with only the rights that program needs, and move the program to it."
+      - "Sign in as the root user > account name at the top right > Security credentials > Access keys > Actions > Deactivate, then Delete after a week with no problems."
+    verification: "Signed in as root: Security credentials > Access keys lists no keys."
+    owner_hint: Account owner
+    references:
+      - https://docs.aws.amazon.com/IAM/latest/UserGuide/id_root-user_manage_delete-key.html
+
+  aws.admin.stop_using_root:
+    title: Stop using the root user for daily work
+    impact: >
+      The root user cannot be restricted and its actions are harder to tie
+      to a person. Using it every day makes it far more likely that its
+      password or session is stolen.
+    steps:
+      - "Give each administrator a named sign-in of their own: IAM Identity Center > Users, or IAM > Users, with a second sign-in step."
+      - "Use the root user only for the few tasks that need it (closing the account, changing the support plan, restoring access)."
+      - "Record who may use the root user and where its password and security key are kept."
+    verification: "IAM > Credential report (download): the root user's 'password_last_used' date is not recent."
+    owner_hint: Account owner
+
+  aws.admin.reduce_admin_users:
+    title: Remove full administrative rights attached directly to users
+    impact: >
+      Each user with full administrative rights is another way into
+      everything in the account. Rights attached directly to a person are
+      also easy to forget when they change role or leave.
+    steps:
+      - "IAM > Users > the user named in the findings > Permissions."
+      - "If the person does not need to administer the whole account, remove 'AdministratorAccess' and add a policy for the job they do."
+      - "If they do, put them in an administrators group instead, so the list of administrators is in one place: IAM > User groups."
+    verification: "IAM > Policies > AdministratorAccess > Entities attached: no individual users are listed."
+    owner_hint: IT administrator
+
+  aws.admin.fix_wildcard_policies:
+    title: Narrow custom policies that allow everything
+    impact: >
+      A custom policy that allows every action on every resource makes
+      whoever holds it an administrator, without the name saying so. It
+      is the kind of access that is granted once and never noticed again.
+    steps:
+      - "IAM > Policies > the policy named in the findings > Entities attached: see who holds it."
+      - "Permissions > Edit: replace the statement that allows Action '*' on Resource '*' with the specific actions the holder needs."
+      - "If nobody can say what it is for, detach it from everything, wait two weeks, then delete it."
+    verification: "IAM > Policies > the policy > Permissions: no statement allows Action '*' on Resource '*'."
+    owner_hint: IT administrator
+
+  aws.accounts.remove_unused_logins:
+    title: Remove console access nobody is using
+    impact: >
+      A sign-in that nobody uses still works for anyone who obtains its
+      password, and nobody is watching it. These are often accounts of
+      people who have left or changed role.
+    steps:
+      - "For each user named in the findings, ask their manager whether they still need to sign in to AWS."
+      - "If not: IAM > Users > the user > Security credentials > Console sign-in > Manage console access > Disable."
+      - "If the person has left, delete the user after checking nothing depends on its access keys."
+    verification: "IAM > Users: the 'Console last sign-in' column shows a recent date, or 'None' with console access disabled, for every user."
+    owner_hint: IT administrator
+
+  aws.accounts.remove_unused_keys:
+    title: Delete access keys that are not being used
+    impact: >
+      An access key is a password for programs. One that nothing uses is
+      only useful to someone who finds it in an old script, a laptop or a
+      code repository.
+    steps:
+      - "IAM > Users > the user named in the findings > Security credentials > Access keys: check 'Last used'."
+      - "Actions > Deactivate. Wait a week to confirm nothing breaks, then Actions > Delete."
+    verification: "IAM > Users > each user > Security credentials > Access keys: every active key shows a recent 'Last used' date."
+    owner_hint: IT administrator
+
+  aws.accounts.rotate_keys:
+    title: Replace old access keys
+    impact: >
+      The longer an access key lives, the more scripts, laptops and
+      backups hold a copy of it. Replacing it makes every old copy useless.
+    steps:
+      - "IAM > Users > the user named in the findings > Security credentials > Access keys > Create access key."
+      - "Put the new key into the program that uses the old one, and confirm it works."
+      - "Deactivate the old key, wait a week, then delete it."
+      - "Where the program runs inside AWS, use a role instead of a key, so there is nothing to replace."
+    verification: "IAM > Users: the 'Active key age' column shows less than 90 days for every user."
+    owner_hint: IT administrator
+    references:
+      - https://docs.aws.amazon.com/IAM/latest/UserGuide/id-credentials-access-keys-update.html
+
+  aws.roles.reduce_admin_roles:
+    title: Reduce roles that have full administrative rights
+    impact: >
+      A role is access that a program, a service or another account can
+      pick up. One with full administrative rights gives whatever is allowed
+      to use it control of the whole account.
+    steps:
+      - "IAM > Roles > the role named in the findings > Trust relationships: see who or what is allowed to use it."
+      - "If it is the role your administrators sign in through, keep it, and record that."
+      - "Otherwise: Permissions > remove 'AdministratorAccess' and attach a policy with only the rights that program or account needs."
+    verification: "IAM > Policies > AdministratorAccess > Entities attached: every role listed is one you have recorded as an administrator role."
+    owner_hint: IT administrator
+
+  aws.storage.close_public_buckets:
+    title: Close storage buckets that are open to the public
+    impact: >
+      Anyone on the internet who finds the address can read what is in a
+      public bucket, and tools scan for them constantly. Where the public
+      can also write, they can replace or delete your files.
+    steps:
+      - "S3 > Buckets > the bucket named in the findings > Permissions."
+      - "Under 'Block public access (bucket settings)', choose Edit, tick 'Block all public access', and save."
+      - "If the bucket is public on purpose (a website's images, for example), record that, and make sure nothing else is stored in it."
+    verification: "S3 > Buckets: the 'Access' column shows 'Bucket and objects not public' for every bucket not recorded as public on purpose."
+    owner_hint: Whoever owns the data, with IT
+    references:
+      - https://docs.aws.amazon.com/AmazonS3/latest/userguide/access-control-block-public-access.html
+
+  aws.storage.block_public_access:
+    title: Switch on the account-wide block on public storage
+    impact: >
+      With the account-wide block off, any one bucket can be made public by
+      a single mistaken setting. Switched on, a mistake like that has no
+      effect.
+    steps:
+      - "First check that no bucket needs to be public: S3 > Buckets, 'Access' column."
+      - "S3 > Block Public Access settings for this account > Edit > tick 'Block all public access' > Save."
+    verification: "S3 > Block Public Access settings for this account: all four settings show 'On'."
+    owner_hint: IT administrator
+
+  aws.logging.enable_trail:
+    title: Keep a permanent record of account activity
+    impact: >
+      AWS keeps 90 days of basic activity history by itself. After that,
+      or for anything beyond the basics, there would be nothing to
+      reconstruct what happened after a break-in.
+    steps:
+      - "CloudTrail > Trails > Create trail."
+      - "Leave 'Multi-region trail' on, so every region is covered, and create a new storage bucket for the records."
+      - "Keep 'Log file validation' enabled, and choose 'Management events', Read and Write."
+    verification: "CloudTrail > Trails: one trail shows 'Multi-region trail: Yes' and 'Status: Logging'."
+    owner_hint: IT administrator
+    references:
+      - https://docs.aws.amazon.com/awscloudtrail/latest/userguide/cloudtrail-create-a-trail-using-the-console-first-time.html
+
+  aws.logging.enable_validation:
+    title: Protect activity records against tampering
+    impact: >
+      Without log file validation, someone who got into the account could
+      edit or delete the records of what they did, and nobody could tell.
+    steps:
+      - "CloudTrail > Trails > the trail named in the findings > General details > Edit."
+      - "Under 'Additional settings', enable 'Log file validation', and save."
+    verification: "CloudTrail > Trails > the trail: 'Log file validation' shows 'Enabled'."
+    owner_hint: IT administrator
+
+  aws.sharing.review_cross_account:
+    title: Review access given to other AWS accounts
+    impact: >
+      Access given to another AWS account keeps working whoever now
+      controls that account: a supplier you stopped using, or a former
+      contractor's own account.
+    steps:
+      - "For a role: IAM > Roles > the role named in the findings > Trust relationships shows the account number allowed to use it."
+      - "For a storage bucket: S3 > Buckets > the bucket > Permissions > Bucket policy shows the account number."
+      - "Confirm each account number belongs to an organization you still work with. Remove the access if not, or if nobody knows."
+      - "For access you keep, record who it is for and require an external ID on roles used by suppliers."
+    verification: "IAM > Access analyzer > Findings: every finding for external access is archived with a recorded reason, or resolved."
+    owner_hint: IT administrator with the executive director
+
+  aws.sharing.enable_access_analyzer:
+    title: Switch on the AWS feature that lists outside access
+    impact: >
+      IAM Access Analyzer is a free AWS feature that lists every resource
+      shared outside the account. With it off, new outside access goes
+      unnoticed.
+    steps:
+      - "IAM > Access analyzer > Create analyzer."
+      - "Choose 'External access analysis', leave the zone of trust as 'Current account', and create it."
+      - "Repeat in each region you use, then review the findings it lists."
+    verification: "IAM > Access analyzer > Analyzer settings: an analyzer with status 'Active' exists in each region you use."
+    owner_hint: IT administrator
+    references:
+      - https://docs.aws.amazon.com/IAM/latest/UserGuide/access-analyzer-getting-started.html

@@ -177,3 +177,27 @@ def test_the_summary_says_what_the_application_reads(combined):
     for risk in context["summary"].headline_risks:
         if "Backup Sync Test" in risk.paragraph:
             assert "mail or files" not in risk.paragraph
+
+
+def test_a_report_with_aws_names_it_as_an_account_read_by_prowler(tenant, result):
+    """AWS has no staff directory and is read by Prowler: the cover and
+    summary must not describe it in Workspace and Microsoft terms."""
+    from tests.rules.test_aws_rules import _run as run_aws
+
+    _, aws_tenant, aws_result, _ = run_aws()
+    renderer = ReportRenderer()
+    context = renderer.build_combined_context(
+        [(tenant, result), (aws_tenant, aws_result)], client_name="Lab", assessor="T"
+    )
+    examined = context["scope_statement"]["examined"]
+    assert examined[0] == "Your staff directories in Google Workspace: accounts, guests and groups"
+    assert any(line.startswith("In AWS:") for line in examined)
+    assert "Prowler" in context["scope_statement"]["method"]
+    opening = context["summary"].opening
+    staff = len(tenant.active_users)
+    assert f"covering {staff} active staff accounts ({staff} in Google Workspace)" in opening
+    assert 'your AWS account 111122223333 ("lab")' in opening
+    html = renderer.env.get_template("report.html").render(**context)
+    text = _text(html)
+    assert "made no requests to AWS: it read the results file Prowler wrote" in text
+    assert "Policies on the assessment role" in text and "SecurityAudit" in text

@@ -1,0 +1,312 @@
+# Prowler check -> this tool's finding.
+#
+# AWS is read by Prowler (the brief: wrap existing tooling, do not rebuild it).
+# This file is the whole of the AWS "rule set": which Prowler checks are run,
+# and how each failed result is scored and worded. Scope is deliberately tight:
+# identity and storage exposure only, not full CIS AWS coverage.
+#
+# Check names and what each fails on were read from Prowler 5.45.0. When
+# Prowler is upgraded, re-check them: a renamed check returns no results, which
+# this tool reports as "not assessed", never as clean.
+#
+#   checks     Prowler check IDs; a failed result from any of them counts.
+#   service    The AWS service read. If Prowler returned nothing at all for a
+#              service, its rules are "not assessed" (access was probably denied).
+#   unless     Skip when this other rule has a finding (it already says so).
+#   one / many Title for one affected item / several ({n} is the count).
+#   evidence   One plain sentence per affected item. {name} is the resource.
+#   noun       What an affected item is called in the report.
+#   privileged true when the affected item has full control of the account.
+prowler_version: "5.45.0"
+
+rules:
+  # -- 1. Second sign-in step -------------------------------------------------
+  - id: AWS-MFA-001
+    family: mfa_coverage
+    service: iam
+    checks: [iam_root_mfa_enabled]
+    impact: 5
+    exposure: 5
+    privileged: true
+    noun: root user
+    one: The account's root user has no second sign-in step
+    many: The account's root user has no second sign-in step
+    evidence: "The root user, which has unrestricted control of the whole AWS account, signs in with a password alone."
+    remediation: aws.mfa.root
+    framework: [PR.AA-03, PR.AA-05]
+
+  - id: AWS-MFA-002
+    family: mfa_coverage
+    service: iam
+    checks: [iam_user_mfa_enabled_console_access]
+    impact: 4
+    exposure: 4
+    noun: user
+    one: 1 AWS user can sign in to the console with a password alone
+    many: "{n} AWS users can sign in to the console with a password alone"
+    evidence: "{name} has a console password and no second sign-in step."
+    remediation: aws.mfa.users
+    framework: [PR.AA-03]
+
+  - id: AWS-MFA-003
+    family: mfa_coverage
+    service: iam
+    checks: [iam_root_hardware_mfa_enabled]
+    unless: AWS-MFA-001
+    impact: 2
+    exposure: 2
+    privileged: true
+    noun: root user
+    one: The root user's second sign-in step is an app, not a physical security key
+    many: The root user's second sign-in step is an app, not a physical security key
+    evidence: "The root user is protected by an authenticator app. A physical security key cannot be copied or captured by a fake sign-in page."
+    remediation: aws.mfa.root_hardware
+    framework: [PR.AA-03]
+
+  # -- 2. Administrative control ----------------------------------------------
+  - id: AWS-ADM-001
+    family: admin_role_sprawl
+    service: iam
+    checks: [iam_no_root_access_key]
+    impact: 5
+    exposure: 4
+    privileged: true
+    noun: access key
+    one: The root user has an access key
+    many: The root user has access keys
+    evidence: "The root user has an active access key: a long-lived password for programs that gives unrestricted control of the account and cannot be limited."
+    remediation: aws.admin.remove_root_keys
+    framework: [PR.AA-05]
+
+  - id: AWS-ADM-002
+    family: admin_role_sprawl
+    service: iam
+    checks: [iam_avoid_root_usage]
+    impact: 4
+    exposure: 2
+    privileged: true
+    noun: root user
+    one: The root user was used in the last day
+    many: The root user was used in the last day
+    evidence: "The root user signed in or its key was used within the last day. Day-to-day work should use a named account with only the rights it needs."
+    remediation: aws.admin.stop_using_root
+    framework: [PR.AA-05]
+
+  - id: AWS-ADM-003
+    family: admin_role_sprawl
+    service: iam
+    checks: [iam_user_administrator_access_policy]
+    impact: 4
+    exposure: 3
+    privileged: true
+    noun: user
+    one: 1 AWS user has full administrative rights attached directly
+    many: "{n} AWS users have full administrative rights attached directly"
+    evidence: "{name} has the AdministratorAccess policy attached directly, so it can do anything in the account."
+    remediation: aws.admin.reduce_admin_users
+    framework: [PR.AA-05]
+
+  - id: AWS-ADM-004
+    family: admin_role_sprawl
+    service: iam
+    checks:
+      - iam_customer_attached_policy_no_administrative_privileges
+      - iam_inline_policy_no_administrative_privileges
+    impact: 4
+    exposure: 3
+    noun: policy
+    one: 1 custom permission policy grants full control of the account
+    many: "{n} custom permission policies grant full control of the account"
+    evidence: "The policy {name} allows every action on every resource. Whoever it is attached to is an administrator, without the name saying so."
+    remediation: aws.admin.fix_wildcard_policies
+    framework: [PR.AA-05]
+
+  # -- 3. Unused logins and keys ----------------------------------------------
+  - id: AWS-STA-001
+    family: stale_accounts
+    service: iam
+    checks: [iam_user_console_access_unused]
+    impact: 3
+    exposure: 3
+    noun: user
+    one: 1 AWS user has a console password that has not been used for a long time
+    many: "{n} AWS users have console passwords that have not been used for a long time"
+    evidence: "{name} can still sign in to the console but has not done so within the period Prowler checks (45 days by default)."
+    remediation: aws.accounts.remove_unused_logins
+    framework: [PR.AA-01]
+
+  - id: AWS-STA-002
+    family: stale_accounts
+    service: iam
+    checks: [iam_user_accesskey_unused]
+    impact: 3
+    exposure: 3
+    noun: user
+    one: 1 AWS user has an access key that is not being used
+    many: "{n} AWS users have access keys that are not being used"
+    evidence: "{name} has an active access key that has not been used within the period Prowler checks (45 days by default). An unused key is only useful to someone who finds it."
+    remediation: aws.accounts.remove_unused_keys
+    framework: [PR.AA-01]
+
+  - id: AWS-STA-003
+    family: stale_accounts
+    service: iam
+    checks: [iam_rotate_access_key_90_days]
+    impact: 3
+    exposure: 2
+    noun: user
+    one: 1 AWS user has an access key more than 90 days old
+    many: "{n} AWS users have access keys more than 90 days old"
+    evidence: "{name} has an access key that has not been replaced for more than 90 days. The longer a key lives, the more places it has been copied to."
+    remediation: aws.accounts.rotate_keys
+    framework: [PR.AA-01]
+
+  # -- 4. Non-human identities --------------------------------------------------
+  - id: AWS-SVC-001
+    family: service_account_privilege
+    service: iam
+    checks: [iam_role_administratoraccess_policy]
+    impact: 4
+    exposure: 2
+    privileged: true
+    noun: role
+    one: 1 role that programs or other accounts can use has full administrative rights
+    many: "{n} roles that programs or other accounts can use have full administrative rights"
+    evidence: "The role {name} has the AdministratorAccess policy. Anything allowed to use the role can do anything in the account."
+    remediation: aws.roles.reduce_admin_roles
+    framework: [PR.AA-05]
+
+  # -- 5. Public storage ----------------------------------------------------------
+  - id: AWS-SHR-001
+    family: external_sharing
+    service: s3
+    checks: [s3_bucket_public_access]
+    impact: 4
+    exposure: 5
+    noun: storage bucket
+    one: 1 storage bucket is open to the public
+    many: "{n} storage buckets are open to the public"
+    evidence: "The storage bucket {name} can be reached by anyone on the internet, with no sign-in."
+    remediation: aws.storage.close_public_buckets
+    framework: [PR.DS-01, PR.AA-05]
+
+  - id: AWS-SHR-002
+    family: external_sharing
+    service: s3
+    checks: [s3_bucket_policy_public_write_access, s3_bucket_public_write_acl]
+    impact: 5
+    exposure: 5
+    noun: storage bucket
+    one: 1 storage bucket can be written to by anyone on the internet
+    many: "{n} storage buckets can be written to by anyone on the internet"
+    evidence: "Anyone on the internet can add, replace or delete files in the storage bucket {name}."
+    remediation: aws.storage.close_public_buckets
+    framework: [PR.DS-01, PR.AA-05]
+
+  - id: AWS-SHR-003
+    family: external_sharing
+    service: s3
+    checks: [s3_bucket_public_list_acl]
+    impact: 3
+    exposure: 5
+    noun: storage bucket
+    one: 1 storage bucket lets anyone on the internet list its files
+    many: "{n} storage buckets let anyone on the internet list their files"
+    evidence: "Anyone on the internet can list every file name in the storage bucket {name}."
+    remediation: aws.storage.close_public_buckets
+    framework: [PR.DS-01]
+
+  - id: AWS-SHR-004
+    family: external_sharing
+    service: s3
+    checks: [s3_account_level_public_access_blocks]
+    impact: 3
+    exposure: 3
+    noun: setting
+    one: The account-wide block on public storage is switched off
+    many: The account-wide block on public storage is switched off
+    evidence: "The account-wide 'Block Public Access' setting is not fully on, so any one bucket can be made public by mistake."
+    remediation: aws.storage.block_public_access
+    framework: [PR.DS-01]
+
+  # -- 6. Activity records ----------------------------------------------------------
+  - id: AWS-LOG-001
+    family: logging_readiness
+    service: cloudtrail
+    checks: [cloudtrail_multi_region_enabled]
+    impact: 3
+    exposure: 3
+    noun: region
+    one: Account activity is not being recorded in 1 AWS region
+    many: "Account activity is not being recorded in {n} AWS regions"
+    evidence: "No activity trail is recording in {name}. AWS keeps 90 days of basic history by itself; after that there would be nothing to investigate with."
+    collapse: region
+    remediation: aws.logging.enable_trail
+    framework: [PR.PS-04, DE.AE-03]
+
+  - id: AWS-LOG-002
+    family: logging_readiness
+    service: cloudtrail
+    checks: [cloudtrail_log_file_validation_enabled]
+    impact: 2
+    exposure: 2
+    noun: activity trail
+    one: 1 activity trail does not protect its records against tampering
+    many: "{n} activity trails do not protect their records against tampering"
+    evidence: "The activity trail {name} has log file validation off, so an edited or deleted record could not be detected."
+    remediation: aws.logging.enable_validation
+    framework: [PR.PS-04]
+
+  - id: AWS-LOG-003
+    family: logging_readiness
+    service: cloudtrail
+    checks: [cloudtrail_logs_s3_bucket_is_not_publicly_accessible]
+    impact: 4
+    exposure: 5
+    noun: storage bucket
+    one: The storage bucket holding the account's activity records is public
+    many: "{n} storage buckets holding the account's activity records are public"
+    evidence: "The storage bucket {name}, where the account's activity records are kept, can be read by anyone on the internet."
+    remediation: aws.storage.close_public_buckets
+    framework: [PR.DS-01, PR.PS-04]
+
+  # -- 7. Access given to other accounts ------------------------------------------------
+  - id: AWS-OAU-001
+    family: oauth_grants
+    service: s3
+    checks: [s3_bucket_cross_account_access]
+    impact: 3
+    exposure: 3
+    noun: storage bucket
+    one: 1 storage bucket is shared with another AWS account
+    many: "{n} storage buckets are shared with other AWS accounts"
+    evidence: "The storage bucket {name} has a policy that lets a different AWS account reach it."
+    remediation: aws.sharing.review_cross_account
+    framework: [PR.AA-05]
+
+  - id: AWS-OAU-002
+    family: oauth_grants
+    service: iam
+    checks: [iam_role_cross_account_readonlyaccess_policy]
+    impact: 4
+    exposure: 3
+    noun: role
+    one: 1 role lets another AWS account read everything in this one
+    many: "{n} roles let other AWS accounts read everything in this one"
+    evidence: "The role {name} can be used from a different AWS account and holds the ReadOnlyAccess policy, which reads every service, including stored data."
+    remediation: aws.sharing.review_cross_account
+    framework: [PR.AA-05]
+
+  - id: AWS-OAU-003
+    family: oauth_grants
+    service: accessanalyzer
+    checks: [accessanalyzer_enabled]
+    impact: 2
+    exposure: 2
+    noun: region
+    one: The AWS feature that lists what is shared outside the account is off in 1 region
+    many: "The AWS feature that lists what is shared outside the account is off in {n} regions"
+    evidence: "IAM Access Analyzer is not switched on in {name}, so nothing is watching for resources shared outside the account there."
+    collapse: region
+    remediation: aws.sharing.enable_access_analyzer
+    framework: [PR.AA-05]

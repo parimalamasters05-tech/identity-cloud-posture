@@ -24,4 +24,8 @@ def normalize_snapshot(snapshot: Snapshot) -> NormalizedTenant:
         from icp.normalizers.microsoft import normalize as normalize_m365
 
         return normalize_m365(snapshot)
+    if snapshot.platform == Platform.AWS:
+        from icp.normalizers.aws import normalize as normalize_aws
+
+        return normalize_aws(snapshot)
     raise ValueError(f"No normalizer for platform {snapshot.platform}")

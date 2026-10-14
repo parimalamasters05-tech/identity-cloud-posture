@@ -160,3 +160,58 @@ services:
       - ./config:/work/config:ro
       - ${ICP_HOST_M365_KEY_FILE:?set ICP_HOST_M365_KEY_FILE in .env to the absolute host path of the Microsoft 365 private key}:/run/secrets/m365-key.pem:ro
     command: [collect-m365]
+
+  # --------------------------------------------------------------------------
+  # AWS (week 5): Prowler reads the account, collect-aws imports the result.
+  #
+  #   docker compose run --rm prowler        # the ONLY AWS service with network
+  #   docker compose run --rm collect-aws    # file in, encrypted snapshot out
+  #
+  # Prowler signs in with the access key of a user whose only right is to
+  # assume the assessment role (.env: AWS_ACCESS_KEY_ID, AWS_SECRET_ACCESS_KEY),
+  # then works as that role, which holds only SecurityAudit and ViewOnlyAccess.
+  # The image is pinned by digest to the version the check map was read from.
+  # --------------------------------------------------------------------------
+  prowler:
+    image: prowlercloud/prowler@sha256:1e5795706f6c2aedf5c2d404c73af6d3c0bc7a1db8add8d290bd5b41e8ef8425  # 5.45.0
+    read_only: true
+    cap_drop: [ALL]
+    security_opt:
+      - no-new-privileges:true
+    tmpfs:
+      - /tmp:size=256m,mode=1777
+      - /home/prowler/.cache:size=64m,uid=1000,gid=1000
+    env_file: [.env]
+    volumes:
+      - ./config/prowler_checks.json:/config/checks.json:ro
+      - ./prowler-output:/output
+    command:
+      - aws
+      - --role
+      # Not ':?' (required): compose checks every service's variables on every
+      # command, so a missing AWS setting would stop the Google and Microsoft
+      # services too. Unset, Prowler refuses the placeholder and names it.
+      - ${ICP_AWS_ROLE_ARN:-set-ICP_AWS_ROLE_ARN-in-.env}
+      - --external-id
+      - ${ICP_AWS_EXTERNAL_ID:-set-ICP_AWS_EXTERNAL_ID-in-.env}
+      - --checks-file
+      - /config/checks.json
+      - --output-formats
+      - json-ocsf
+      - --output-directory
+      - /output
+      - --output-filename
+      - prowler
+      - --no-banner
+      - --ignore-exit-code-3
+
+  collect-aws:
+    <<: *hardening
+    network_mode: none
+    volumes:
+      - ./snapshots:/work/snapshots
+      - ./output:/work/output
+      - ./config:/work/config:ro
+      - ./prowler-output:/work/prowler-output
+    env_file: [.env]
+    command: [collect-aws, --prowler-output, /work/prowler-output/prowler.ocsf.json]

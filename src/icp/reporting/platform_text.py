@@ -42,6 +42,15 @@ class PlatformText:
     #: Said after the request count, e.g. the sign-in request Microsoft needs.
     request_note: str = ""
     cover_name_source: str = ""
+    #: Replaces the request-count paragraph under "Read-only verification",
+    #: for a platform this tool does not contact itself (AWS, read by Prowler).
+    verification: str = ""
+
+    @property
+    def permission_nouns(self) -> str:
+        """'scopes', 'permissions', 'policies'."""
+        noun = self.permission_noun
+        return noun[:-1] + "ies" if noun.endswith("y") else noun + "s"
 
 
 GOOGLE = PlatformText(
@@ -158,8 +167,67 @@ MICROSOFT = PlatformText(
 )
 
 
+#: AWS is read by Prowler, an open-source scanner, not by this tool's own
+#: collectors (the brief: wrap existing tooling, do not rebuild it). The wording
+#: says so: the read-only claim rests on the role's policies and on CloudTrail,
+#: not on this tool's request guard, which never contacts AWS.
+AWS = PlatformText(
+    name="AWS",
+    environment="your AWS account",
+    console="the AWS Management Console",
+    examined=(
+        "The sign-in protection on the account's root user and on each person's AWS login",
+        "Which users, groups and roles hold full administrative rights",
+        "Logins and access keys that have not been used for a long time, and keys never replaced",
+        "Roles that other AWS accounts or services are allowed to use",
+        "Storage buckets that the public can read or write, and the settings that should prevent it",
+        "Whether the activity records needed to investigate an incident are being kept",
+    ),
+    not_examined=(
+        "The contents of any file or database. Settings and account details only.",
+        "Servers, networks, application code, or anything outside identity and storage exposure",
+        "Any attempt to break in, test passwords, or exploit a weakness",
+        "Ongoing monitoring: this is a snapshot of one moment",
+        "Formal certification or attestation against any framework",
+    ),
+    method_opening=(
+        "Read-only. Settings were read with Prowler, an open-source assessment tool, through a "
+        "role limited to AWS's own read-only audit policies, under a signed authorization letter."
+    ),
+    retrieval=(
+        "Configuration was read by Prowler, an open-source assessment tool, using a role in your "
+        "account that holds only the two AWS-managed policies listed below. This report's tool "
+        "then read Prowler's results; it did not contact AWS itself."
+    ),
+    permissions_heading="Policies on the assessment role",
+    permission_noun="policy",
+    audit_log="AWS CloudTrail (CloudTrail > Event history, filtered by the assessment role's name)",
+    licence_note=(
+        "Only identity and storage-exposure settings were examined in AWS; this is not a full "
+        "review of the account. A check Prowler did not run is recorded as a coverage note "
+        "rather than omitted."
+    ),
+    anonymous_label="",
+    write_capable=lambda _policies: [],
+    family_titles={
+        CheckFamily.MFA_COVERAGE: "Second sign-in step coverage",
+        CheckFamily.EXTERNAL_SHARING: "Public storage exposure",
+        CheckFamily.OAUTH_GRANTS: "Access given to other accounts",
+    },
+    cover_name_source="the AWS account alias",
+    verification=(
+        "This report's tool made no requests to AWS: it read the results file Prowler wrote. "
+        "Prowler read the account through the assessment role, whose two AWS-managed policies "
+        "allow reading and listing only, so AWS itself would have refused any attempt to change "
+        "something. We recommend you confirm this independently in"
+    ),
+)
+
+_BY_PLATFORM = {Platform.MICROSOFT_365: MICROSOFT, Platform.AWS: AWS}
+
+
 def for_platform(platform: Platform) -> PlatformText:
-    return MICROSOFT if platform == Platform.MICROSOFT_365 else GOOGLE
+    return _BY_PLATFORM.get(platform, GOOGLE)
 
 
 def _join(names: list[str]) -> str:
@@ -177,18 +245,32 @@ def combined(platforms: list[Platform]) -> PlatformText:
 
     texts = [for_platform(p) for p in platforms]
     names = _join([t.name for t in texts])
+    # AWS has no staff directory, and is read by Prowler: say so on the cover
+    # rather than let the Workspace and Microsoft wording claim it.
+    with_aws = Platform.AWS in platforms
+    staffed = _join([t.name for t in texts if t is not AWS]) if with_aws else names
+    aws_lines = (
+        ("In AWS: the root user, users and roles with full control, and unused or old access keys",)
+        if with_aws
+        else ()
+    )
     return replace(
         texts[0],
         name=names,
         environment=f"your {names} environments",
         console=_join([t.console for t in texts]),
         examined=(
-            f"Your staff directories in {names}: accounts, guests and groups",
+            f"Your staff directories in {staffed}: accounts, guests and groups",
             "Who holds administrator rights, and which rights",
             "Whether each account uses a second sign-in step, and whether it can resist phishing",
             "Outside applications that staff or administrators have given access to",
             "Applications that hold access on their own, and how they sign in",
-            "Files and folders that anyone with the link can open, and the sharing settings behind them",
+            *aws_lines,
+            (
+                "Files, folders and storage buckets that the public can open, and the settings behind them"
+                if with_aws
+                else "Files and folders that anyone with the link can open, and the sharing settings behind them"
+            ),
             "Whether the records needed to investigate an incident are being kept",
         ),
         not_examined=(
@@ -201,6 +283,12 @@ def combined(platforms: list[Platform]) -> PlatformText:
         method_opening=(
             f"Read-only. Settings were read through the official administrative interfaces of {names}, "
             "under a signed authorization letter."
+            + (
+                " In AWS the reading was done by Prowler, an open-source assessment tool, through a "
+                "role limited to AWS's own read-only audit policies."
+                if with_aws
+                else ""
+            )
         ),
         family_titles={CheckFamily.MFA_COVERAGE: "Second sign-in step coverage"},
         cover_name_source="",

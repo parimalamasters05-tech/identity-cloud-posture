@@ -77,11 +77,11 @@ jobs:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
 
       - name: Assert no client data is tracked
-        # snapshots/ and output/ hold client identity data. Only .gitkeep may
+        # snapshots/, output/ and prowler-output/ hold client data. Only .gitkeep may
         # ever appear there. Checked in CI as well as pre-commit, because
         # pre-commit can be bypassed with --no-verify.
         run: |
-          tracked=$(git ls-files snapshots output | grep -v '\.gitkeep$' || true)
+          tracked=$(git ls-files snapshots output prowler-output | grep -v '\.gitkeep$' || true)
           if [ -n "$tracked" ]; then
             echo "::error::Client data is tracked in git:"
             echo "$tracked"

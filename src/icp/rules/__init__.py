@@ -7,6 +7,7 @@ construction: they read only the normalized tenant view, never provider JSON.
 # Imported for their registration side effects. Order is irrelevant.
 from icp.rules import (  # noqa: F401
     admin_role_sprawl,
+    aws,
     external_sharing,
     logging_readiness,
     mfa_coverage,

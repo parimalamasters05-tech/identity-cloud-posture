@@ -112,3 +112,23 @@ effort_hours:
   m365.apps.revoke_departed: {base: 0.5, per_item: 0.25, cap: 3.0}
   m365.apps.tighten_consent: 0.5
   m365.apps.restrict_registration: 0.25
+
+  # -- AWS (findings come from Prowler; see config/prowler_check_map.yaml) ---
+  aws.mfa.root: 0.5
+  aws.mfa.root_hardware: 1.0
+  aws.mfa.users: {base: 0.5, per_item: 0.25, cap: 8.0}
+  # Finding what uses the key is the work, not deleting it.
+  aws.admin.remove_root_keys: 2.0
+  aws.admin.stop_using_root: 2.0
+  aws.admin.reduce_admin_users: {base: 0.5, per_item: 0.5, cap: 4.0}
+  aws.admin.fix_wildcard_policies: {base: 0.5, per_item: 1.0, cap: 6.0}
+  aws.accounts.remove_unused_logins: {base: 0.25, per_item: 0.1, cap: 4.0}
+  aws.accounts.remove_unused_keys: {base: 0.25, per_item: 0.25, cap: 4.0}
+  aws.accounts.rotate_keys: {base: 0.5, per_item: 0.5, cap: 8.0}
+  aws.roles.reduce_admin_roles: {base: 0.5, per_item: 0.5, cap: 4.0}
+  aws.storage.close_public_buckets: {base: 0.25, per_item: 0.25, cap: 8.0}
+  aws.storage.block_public_access: 0.5
+  aws.logging.enable_trail: 1.0
+  aws.logging.enable_validation: 0.25
+  aws.sharing.review_cross_account: {base: 0.5, per_item: 0.5, cap: 6.0}
+  aws.sharing.enable_access_analyzer: 0.5

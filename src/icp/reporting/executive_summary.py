@@ -15,7 +15,7 @@ import re
 from collections.abc import Callable
 from dataclasses import dataclass
 
-from icp.models.enums import CheckFamily, Severity
+from icp.models.enums import CheckFamily, Platform, Severity
 from icp.models.finding import Finding
 from icp.normalizers.base import NormalizedTenant
 from icp.reporting.plain import count, duration, lower_first, verb
@@ -290,16 +290,27 @@ def build(
     )
 
 
+def _aws_account(tenant: NormalizedTenant) -> str:
+    """'your AWS account 111122223333 ("lab")'."""
+    number = tenant.coverage.get("account_id") or tenant.tenant_id
+    alias = f' ("{tenant.organization_name}")' if tenant.organization_name else ""
+    return f"your AWS account {number}{alias}"
+
+
 def _opening(tenant: NormalizedTenant, findings: list[Finding], rating: str) -> str:
     users = len(tenant.active_users)
     apps = len({g.client_id for g in tenant.grants if not g.is_first_party})
     critical = sum(1 for f in findings if f.severity == Severity.CRITICAL)
     high = sum(1 for f in findings if f.severity == Severity.HIGH)
 
-    parts = [
-        f"We examined the identity and access configuration of "
-        f"{for_platform(tenant.platform).environment}, covering {users} active staff accounts"
-    ]
+    if tenant.platform == Platform.AWS:
+        # No staff directory to count: Prowler reports on resources.
+        parts = [f"We examined the identity and storage settings of {_aws_account(tenant)}"]
+    else:
+        parts = [
+            f"We examined the identity and access configuration of "
+            f"{for_platform(tenant.platform).environment}, covering {users} active staff accounts"
+        ]
     if apps:
         parts.append(f" and {apps} connected third-party applications")
     parts.append(". The assessment was read-only: nothing in your environment was changed at any point. ")
@@ -419,13 +430,17 @@ def build_combined(
     high = sum(1 for f in actionable if f.severity == Severity.HIGH)
 
     text = combined([t.platform for t in tenants])
-    per_platform = ", ".join(f"{len(t.active_users)} in {for_platform(t.platform).name}" for t in tenants)
-    users = sum(len(t.active_users) for t in tenants)
-    apps = sum(len({g.client_id for g in t.grants if not g.is_first_party}) for t in tenants)
+    # AWS has no staff directory to count; it is named as an account instead.
+    staffed = [t for t in tenants if t.platform != Platform.AWS]
+    clouds = [t for t in tenants if t.platform == Platform.AWS]
+    per_platform = ", ".join(f"{len(t.active_users)} in {for_platform(t.platform).name}" for t in staffed)
+    users = sum(len(t.active_users) for t in staffed)
+    apps = sum(len({g.client_id for g in t.grants if not g.is_first_party}) for t in staffed)
     opening = (
         f"We examined the identity and access configuration of {text.environment}, covering "
         f"{users} active staff accounts ({per_platform})"
         + (f" and {apps} connected third-party applications" if apps else "")
+        + "".join(f", and the identity and storage settings of {_aws_account(t)}" for t in clouds)
         + ". The assessment was read-only: nothing in your environments was changed at any point. "
         + _verdict(critical, high, rating)
     )

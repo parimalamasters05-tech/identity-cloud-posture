@@ -9,6 +9,9 @@ snapshots/*
 !snapshots/.gitkeep
 output/*
 !output/.gitkeep
+# Prowler's raw AWS results, before import (collect-aws deletes them after).
+prowler-output/*
+!prowler-output/.gitkeep
 
 # The same client data by file type, wherever it lands -- a report saved to the
 # wrong folder, a snapshot copied for debugging. The directory rules above are
