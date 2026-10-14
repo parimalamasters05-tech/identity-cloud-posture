@@ -144,6 +144,12 @@ def import_prowler(
     try:
         data = json.loads(Path(path).read_text("utf-8-sig"))
     except (OSError, json.JSONDecodeError) as exc:
+        if isinstance(exc, json.JSONDecodeError) and exc.msg == "Extra data":
+            raise ProwlerImportError(
+                f"{path.name} holds more than one Prowler run: Prowler adds to an existing results "
+                "file instead of replacing it. Delete prowler.ocsf.json and prowler.log from the "
+                "prowler-output folder and scan again."
+            ) from exc
         raise ProwlerImportError(f"Could not read Prowler output {path.name}: {exc}") from exc
     if not isinstance(data, list) or not all(isinstance(i, dict) for i in data):
         raise ProwlerImportError(

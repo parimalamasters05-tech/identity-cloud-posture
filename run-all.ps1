@@ -45,11 +45,42 @@ foreach ($line in Get-Content ".env") {
 }
 function IsSet([string]$name) { return $settings.ContainsKey($name) -and $settings[$name] -ne "" }
 
+# Docker Compose prefers a variable already set in this terminal over .env.
+# Seen live: a VS Code terminal opened before the AWS key was replaced kept the
+# old key, and every scan failed with "InvalidClientTokenId" although .env was
+# right. For this script's run only, .env wins; values are never printed.
+foreach ($name in $settings.Keys) {
+    $inTerminal = [Environment]::GetEnvironmentVariable($name, "Process")
+    if ($inTerminal -and $inTerminal -ne $settings[$name]) {
+        Write-Host "Note: this terminal had a different $name than .env; using the value in .env." -ForegroundColor Yellow
+        [Environment]::SetEnvironmentVariable($name, $null, "Process")
+    }
+}
+
 function Step([string]$title, [string[]]$compose) {
     Write-Host ""
     Write-Host "== $title ==" -ForegroundColor Cyan
-    & docker compose run --rm @compose
-    return ($LASTEXITCODE -eq 0)
+    # Docker writes progress to stderr, which Windows PowerShell 5.1 turns into
+    # errors when output is captured; success is judged by the exit code only.
+    $ErrorActionPreference = "Continue"
+    if ($compose[0] -ne "prowler") {
+        & docker compose run --rm @compose
+        return ($LASTEXITCODE -eq 0)
+    }
+    # Prowler prints every read AWS refused (an organization policy, say) as a
+    # red ERROR line. They are expected, are kept in Prowler's log file, and
+    # collect-aws reports them; on screen, one line says how many there were.
+    $refused = 0
+    & docker compose run --rm @compose 2>&1 | ForEach-Object {
+        $line = "$_"
+        if ($line -match "is not authorized to perform: ") { $refused++ }
+        elseif ($line.Trim() -ne "") { Write-Host $line }
+    }
+    $code = $LASTEXITCODE
+    if ($refused) {
+        Write-Host "  ($refused reads were refused by AWS, most likely by an organization policy; the import step lists them and the report marks those checks as not assessed)" -ForegroundColor Yellow
+    }
+    return ($code -eq 0)
 }
 
 $results = [ordered]@{}
@@ -68,6 +99,9 @@ else { $results["Microsoft 365"] = "not configured" }
 
 if ($Skip -contains "aws") { $results["AWS"] = "skipped" }
 elseif (IsSet "ICP_AWS_ROLE_ARN") {
+    # Prowler appends to an existing results file, so leftovers from an
+    # interrupted run would make this one unreadable. Start clean.
+    Remove-Item -Force -ErrorAction SilentlyContinue "prowler-output/prowler.ocsf.json", "prowler-output/prowler.log"
     $ok = Step "AWS: Prowler scan" @("prowler")
     if ($ok -and (Test-Path "prowler-output\prowler.ocsf.json")) {
         $ok = Step "AWS: import Prowler results" @("collect-aws")

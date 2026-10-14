@@ -388,3 +388,13 @@ def test_admin_rights_are_not_moved_into_a_permanent_group():
     steps = " ".join(RemediationLibrary.load_default().entries["aws.admin.reduce_admin_users"].steps)
     assert "only when needed" in steps and "IAM Identity Center" in steps
     assert "put them in an administrators group" not in steps
+
+
+def test_two_prowler_runs_in_one_file_are_refused_with_the_way_out(tmp_path):
+    """Seen live: Prowler appends, so an interrupted run left a file that the
+    next scan added a second list to."""
+    text = FIXTURE.read_text("utf-8")
+    doubled = tmp_path / "prowler.ocsf.json"
+    doubled.write_text(text + text, encoding="utf-8")
+    with pytest.raises(ProwlerImportError, match="more than one Prowler run"):
+        import_prowler(doubled)
