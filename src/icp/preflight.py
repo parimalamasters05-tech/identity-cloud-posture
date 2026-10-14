@@ -261,13 +261,16 @@ def _token_error(settings: Settings, scopes: tuple[str, ...]) -> str | None:
     import httplib2
 
     from icp.security.credentials import load_google_credentials
+    from icp.security.readonly import token_guard
 
     credentials, _ = load_google_credentials(
         subject=settings.admin_subject, scopes=scopes, key_file=settings.google_key_file
     )
     try:
         credentials.refresh(
-            google_auth_httplib2.Request(httplib2.Http(timeout=settings.request_timeout_seconds))
+            google_auth_httplib2.Request(
+                token_guard(httplib2.Http(timeout=settings.request_timeout_seconds))
+            )
         )
     except Exception as exc:
         return f"{type(exc).__name__}: {exc}"
@@ -336,7 +339,8 @@ def check_api_access(settings: Settings) -> list[ProbeResult]:
     results: list[ProbeResult] = []
 
     for probe in PROBES:
-        assert probe.call is not None
+        if probe.call is None:  # a declaration error, never skipped silently
+            raise ValueError(f"Probe {probe.name!r} has no call")
         try:
             probe.call(client, settings)
             results.append(ProbeResult(probe, True, "reachable"))

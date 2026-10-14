@@ -314,7 +314,7 @@ class ReportRenderer:
             ],
             "findings_by_family": by_family,
             "applications": [],
-            "token_log": None,
+            "token_log": None,  # nosec B105 - a report section, not a credential
             "appendix_by_family": appendix_by_family,
             "passed_areas": passed_areas,
             "coverage_notes": [self._finding_context(f) for f in coverage_notes],

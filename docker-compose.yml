@@ -181,7 +181,14 @@ services:
     tmpfs:
       - /tmp:size=256m,mode=1777
       - /home/prowler/.cache:size=64m,uid=1000,gid=1000
-    env_file: [.env]
+    # Only the three AWS values, never the whole .env: this is a third-party
+    # image, and .env also holds ICP_SNAPSHOT_KEY (which decrypts every saved
+    # snapshot) and the Google and Microsoft settings. Compose reads .env for
+    # these substitutions; the container sees nothing else from it.
+    environment:
+      AWS_ACCESS_KEY_ID: ${AWS_ACCESS_KEY_ID:-}
+      AWS_SECRET_ACCESS_KEY: ${AWS_SECRET_ACCESS_KEY:-}
+      AWS_DEFAULT_REGION: ${AWS_DEFAULT_REGION:-us-east-1}
     volumes:
       - ./config/prowler_checks.json:/config/checks.json:ro
       - ./prowler-output:/output

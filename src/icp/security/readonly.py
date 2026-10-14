@@ -106,6 +106,52 @@ def _strip_query(uri: str) -> str:
     return uri.split("?", 1)[0]
 
 
+#: The only address a POST may go to beneath the guard: Google issues the
+#: access token there. It changes nothing in the tenant.
+GOOGLE_TOKEN_ENDPOINT = "https://oauth2.googleapis.com/token"  # noqa: S105  # nosec B105 - an address, not a secret
+
+
+class TokenOrReadHttp:
+    """Inner guard, on the raw connection under the authorizing layer.
+
+    ReadOnlyHttp sits on top and checks and records every API call. Beneath
+    it, Google's auth library also sends its token request, on the raw
+    connection, where the outer guard never sees it. This lets through reads
+    (the API calls the outer guard already passed) and a POST to Google's
+    token endpoint only, so that connection cannot be used for anything else.
+    """
+
+    def __init__(self, inner: Any, token_endpoint: str = GOOGLE_TOKEN_ENDPOINT) -> None:
+        self._inner = inner
+        self._token_endpoint = token_endpoint
+
+    def request(
+        self,
+        uri: str,
+        method: str = "GET",
+        body: Any = None,
+        headers: dict[str, str] | None = None,
+        *args: Any,
+        **kwargs: Any,
+    ) -> Any:
+        verb = (method or "GET").upper()
+        is_token = verb == "POST" and _strip_query(uri) == self._token_endpoint
+        if verb not in SAFE_METHODS and not is_token and not _is_permitted_batch(verb, uri, body):
+            raise WriteAttemptBlocked(
+                f"Blocked {verb} to {_strip_query(uri)} beneath the guard. Only reads and the "
+                "token request may use this connection."
+            )
+        return self._inner.request(uri, verb, body, headers, *args, **kwargs)
+
+    def __getattr__(self, name: str) -> Any:
+        return getattr(self._inner, name)
+
+
+def token_guard(inner: Any) -> TokenOrReadHttp:
+    """Wrap a raw connection used for Google's token request."""
+    return inner if isinstance(inner, TokenOrReadHttp) else TokenOrReadHttp(inner)
+
+
 def guard(inner: Any, recorder: list[ApiCallRecord] | None = None) -> ReadOnlyHttp:
     """Wrap a transport object. Always call this; never pass a raw transport."""
     if isinstance(inner, ReadOnlyHttp):
@@ -131,7 +177,9 @@ __all__ = [
     "SAFE_METHODS",
     "UNSAFE_METHODS",
     "ReadOnlyHttp",
+    "TokenOrReadHttp",
     "WriteAttemptBlocked",
     "assert_no_writes",
     "guard",
+    "token_guard",
 ]

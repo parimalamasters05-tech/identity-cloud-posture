@@ -16,7 +16,7 @@ from typing import Any
 from icp.config import Settings
 from icp.models.snapshot import ApiCallRecord
 from icp.security.credentials import load_google_credentials
-from icp.security.readonly import WriteAttemptBlocked, assert_no_writes, guard
+from icp.security.readonly import WriteAttemptBlocked, assert_no_writes, guard, token_guard
 from icp.security.scopes import assert_read_only
 
 logger = logging.getLogger(__name__)
@@ -93,7 +93,9 @@ class GoogleClient:
         credentials = self._authorize()
         try:
             credentials.refresh(
-                google_auth_httplib2.Request(httplib2.Http(timeout=self.settings.request_timeout_seconds))
+                google_auth_httplib2.Request(
+                    token_guard(httplib2.Http(timeout=self.settings.request_timeout_seconds))
+                )
             )
         except Exception as exc:
             if "unauthorized_client" in str(exc):
@@ -149,7 +151,8 @@ class GoogleClient:
         if subject:
             credentials = credentials.with_subject(subject)
 
-        base_http = httplib2.Http(timeout=self.settings.request_timeout_seconds)
+        # Beneath the authorizing layer: reads and the token request only.
+        base_http = token_guard(httplib2.Http(timeout=self.settings.request_timeout_seconds))
         authorized = google_auth_httplib2.AuthorizedHttp(credentials, http=base_http)
 
         # Every request from here on passes through the guard. The recorder is
@@ -199,7 +202,7 @@ class GoogleClient:
                 label = f"network error {type(exc).__name__}"
 
             # Retry jitter, not a security decision -- `random` is correct here.
-            sleep_for = wait if wait is not None else random.uniform(0, min(delay, 32.0))  # noqa: S311
+            sleep_for = wait if wait is not None else random.uniform(0, min(delay, 32.0))  # noqa: S311  # nosec B311 - retry jitter, not a secret
             logger.warning(
                 "Retryable failure (%s), attempt %d/%d, sleeping %.1fs",
                 label,

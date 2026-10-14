@@ -138,6 +138,32 @@ def client_assertion(creds: GraphCredentials, *, now: float | None = None) -> st
 Opener = Callable[..., Any]
 
 
+class _RefuseRedirects(urllib.request.HTTPRedirectHandler):
+    """Never follow a redirect.
+
+    urllib follows them by default, and a followed redirect is a request
+    check_request never saw: Graph answers a file-content request with a
+    redirect to a download address on another host. The tool asks only for
+    metadata, so a redirect is unexpected and is refused, not followed.
+    """
+
+    def redirect_request(  # type: ignore[override]
+        self, req: urllib.request.Request, fp: Any, code: int, msg: str, headers: Any, newurl: str
+    ) -> None:
+        target = urllib.parse.urlsplit(newurl)
+        raise GraphError(
+            code,
+            "redirect_refused",
+            f"Microsoft redirected the request to {target.netloc}{target.path}; redirects are not "
+            "followed, because the tool only reads Graph metadata.",
+        )
+
+
+#: Every request goes through this opener: HTTPS certificate checks as
+#: standard, redirects refused.
+_OPENER = urllib.request.build_opener(_RefuseRedirects)
+
+
 class GraphReadOnly:
     """Microsoft Graph client that can only read.
 
@@ -164,7 +190,7 @@ class GraphReadOnly:
         #: Repeats of a request that timed out or was throttled. Every repeat
         #: is the same read again; counted so the run's request total is honest.
         self.retries = 0
-        self._open = opener or urllib.request.urlopen
+        self._open = opener or _OPENER.open
         self._timeout = timeout
         self._attempts = max(1, attempts)
         self._sleep = sleep
