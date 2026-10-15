@@ -263,7 +263,9 @@ rules:
     # overstated it (review of 14 Oct).
     one: No activity trail (CloudTrail) is recording in 1 AWS region
     many: "No activity trail (CloudTrail) is recording in {n} AWS regions"
-    evidence: "No activity trail is recording in {name}. AWS keeps 90 days of basic history by itself; after that there would be nothing to investigate with."
+    # Prowler's check passes on any logging trail, single- or multi-region,
+    # despite its name (reviewers twice read it as "no multi-region trail").
+    evidence: "No activity trail, single-region or multi-region, is recording in {name}. AWS keeps 90 days of basic history by itself; after that there would be nothing to investigate with."
     collapse: region
     remediation: aws.logging.enable_trail
     framework: [PR.PS-04, DE.AE-03]

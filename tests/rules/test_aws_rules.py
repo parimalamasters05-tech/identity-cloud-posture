@@ -398,3 +398,10 @@ def test_two_prowler_runs_in_one_file_are_refused_with_the_way_out(tmp_path):
     doubled.write_text(text + text, encoding="utf-8")
     with pytest.raises(ProwlerImportError, match="more than one Prowler run"):
         import_prowler(doubled)
+
+
+def test_the_trail_evidence_says_any_trail_would_have_counted(seeded):
+    """Prowler's check is named multi_region_enabled but passes on any logging
+    trail; reviewers twice read the finding as "no multi-region trail"."""
+    _, _, _, by_rule = seeded
+    assert "single-region or multi-region" in by_rule["AWS-LOG-001"][0].evidence[0].summary

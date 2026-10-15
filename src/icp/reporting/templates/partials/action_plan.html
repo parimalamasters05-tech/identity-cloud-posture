@@ -5,6 +5,9 @@
     The most serious items come first. Among items that are equally serious, the quickest come
     first, so a short piece of work that removes a lot of risk is never left waiting behind a
     long one. Each item names who should own it and roughly how long it takes.
+    {% if total_findings > action_plan | length %}This is a shortlist of the {{ action_plan | length }} most
+    important actions, not the whole list: all {{ total_findings }} findings, each with how to fix it, are
+    in the detailed findings.{% endif %}
   </p>
 
   <table>

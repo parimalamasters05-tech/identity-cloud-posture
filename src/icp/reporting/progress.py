@@ -85,4 +85,6 @@ def build(
         "counts": {key: summary[key] for key, _ in _GROUPS},
         "risk": summary["risk"],
         "rows": rows,
+        # Open in both reviews: the appendix says so beside this review's date.
+        "open_before": [f.finding_id for f in delta.open_in_both],
     }

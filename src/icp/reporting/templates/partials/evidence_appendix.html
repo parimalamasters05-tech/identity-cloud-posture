@@ -33,7 +33,8 @@
         {% if combined %}<tr><th>Platform</th><td>{{ platform_name(f) }}</td></tr>{% endif %}
         <tr><th>Rule</th><td class="mono">{{ f.rule_id }}</td></tr>
         <tr><th>Remediation key</th><td class="mono">{{ f.remediation_key }}</td></tr>
-        <tr><th>First seen</th><td>{{ f.first_seen.strftime('%d %B %Y') }}</td></tr>
+        <tr><th>Observed</th><td>{{ f.first_seen.strftime('%d %B %Y') }} (this review){% if f.finding_id in seen_before %};
+          also open at the previous review, {{ seen_before[f.finding_id].strftime('%d %B %Y') }}{% endif %}</td></tr>
       </table>
 
       <h4>Affected entities ({{ f.entity_count }})</h4>

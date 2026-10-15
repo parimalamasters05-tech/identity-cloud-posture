@@ -74,3 +74,28 @@ def test_the_two_snapshots_must_be_in_order_and_the_same_platform(pair, tenant, 
         build(after, before)
     with pytest.raises(ValueError, match="same platform"):
         build((tenant, result), after)
+
+
+def test_the_appendix_says_a_finding_was_also_open_at_the_previous_review(pair):
+    """Review of 14 Oct: the appendix said "First seen" with this review's
+    date, beside a progress page calling the same finding unchanged."""
+    _, (tenant, result) = pair
+    renderer = ReportRenderer()
+    progress = build(*pair)
+    html = renderer.env.get_template("report.html").render(
+        **renderer.build_context(tenant, result, client_name="Lab", assessor="T", progress=[progress])
+    )
+    text = re.sub(r"\s+", " ", re.sub(r"<[^>]+>", " ", html))
+    assert "First seen" not in text
+    assert "(this review); also open at the previous review" in text
+
+
+def test_the_action_plan_says_it_is_a_shortlist(pair):
+    _, (tenant, result) = pair
+    renderer = ReportRenderer()
+    context = renderer.build_context(tenant, result, client_name="Lab", assessor="T")
+    text = re.sub(
+        r"\s+", " ", re.sub(r"<[^>]+>", " ", renderer.env.get_template("report.html").render(**context))
+    )
+    if context["total_findings"] > len(context["action_plan"]):
+        assert f"shortlist of the {len(context['action_plan'])} most important actions" in text

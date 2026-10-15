@@ -194,6 +194,7 @@ class ReportRenderer:
             "combined": False,
             # Before-and-after, when the run was given an earlier snapshot.
             "progress": progress or [],
+            "seen_before": _seen_before(progress),
             "parts": [self._part(tenant, engagement_ref)],
         }
 
@@ -345,6 +346,7 @@ class ReportRenderer:
             "combined": True,
             # Before-and-after, when the run was given an earlier snapshot.
             "progress": progress or [],
+            "seen_before": _seen_before(progress),
             "parts": parts,
         }
 
@@ -694,6 +696,15 @@ def _scope_statement(tenant: NormalizedTenant, engagement_ref: str = "") -> dict
         "point_in_time": tenant.snapshot.collected_at,
         "degraded": list(tenant.snapshot.degraded_collectors()),
     }
+
+
+def _seen_before(progress: list[dict[str, Any]] | None) -> dict[str, datetime]:
+    """finding id -> date of the earlier review it was also open in.
+
+    The appendix once showed only "First seen" with this review's date, beside a
+    progress page calling the same finding unchanged since an earlier review.
+    """
+    return {fid: item["previous_at"] for item in progress or [] for fid in item.get("open_before", [])}
 
 
 def _slug(value: str) -> str:
