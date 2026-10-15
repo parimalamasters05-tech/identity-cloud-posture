@@ -126,6 +126,8 @@ effort_hours:
   aws.accounts.remove_unused_keys: {base: 0.25, per_item: 0.25, cap: 4.0}
   aws.accounts.rotate_keys: {base: 0.5, per_item: 0.5, cap: 8.0}
   aws.roles.reduce_admin_roles: {base: 0.5, per_item: 0.5, cap: 4.0}
+  # Finding the code that runs as the role is most of the work.
+  aws.roles.reduce_service_role_admin: {base: 0.5, per_item: 1.0, cap: 6.0}
   aws.storage.close_public_buckets: {base: 0.25, per_item: 0.25, cap: 8.0}
   aws.storage.block_public_access: 0.5
   aws.logging.enable_trail: 1.0

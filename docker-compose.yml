@@ -191,6 +191,11 @@ services:
       AWS_DEFAULT_REGION: ${AWS_DEFAULT_REGION:-us-east-1}
     volumes:
       - ./config/prowler_checks.json:/config/checks.json:ro
+      # This tool's own checks (prowler-checks/), placed read-only where Prowler
+      # keeps its built-in ones: its --checks-folder option would copy them into
+      # the image, which this read-only container rightly refuses.
+      - ./prowler-checks/iam_icp_service_role_admin:/home/prowler/prowler/providers/aws/services/iam/iam_icp_service_role_admin:ro
+      - ./prowler-checks/iam_icp_assessment_role_policies:/home/prowler/prowler/providers/aws/services/iam/iam_icp_assessment_role_policies:ro
       - ./prowler-output:/output
     command:
       - aws

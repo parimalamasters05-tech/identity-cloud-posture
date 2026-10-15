@@ -60,13 +60,23 @@ def _refused_regions(snapshot: Snapshot, rows: list[dict[str, Any]]) -> list[Cov
 #: services use (seen live: a Lambda role with AdministratorAccess was not
 #: reported). Recorded as partial coverage, so the family is never shown as
 #: "no issues found" for every role.
+_SERVICE_ROLE_CHECK = "iam_icp_service_role_admin"
+_ASSESSMENT_ROLE_CHECK = "iam_icp_assessment_role_policies"
+
+
+def _assessment_role(rows: list[dict[str, Any]]) -> dict[str, str] | None:
+    """The custom check's reading of the role the scan ran through, if it ran."""
+    row = next((r for r in rows if r["check_id"] == _ASSESSMENT_ROLE_CHECK), None)
+    return {"status": row["status"], "detail": row["detail"]} if row else None
+
+
 _SERVICE_ROLES_UNCHECKED = CoverageGap(
     key="aws-service-roles-unchecked",
     families=(CheckFamily.SERVICE_ACCOUNT_PRIVILEGE,),
     reason=(
-        "Only roles that people or other AWS accounts can switch into were checked. Roles that "
-        "AWS services use (for example a Lambda function's or a server's role) were not checked "
-        "for full administrative rights: Prowler leaves them out."
+        "This scan did not include the check for roles that AWS services use (for example a "
+        "Lambda function's or a server's role), so those were not checked for full "
+        "administrative rights. Scans from this version of the tool include it."
     ),
 )
 
@@ -83,7 +93,15 @@ def normalize(snapshot: Snapshot) -> NormalizedTenant:
         # The alias is the only name an AWS account has; many have none.
         organization_name=account.get("alias") or None,
         primary_domain=f"AWS account {account_id}",
-        coverage_gaps=[*_refused_regions(snapshot, rows), _SERVICE_ROLES_UNCHECKED],
+        coverage_gaps=[
+            *_refused_regions(snapshot, rows),
+            # Only for a scan without the custom check (it always returns a result).
+            *(
+                []
+                if any(r["check_id"] == _SERVICE_ROLE_CHECK for r in rows)
+                else [_SERVICE_ROLES_UNCHECKED]
+            ),
+        ],
         coverage={
             "account_id": account_id,
             "prowler_version": prowler.get("prowler_version"),
@@ -91,5 +109,6 @@ def normalize(snapshot: Snapshot) -> NormalizedTenant:
             "results_total": len(rows),
             "results_failed": sum(1 for r in rows if r.get("status") == "FAIL"),
             "degraded_collectors": list(snapshot.degraded_collectors()),
+            "assessment_role": _assessment_role(rows),
         },
     )

@@ -207,8 +207,7 @@ AWS = PlatformText(
     licence_note=(
         "Only identity and storage-exposure settings were examined in AWS; this is not a full "
         "review of the account. A check Prowler did not run is recorded as a coverage note "
-        "rather than omitted. Roles used by AWS services (for example a Lambda function's or "
-        "a server's role) were not checked for full administrative rights: Prowler leaves them out."
+        "rather than omitted."
     ),
     anonymous_label="",
     write_capable=lambda _policies: [],

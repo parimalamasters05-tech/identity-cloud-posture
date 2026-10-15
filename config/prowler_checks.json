@@ -6,6 +6,8 @@
     "cloudtrail_multi_region_enabled",
     "iam_avoid_root_usage",
     "iam_customer_attached_policy_no_administrative_privileges",
+    "iam_icp_assessment_role_policies",
+    "iam_icp_service_role_admin",
     "iam_inline_policy_no_administrative_privileges",
     "iam_no_root_access_key",
     "iam_role_administratoraccess_policy",

@@ -32,7 +32,7 @@
         ],
         "notes": "",
         "compliance": {},
-        "scan_id": "01a1261d-0b00-7935-a5a4-0b666e8a7a6f",
+        "scan_id": "01a1261d-0b00-7e3a-9cee-ef33385d81ea",
         "provider_uid": "111122223333",
         "provider": "aws"
     },
@@ -136,7 +136,7 @@
         ],
         "notes": "",
         "compliance": {},
-        "scan_id": "01a1261d-0b00-7935-a5a4-0b666e8a7a6f",
+        "scan_id": "01a1261d-0b00-7e3a-9cee-ef33385d81ea",
         "provider_uid": "111122223333",
         "provider": "aws"
     },
@@ -240,7 +240,7 @@
         ],
         "notes": "",
         "compliance": {},
-        "scan_id": "01a1261d-0b00-7935-a5a4-0b666e8a7a6f",
+        "scan_id": "01a1261d-0b00-7e3a-9cee-ef33385d81ea",
         "provider_uid": "111122223333",
         "provider": "aws"
     },
@@ -346,7 +346,7 @@
         ],
         "notes": "",
         "compliance": {},
-        "scan_id": "01a1261d-0b00-7935-a5a4-0b666e8a7a6f",
+        "scan_id": "01a1261d-0b00-7e3a-9cee-ef33385d81ea",
         "provider_uid": "111122223333",
         "provider": "aws"
     },
@@ -453,7 +453,7 @@
         ],
         "notes": "",
         "compliance": {},
-        "scan_id": "01a1261d-0b00-7935-a5a4-0b666e8a7a6f",
+        "scan_id": "01a1261d-0b00-7e3a-9cee-ef33385d81ea",
         "provider_uid": "111122223333",
         "provider": "aws"
     },
@@ -558,7 +558,7 @@
         ],
         "notes": "",
         "compliance": {},
-        "scan_id": "01a1261d-0b00-7935-a5a4-0b666e8a7a6f",
+        "scan_id": "01a1261d-0b00-7e3a-9cee-ef33385d81ea",
         "provider_uid": "111122223333",
         "provider": "aws"
     },
@@ -663,7 +663,7 @@
         ],
         "notes": "",
         "compliance": {},
-        "scan_id": "01a1261d-0b00-7935-a5a4-0b666e8a7a6f",
+        "scan_id": "01a1261d-0b00-7e3a-9cee-ef33385d81ea",
         "provider_uid": "111122223333",
         "provider": "aws"
     },
@@ -768,7 +768,7 @@
         ],
         "notes": "",
         "compliance": {},
-        "scan_id": "01a1261d-0b00-7935-a5a4-0b666e8a7a6f",
+        "scan_id": "01a1261d-0b00-7e3a-9cee-ef33385d81ea",
         "provider_uid": "111122223333",
         "provider": "aws"
     },
@@ -872,7 +872,7 @@
         ],
         "notes": "CAF Security Epic: IAM",
         "compliance": {},
-        "scan_id": "01a1261d-0b00-7935-a5a4-0b666e8a7a6f",
+        "scan_id": "01a1261d-0b00-7e3a-9cee-ef33385d81ea",
         "provider_uid": "111122223333",
         "provider": "aws"
     },
@@ -977,7 +977,7 @@
         ],
         "notes": "",
         "compliance": {},
-        "scan_id": "01a1261d-0b00-7935-a5a4-0b666e8a7a6f",
+        "scan_id": "01a1261d-0b00-7e3a-9cee-ef33385d81ea",
         "provider_uid": "111122223333",
         "provider": "aws"
     },
@@ -1083,7 +1083,7 @@
         ],
         "notes": "",
         "compliance": {},
-        "scan_id": "01a1261d-0b00-7935-a5a4-0b666e8a7a6f",
+        "scan_id": "01a1261d-0b00-7e3a-9cee-ef33385d81ea",
         "provider_uid": "111122223333",
         "provider": "aws"
     },
@@ -1187,7 +1187,7 @@
         ],
         "notes": "",
         "compliance": {},
-        "scan_id": "01a1261d-0b00-7935-a5a4-0b666e8a7a6f",
+        "scan_id": "01a1261d-0b00-7e3a-9cee-ef33385d81ea",
         "provider_uid": "111122223333",
         "provider": "aws"
     },
@@ -1291,7 +1291,7 @@
         ],
         "notes": "CAF Security Epic: IAM",
         "compliance": {},
-        "scan_id": "01a1261d-0b00-7935-a5a4-0b666e8a7a6f",
+        "scan_id": "01a1261d-0b00-7e3a-9cee-ef33385d81ea",
         "provider_uid": "111122223333",
         "provider": "aws"
     },
@@ -1395,7 +1395,7 @@
         ],
         "notes": "",
         "compliance": {},
-        "scan_id": "01a1261d-0b00-7935-a5a4-0b666e8a7a6f",
+        "scan_id": "01a1261d-0b00-7e3a-9cee-ef33385d81ea",
         "provider_uid": "111122223333",
         "provider": "aws"
     },
@@ -1500,7 +1500,7 @@
         ],
         "notes": "",
         "compliance": {},
-        "scan_id": "01a1261d-0b00-7935-a5a4-0b666e8a7a6f",
+        "scan_id": "01a1261d-0b00-7e3a-9cee-ef33385d81ea",
         "provider_uid": "111122223333",
         "provider": "aws"
     },
@@ -1604,7 +1604,7 @@
         ],
         "notes": "",
         "compliance": {},
-        "scan_id": "01a1261d-0b00-7935-a5a4-0b666e8a7a6f",
+        "scan_id": "01a1261d-0b00-7e3a-9cee-ef33385d81ea",
         "provider_uid": "111122223333",
         "provider": "aws"
     },
@@ -1710,7 +1710,7 @@
         ],
         "notes": "",
         "compliance": {},
-        "scan_id": "01a1261d-0b00-7935-a5a4-0b666e8a7a6f",
+        "scan_id": "01a1261d-0b00-7e3a-9cee-ef33385d81ea",
         "provider_uid": "111122223333",
         "provider": "aws"
     },
@@ -1816,7 +1816,7 @@
         ],
         "notes": "",
         "compliance": {},
-        "scan_id": "01a1261d-0b00-7935-a5a4-0b666e8a7a6f",
+        "scan_id": "01a1261d-0b00-7e3a-9cee-ef33385d81ea",
         "provider_uid": "111122223333",
         "provider": "aws"
     },
@@ -1920,7 +1920,7 @@
         ],
         "notes": "",
         "compliance": {},
-        "scan_id": "01a1261d-0b00-7935-a5a4-0b666e8a7a6f",
+        "scan_id": "01a1261d-0b00-7e3a-9cee-ef33385d81ea",
         "provider_uid": "111122223333",
         "provider": "aws"
     },
@@ -2026,7 +2026,7 @@
         ],
         "notes": "This check supports the `trusted_account_ids` configuration in config.yaml to allow specific cross-account access without triggering a finding.",
         "compliance": {},
-        "scan_id": "01a1261d-0b00-7935-a5a4-0b666e8a7a6f",
+        "scan_id": "01a1261d-0b00-7e3a-9cee-ef33385d81ea",
         "provider_uid": "111122223333",
         "provider": "aws"
     },
@@ -2131,7 +2131,7 @@
         ],
         "notes": "",
         "compliance": {},
-        "scan_id": "01a1261d-0b00-7935-a5a4-0b666e8a7a6f",
+        "scan_id": "01a1261d-0b00-7e3a-9cee-ef33385d81ea",
         "provider_uid": "111122223333",
         "provider": "aws"
     },
@@ -2235,7 +2235,7 @@
         ],
         "notes": "",
         "compliance": {},
-        "scan_id": "01a1261d-0b00-7935-a5a4-0b666e8a7a6f",
+        "scan_id": "01a1261d-0b00-7e3a-9cee-ef33385d81ea",
         "provider_uid": "111122223333",
         "provider": "aws"
     },
@@ -2346,7 +2346,7 @@
         ],
         "notes": "",
         "compliance": {},
-        "scan_id": "01a1261d-0b00-7935-a5a4-0b666e8a7a6f",
+        "scan_id": "01a1261d-0b00-7e3a-9cee-ef33385d81ea",
         "provider_uid": "111122223333",
         "provider": "aws"
     },
@@ -2456,7 +2456,7 @@
         ],
         "notes": "",
         "compliance": {},
-        "scan_id": "01a1261d-0b00-7935-a5a4-0b666e8a7a6f",
+        "scan_id": "01a1261d-0b00-7e3a-9cee-ef33385d81ea",
         "provider_uid": "111122223333",
         "provider": "aws"
     },
@@ -2525,6 +2525,304 @@
     "type_uid": 200401,
     "type_name": "Detection Finding: Create"
 },{
+    "message": "Service role test-app-admin has the AdministratorAccess policy attached.",
+    "metadata": {
+        "event_code": "iam_icp_service_role_admin",
+        "product": {
+            "name": "Prowler",
+            "uid": "prowler",
+            "vendor_name": "Prowler",
+            "version": "5.45.0"
+        },
+        "profiles": [
+            "cloud",
+            "datetime"
+        ],
+        "version": "1.5.0"
+    },
+    "severity_id": 4,
+    "severity": "High",
+    "status": "New",
+    "status_code": "FAIL",
+    "status_detail": "Service role test-app-admin has the AdministratorAccess policy attached.",
+    "status_id": 1,
+    "unmapped": {
+        "related_url": "",
+        "categories": [
+            "identity-access"
+        ],
+        "depends_on": [],
+        "related_to": [],
+        "additional_urls": [
+            "https://docs.aws.amazon.com/IAM/latest/UserGuide/best-practices.html#grant-least-privilege"
+        ],
+        "notes": "Custom check shipped with this tool in prowler-checks/; mounted read-only into the Prowler container.",
+        "compliance": {},
+        "scan_id": "01a1261d-0b00-7e3a-9cee-ef33385d81ea",
+        "provider_uid": "111122223333",
+        "provider": "aws"
+    },
+    "activity_name": "Create",
+    "activity_id": 1,
+    "finding_info": {
+        "analytic": {
+            "category": "iam",
+            "name": "IAM role used by an AWS service does not have AdministratorAccess attached",
+            "type": "Rule",
+            "type_id": 1,
+            "uid": "iam_icp_service_role_admin"
+        },
+        "created_time": 1791640800,
+        "created_time_dt": "2026-10-10T14:00:00Z",
+        "desc": "Custom check (Identity & Cloud Posture Health Check). **IAM roles that AWS services assume** (Lambda, EC2 and others; not AWS service-linked roles) are evaluated for attachment of the AWS-managed `AdministratorAccess` policy. Prowler's own `iam_role_administratoraccess_policy` excludes these roles.",
+        "title": "IAM role used by an AWS service does not have AdministratorAccess attached",
+        "types": [
+            "Software and Configuration Checks/AWS Security Best Practices"
+        ],
+        "uid": "prowler-aws-iam_icp_service_role_admin-111122223333-us-east-1-test-app-admin"
+    },
+    "resources": [
+        {
+            "cloud_partition": "aws",
+            "region": "us-east-1",
+            "data": {
+                "details": "",
+                "metadata": {}
+            },
+            "group": {
+                "name": "iam"
+            },
+            "labels": [],
+            "name": "test-app-admin",
+            "type": "AwsIamRole",
+            "uid": "arn:aws:iam::111122223333:role/test-app-admin"
+        }
+    ],
+    "category_name": "Findings",
+    "category_uid": 2,
+    "class_name": "Detection Finding",
+    "class_uid": 2004,
+    "cloud": {
+        "account": {
+            "name": "lab-account",
+            "type": "AWS Account",
+            "type_id": 10,
+            "uid": "111122223333",
+            "labels": []
+        },
+        "org": {},
+        "provider": "aws",
+        "region": "us-east-1"
+    },
+    "remediation": {
+        "desc": "Give each service role only the actions its code needs.",
+        "references": []
+    },
+    "risk_details": "Code running as the service (a Lambda function, a server) can do anything in the account. A flaw in that code, or stolen temporary credentials, gives full control.",
+    "time": 1791640800,
+    "time_dt": "2026-10-10T14:00:00Z",
+    "type_uid": 200401,
+    "type_name": "Detection Finding: Create"
+},{
+    "message": "Service role test-ec2-readonly does not have the AdministratorAccess policy attached.",
+    "metadata": {
+        "event_code": "iam_icp_service_role_admin",
+        "product": {
+            "name": "Prowler",
+            "uid": "prowler",
+            "vendor_name": "Prowler",
+            "version": "5.45.0"
+        },
+        "profiles": [
+            "cloud",
+            "datetime"
+        ],
+        "version": "1.5.0"
+    },
+    "severity_id": 4,
+    "severity": "High",
+    "status": "New",
+    "status_code": "PASS",
+    "status_detail": "Service role test-ec2-readonly does not have the AdministratorAccess policy attached.",
+    "status_id": 1,
+    "unmapped": {
+        "related_url": "",
+        "categories": [
+            "identity-access"
+        ],
+        "depends_on": [],
+        "related_to": [],
+        "additional_urls": [
+            "https://docs.aws.amazon.com/IAM/latest/UserGuide/best-practices.html#grant-least-privilege"
+        ],
+        "notes": "Custom check shipped with this tool in prowler-checks/; mounted read-only into the Prowler container.",
+        "compliance": {},
+        "scan_id": "01a1261d-0b00-7e3a-9cee-ef33385d81ea",
+        "provider_uid": "111122223333",
+        "provider": "aws"
+    },
+    "activity_name": "Create",
+    "activity_id": 1,
+    "finding_info": {
+        "analytic": {
+            "category": "iam",
+            "name": "IAM role used by an AWS service does not have AdministratorAccess attached",
+            "type": "Rule",
+            "type_id": 1,
+            "uid": "iam_icp_service_role_admin"
+        },
+        "created_time": 1791640800,
+        "created_time_dt": "2026-10-10T14:00:00Z",
+        "desc": "Custom check (Identity & Cloud Posture Health Check). **IAM roles that AWS services assume** (Lambda, EC2 and others; not AWS service-linked roles) are evaluated for attachment of the AWS-managed `AdministratorAccess` policy. Prowler's own `iam_role_administratoraccess_policy` excludes these roles.",
+        "title": "IAM role used by an AWS service does not have AdministratorAccess attached",
+        "types": [
+            "Software and Configuration Checks/AWS Security Best Practices"
+        ],
+        "uid": "prowler-aws-iam_icp_service_role_admin-111122223333-us-east-1-test-ec2-readonly"
+    },
+    "resources": [
+        {
+            "cloud_partition": "aws",
+            "region": "us-east-1",
+            "data": {
+                "details": "",
+                "metadata": {}
+            },
+            "group": {
+                "name": "iam"
+            },
+            "labels": [],
+            "name": "test-ec2-readonly",
+            "type": "AwsIamRole",
+            "uid": "arn:aws:iam::111122223333:role/test-ec2-readonly"
+        }
+    ],
+    "category_name": "Findings",
+    "category_uid": 2,
+    "class_name": "Detection Finding",
+    "class_uid": 2004,
+    "cloud": {
+        "account": {
+            "name": "lab-account",
+            "type": "AWS Account",
+            "type_id": 10,
+            "uid": "111122223333",
+            "labels": []
+        },
+        "org": {},
+        "provider": "aws",
+        "region": "us-east-1"
+    },
+    "remediation": {
+        "desc": "Give each service role only the actions its code needs.",
+        "references": []
+    },
+    "risk_details": "Code running as the service (a Lambda function, a server) can do anything in the account. A flaw in that code, or stolen temporary credentials, gives full control.",
+    "time": 1791640800,
+    "time_dt": "2026-10-10T14:00:00Z",
+    "type_uid": 200401,
+    "type_name": "Detection Finding: Create"
+},{
+    "message": "Assessment role icp-assessment holds only SecurityAudit, ViewOnlyAccess, and no inline policy.",
+    "metadata": {
+        "event_code": "iam_icp_assessment_role_policies",
+        "product": {
+            "name": "Prowler",
+            "uid": "prowler",
+            "vendor_name": "Prowler",
+            "version": "5.45.0"
+        },
+        "profiles": [
+            "cloud",
+            "datetime"
+        ],
+        "version": "1.5.0"
+    },
+    "severity_id": 4,
+    "severity": "High",
+    "status": "New",
+    "status_code": "PASS",
+    "status_detail": "Assessment role icp-assessment holds only SecurityAudit, ViewOnlyAccess, and no inline policy.",
+    "status_id": 1,
+    "unmapped": {
+        "related_url": "",
+        "categories": [
+            "identity-access"
+        ],
+        "depends_on": [],
+        "related_to": [],
+        "additional_urls": [
+            "https://docs.aws.amazon.com/aws-managed-policy/latest/reference/SecurityAudit.html",
+            "https://docs.aws.amazon.com/aws-managed-policy/latest/reference/ViewOnlyAccess.html"
+        ],
+        "notes": "Custom check shipped with this tool in prowler-checks/; mounted read-only into the Prowler container.",
+        "compliance": {},
+        "scan_id": "01a1261d-0b00-7e3a-9cee-ef33385d81ea",
+        "provider_uid": "111122223333",
+        "provider": "aws"
+    },
+    "activity_name": "Create",
+    "activity_id": 1,
+    "finding_info": {
+        "analytic": {
+            "category": "iam",
+            "name": "Assessment role holds only read-only audit policies",
+            "type": "Rule",
+            "type_id": 1,
+            "uid": "iam_icp_assessment_role_policies"
+        },
+        "created_time": 1791640800,
+        "created_time_dt": "2026-10-10T14:00:00Z",
+        "desc": "Custom check (Identity & Cloud Posture Health Check). The role this scan ran through is read back from AWS and its attached and inline policies compared with the two it should hold: `SecurityAudit` and `ViewOnlyAccess`.",
+        "title": "Assessment role holds only read-only audit policies",
+        "types": [
+            "Software and Configuration Checks/AWS Security Best Practices"
+        ],
+        "uid": "prowler-aws-iam_icp_assessment_role_policies-111122223333-us-east-1-icp-assessment"
+    },
+    "resources": [
+        {
+            "cloud_partition": "aws",
+            "region": "us-east-1",
+            "data": {
+                "details": "",
+                "metadata": {}
+            },
+            "group": {
+                "name": "iam"
+            },
+            "labels": [],
+            "name": "icp-assessment",
+            "type": "AwsIamRole",
+            "uid": "arn:aws:iam::111122223333:role/icp-assessment"
+        }
+    ],
+    "category_name": "Findings",
+    "category_uid": 2,
+    "class_name": "Detection Finding",
+    "class_uid": 2004,
+    "cloud": {
+        "account": {
+            "name": "lab-account",
+            "type": "AWS Account",
+            "type_id": 10,
+            "uid": "111122223333",
+            "labels": []
+        },
+        "org": {},
+        "provider": "aws",
+        "region": "us-east-1"
+    },
+    "remediation": {
+        "desc": "Keep the assessment role to the two AWS-managed read-only audit policies.",
+        "references": []
+    },
+    "risk_details": "If the assessment role held more than read-only policies, the read-only promise would rest on the scanner's behaviour alone, not on AWS refusing any change.",
+    "time": 1791640800,
+    "time_dt": "2026-10-10T14:00:00Z",
+    "type_uid": 200401,
+    "type_name": "Detection Finding: Create"
+},{
     "message": "IAM password policy does not require minimum length of 14 characters.",
     "metadata": {
         "event_code": "iam_password_policy_minimum_length_14",
@@ -2560,7 +2858,7 @@
         ],
         "notes": "",
         "compliance": {},
-        "scan_id": "01a1261d-0b00-7935-a5a4-0b666e8a7a6f",
+        "scan_id": "01a1261d-0b00-7e3a-9cee-ef33385d81ea",
         "provider_uid": "111122223333",
         "provider": "aws"
     },

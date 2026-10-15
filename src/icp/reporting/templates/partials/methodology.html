@@ -61,6 +61,19 @@
     <strong>{{ part.snapshot.started_at.strftime('%d %B %Y, %H:%M:%S') }} to
     {{ part.snapshot.collected_at.strftime('%H:%M:%S') }} UTC</strong>{% endif %}{% endif %}.
   </p>
+  {# AWS: the custom check read the assessment role back from AWS. #}
+  {% set role_check = part.tenant.coverage.get('assessment_role') %}
+  {% if role_check %}
+  <p class="{{ '' if role_check.status == 'PASS' else 'callout' }}">
+    {% if role_check.status == 'PASS' %}<strong>Verified:</strong> the assessment role was read back from AWS
+    during the scan. {{ role_check.detail }}
+    {% elif role_check.status == 'FAIL' %}<strong>Not as set up:</strong> the assessment role was read back
+    from AWS during the scan and holds more than the read-only audit policies. {{ role_check.detail }}
+    The read-only promise then rests on the scanner's behaviour, not on AWS refusing changes; reduce the
+    role before the next scan.
+    {% else %}The assessment role could not be read back during the scan. {{ role_check.detail }}{% endif %}
+  </p>
+  {% endif %}
   {% endfor %}
 
   <h3>How findings are scored</h3>

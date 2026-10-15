@@ -3,9 +3,13 @@ AWS account (111122223333) with planted problems, produced by Prowler's own
 Finding model and OCSF writer so the test fixture has Prowler's real shape.
 
 Needs no AWS access. Run inside the Prowler image (the version in
-config/prowler_check_map.yaml), from the repository root:
+config/prowler_check_map.yaml), from the repository root, with this tool's
+custom checks mounted where Prowler keeps its own (as docker-compose.yml does):
 
+    P=/home/prowler/prowler/providers/aws/services/iam
     docker run --rm --user root -v "$PWD/tools:/t:ro" -v "$PWD/fixtures/aws:/out" \
+      -v "$PWD/prowler-checks/iam_icp_service_role_admin:$P/iam_icp_service_role_admin:ro" \
+      -v "$PWD/prowler-checks/iam_icp_assessment_role_policies:$P/iam_icp_assessment_role_policies:ro" \
       --entrypoint /home/prowler/.venv/bin/python prowlercloud/prowler:<version> \
       /t/make_prowler_fixture.py /out/prowler-lab.ocsf.json
 """
@@ -225,6 +229,29 @@ findings = [
         f"arn:aws:accessanalyzer:us-west-2:{ACCOUNT}:analyzer",
         "analyzer/unknown",
         "us-west-2",
+    ),
+    # Custom checks (prowler-checks/): a Lambda role with admin rights, a safe
+    # EC2 role, and the assessment role holding only its two read-only policies.
+    f(
+        "iam_icp_service_role_admin",
+        "FAIL",
+        "Service role test-app-admin has the AdministratorAccess policy attached.",
+        f"arn:aws:iam::{ACCOUNT}:role/test-app-admin",
+        "test-app-admin",
+    ),
+    f(
+        "iam_icp_service_role_admin",
+        "PASS",
+        "Service role test-ec2-readonly does not have the AdministratorAccess policy attached.",
+        f"arn:aws:iam::{ACCOUNT}:role/test-ec2-readonly",
+        "test-ec2-readonly",
+    ),
+    f(
+        "iam_icp_assessment_role_policies",
+        "PASS",
+        "Assessment role icp-assessment holds only SecurityAudit, ViewOnlyAccess, and no inline policy.",
+        f"arn:aws:iam::{ACCOUNT}:role/icp-assessment",
+        "icp-assessment",
     ),
     # A check this tool does not map: must be dropped on import.
     f(

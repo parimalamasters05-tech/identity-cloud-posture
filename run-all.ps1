@@ -31,6 +31,13 @@ param(
 $ErrorActionPreference = "Stop"
 Set-Location -Path $PSScriptRoot
 
+# Prowler draws its progress bar and tables in UTF-8; Windows PowerShell 5.1
+# reads piped output in the old console codepage and garbles them.
+try {
+    [Console]::OutputEncoding = [System.Text.Encoding]::UTF8
+    $OutputEncoding = [System.Text.Encoding]::UTF8
+} catch { }
+
 if (-not (Test-Path ".env")) {
     Write-Host "No .env file here. Copy .env.example to .env and fill it in first." -ForegroundColor Red
     exit 1
@@ -72,7 +79,10 @@ function Step([string]$title, [string[]]$compose) {
     # collect-aws reports them; on screen, one line says how many there were.
     $refused = 0
     & docker compose run --rm @compose 2>&1 | ForEach-Object {
-        $line = "$_"
+        # A line from the error stream arrives as an ErrorRecord: take its text.
+        # A blank one would otherwise print as "System.Management.Automation.RemoteException".
+        $line = if ($_ -is [System.Management.Automation.ErrorRecord]) { $_.Exception.Message } else { "$_" }
+        if ($line -eq "System.Management.Automation.RemoteException") { $line = "" }
         if ($line -match "is not authorized to perform: ") { $refused++ }
         elseif ($line.Trim() -ne "") { Write-Host $line }
     }

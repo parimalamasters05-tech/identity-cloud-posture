@@ -738,6 +738,20 @@ remediations:
     references:
       - https://docs.aws.amazon.com/IAM/latest/UserGuide/id-credentials-access-keys-update.html
 
+  aws.roles.reduce_service_role_admin:
+    title: Remove full administrative rights from roles that AWS services use
+    impact: >
+      A role used by an AWS service gives its rights to the code running there:
+      a Lambda function or a server. With full administrative rights, a flaw in
+      that code, or its stolen temporary credentials, gives control of the
+      whole account.
+    steps:
+      - "IAM > Roles > the role named in the findings > Trust relationships: note which service uses it (lambda.amazonaws.com, ec2.amazonaws.com and so on)."
+      - "Find what runs as it: for Lambda, Lambda > Functions, each function's Configuration > Permissions shows its role; for EC2, the instance's Security tab."
+      - "Permissions > remove 'AdministratorAccess' and attach a policy with only the actions that code needs. If nothing uses the role any more, delete it."
+    verification: "IAM > Policies > AdministratorAccess > Entities attached: no role used by an AWS service is listed."
+    owner_hint: IT administrator with the developer who owns the service
+
   aws.roles.reduce_admin_roles:
     title: Reduce roles that have full administrative rights
     impact: >

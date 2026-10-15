@@ -1,0 +1,38 @@
+{
+  "Provider": "aws",
+  "CheckID": "iam_icp_service_role_admin",
+  "CheckTitle": "IAM role used by an AWS service does not have AdministratorAccess attached",
+  "CheckType": [
+    "Software and Configuration Checks/AWS Security Best Practices"
+  ],
+  "ServiceName": "iam",
+  "SubServiceName": "",
+  "ResourceIdTemplate": "",
+  "Severity": "high",
+  "ResourceType": "AwsIamRole",
+  "ResourceGroup": "IAM",
+  "Description": "Custom check (Identity & Cloud Posture Health Check). **IAM roles that AWS services assume** (Lambda, EC2 and others; not AWS service-linked roles) are evaluated for attachment of the AWS-managed `AdministratorAccess` policy. Prowler's own `iam_role_administratoraccess_policy` excludes these roles.",
+  "Risk": "Code running as the service (a Lambda function, a server) can do anything in the account. A flaw in that code, or stolen temporary credentials, gives full control.",
+  "RelatedUrl": "",
+  "AdditionalURLs": [
+    "https://docs.aws.amazon.com/IAM/latest/UserGuide/best-practices.html#grant-least-privilege"
+  ],
+  "Remediation": {
+    "Code": {
+      "CLI": "aws iam detach-role-policy --role-name <ROLE_NAME> --policy-arn arn:aws:iam::aws:policy/AdministratorAccess",
+      "NativeIaC": "",
+      "Other": "IAM > Roles > the role > Permissions: remove AdministratorAccess and attach a policy with only the actions the service needs.",
+      "Terraform": ""
+    },
+    "Recommendation": {
+      "Text": "Give each service role only the actions its code needs.",
+      "Url": ""
+    }
+  },
+  "Categories": [
+    "identity-access"
+  ],
+  "DependsOn": [],
+  "RelatedTo": [],
+  "Notes": "Custom check shipped with this tool in prowler-checks/; mounted read-only into the Prowler container."
+}

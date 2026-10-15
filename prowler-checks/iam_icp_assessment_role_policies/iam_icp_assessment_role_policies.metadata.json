@@ -1,0 +1,39 @@
+{
+  "Provider": "aws",
+  "CheckID": "iam_icp_assessment_role_policies",
+  "CheckTitle": "Assessment role holds only read-only audit policies",
+  "CheckType": [
+    "Software and Configuration Checks/AWS Security Best Practices"
+  ],
+  "ServiceName": "iam",
+  "SubServiceName": "",
+  "ResourceIdTemplate": "",
+  "Severity": "high",
+  "ResourceType": "AwsIamRole",
+  "ResourceGroup": "IAM",
+  "Description": "Custom check (Identity & Cloud Posture Health Check). The role this scan ran through is read back from AWS and its attached and inline policies compared with the two it should hold: `SecurityAudit` and `ViewOnlyAccess`.",
+  "Risk": "If the assessment role held more than read-only policies, the read-only promise would rest on the scanner's behaviour alone, not on AWS refusing any change.",
+  "RelatedUrl": "",
+  "AdditionalURLs": [
+    "https://docs.aws.amazon.com/aws-managed-policy/latest/reference/SecurityAudit.html",
+    "https://docs.aws.amazon.com/aws-managed-policy/latest/reference/ViewOnlyAccess.html"
+  ],
+  "Remediation": {
+    "Code": {
+      "CLI": "",
+      "NativeIaC": "",
+      "Other": "IAM > Roles > the assessment role > Permissions: leave only SecurityAudit and ViewOnlyAccess attached, and no inline policy.",
+      "Terraform": ""
+    },
+    "Recommendation": {
+      "Text": "Keep the assessment role to the two AWS-managed read-only audit policies.",
+      "Url": ""
+    }
+  },
+  "Categories": [
+    "identity-access"
+  ],
+  "DependsOn": [],
+  "RelatedTo": [],
+  "Notes": "Custom check shipped with this tool in prowler-checks/; mounted read-only into the Prowler container."
+}

@@ -50,11 +50,13 @@ class MappedRule:
 class ProwlerMap:
     prowler_version: str
     rules: tuple[MappedRule, ...]
+    #: Evidence about the scan itself, not findings (the assessment role's policies).
+    verification_checks: tuple[str, ...] = ()
 
     @property
     def checks(self) -> tuple[str, ...]:
         """Every Prowler check to run, in a stable order."""
-        return tuple(sorted({c for r in self.rules for c in r.checks}))
+        return tuple(sorted({c for r in self.rules for c in r.checks} | set(self.verification_checks)))
 
     @property
     def services(self) -> dict[str, tuple[str, ...]]:
@@ -100,4 +102,8 @@ def load(path: Path = DEFAULT_MAP_PATH) -> ProwlerMap:
         )
         for r in data.get("rules", [])
     )
-    return ProwlerMap(prowler_version=str(data.get("prowler_version", "")), rules=rules)
+    return ProwlerMap(
+        prowler_version=str(data.get("prowler_version", "")),
+        rules=rules,
+        verification_checks=tuple(data.get("verification_checks", ())),
+    )

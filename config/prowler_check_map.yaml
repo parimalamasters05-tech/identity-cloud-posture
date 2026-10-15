@@ -32,6 +32,12 @@
 #              with another account").
 prowler_version: "5.45.0"
 
+# Checks whose result is not a finding about the client but evidence about the
+# scan itself. Kept on import and shown in the report's read-only section.
+#   iam_icp_assessment_role_policies  custom (prowler-checks/): the role the
+#   scan ran through holds only SecurityAudit and ViewOnlyAccess.
+verification_checks: [iam_icp_assessment_role_policies]
+
 rules:
   # -- 1. Second sign-in step -------------------------------------------------
   - id: AWS-MFA-001
@@ -195,6 +201,23 @@ rules:
     many: "{n} roles that people or other AWS accounts can switch into have full administrative rights"
     evidence: "The role {name} has the AdministratorAccess policy. Anyone allowed to switch into the role can do anything in the account."
     remediation: aws.roles.reduce_admin_roles
+    framework: [PR.AA-05]
+
+  - id: AWS-SVC-002
+    family: service_account_privilege
+    service: iam
+    # Custom check (prowler-checks/): Prowler's own role check leaves out roles
+    # that AWS services use, so a Lambda role with AdministratorAccess was not
+    # reported (seen live, 14 Oct 2026).
+    checks: [iam_icp_service_role_admin]
+    impact: 4
+    exposure: 2
+    privileged: true
+    noun: role
+    one: 1 role used by an AWS service has full administrative rights
+    many: "{n} roles used by AWS services have full administrative rights"
+    evidence: "The role {name} is used by an AWS service (a Lambda function or a server, for example) and has the AdministratorAccess policy, so that code can do anything in the account."
+    remediation: aws.roles.reduce_service_role_admin
     framework: [PR.AA-05]
 
   # -- 5. Public storage ----------------------------------------------------------

@@ -65,7 +65,7 @@ def test_every_aws_rule_has_a_fix_a_time_estimate_and_known_framework_references
     effort = yaml.safe_load((REPO_ROOT / "config" / "risk_matrix.yaml").read_text("utf-8"))["effort_hours"]
     framework = yaml.safe_load((REPO_ROOT / "config" / "framework_mapping.yaml").read_text("utf-8"))
     rules = [r for r in all_rules() if Platform.AWS in r.platforms]
-    assert len(rules) == len(load_map().rules) == 21
+    assert len(rules) == len(load_map().rules) == 22
     for rule in rules:
         assert rule.remediation_key in library.entries, rule.rule_id
         assert rule.remediation_key in effort, rule.rule_id
@@ -130,6 +130,7 @@ def test_every_planted_problem_is_found(seeded):
         "AWS-LOG-001": ["us-east-1", "us-west-2"],
         "AWS-OAU-001": ["icp-test-private"],
         "AWS-OAU-003": ["us-east-1", "us-west-2"],
+        "AWS-SVC-002": ["test-app-admin"],
     }
     found = {
         rule: [e.label for e in findings[0].affected_entities]
@@ -353,7 +354,6 @@ def test_the_report_says_roles_used_by_aws_services_were_not_checked():
     they were covered."""
     from icp.reporting.platform_text import AWS
 
-    assert "Lambda" in AWS.licence_note and "not checked" in AWS.licence_note
     assert not any("services are allowed" in line for line in AWS.examined)
     svc = next(r for r in load_map().rules if r.rule_id == "AWS-SVC-001")
     assert "switch into" in svc.one
@@ -362,12 +362,19 @@ def test_the_report_says_roles_used_by_aws_services_were_not_checked():
 # -- Review of the three-platform report (14 Oct 2026) -------------------------------
 
 
-def test_service_roles_make_the_role_family_partly_assessed_never_clean(seeded):
-    """A clean admin-role result read as covering every role, though roles
-    used by AWS services are not checked."""
+def test_a_scan_without_the_service_role_check_is_partly_assessed_never_clean(tmp_path):
+    """Older scans (before the custom check) must still not read as covering
+    every role: roles used by AWS services were not checked."""
     from icp.models.enums import CheckFamily
 
-    _, tenant, result, _ = seeded
+    data = [
+        i
+        for i in json.loads(FIXTURE.read_text("utf-8"))
+        if i["metadata"]["event_code"] != "iam_icp_service_role_admin"
+    ]
+    path = tmp_path / "older.json"
+    path.write_text(json.dumps(data), encoding="utf-8")
+    _, tenant, result, _ = _run(path)
     [gap] = [g for g in tenant.coverage_gaps if g.key == "aws-service-roles-unchecked"]
     assert gap.families == (CheckFamily.SERVICE_ACCOUNT_PRIVILEGE,)
     assert "Lambda" in gap.reason
@@ -405,3 +412,64 @@ def test_the_trail_evidence_says_any_trail_would_have_counted(seeded):
     trail; reviewers twice read the finding as "no multi-region trail"."""
     _, _, _, by_rule = seeded
     assert "single-region or multi-region" in by_rule["AWS-LOG-001"][0].evidence[0].summary
+
+
+# -- Custom Prowler checks (prowler-checks/) ------------------------------------------
+
+
+def test_a_service_role_with_admin_rights_is_found_and_the_family_is_fully_assessed(seeded):
+    """Seen live: a Lambda role with AdministratorAccess was not reported,
+    because Prowler's own role check leaves out roles AWS services use."""
+    _, tenant, _, by_rule = seeded
+    [finding] = by_rule["AWS-SVC-002"]
+    assert [e.label for e in finding.affected_entities] == ["test-app-admin"]
+    assert finding.title == "1 role used by an AWS service has full administrative rights"
+    assert not [g for g in tenant.coverage_gaps if g.key == "aws-service-roles-unchecked"]
+
+
+def test_the_assessment_role_check_is_evidence_not_a_finding(seeded):
+    _, tenant, result, _ = seeded
+    assert tenant.coverage["assessment_role"]["status"] == "PASS"
+    assert "SecurityAudit, ViewOnlyAccess" in tenant.coverage["assessment_role"]["detail"]
+    assert not any("assessment" in f.title.lower() for f in result.findings)
+
+
+def test_the_report_says_the_assessment_role_was_verified(seeded):
+    import re
+
+    from icp.reporting.renderer import ReportRenderer
+
+    _, tenant, result, _ = seeded
+    renderer = ReportRenderer()
+    html = renderer.env.get_template("report.html").render(
+        **renderer.build_context(tenant, result, client_name="Lab", assessor="T")
+    )
+    text = re.sub(r"\s+", " ", re.sub(r"<[^>]+>", " ", html))
+    assert "Verified: the assessment role was read back from AWS during the scan" in text
+
+
+def test_an_over_privileged_assessment_role_is_called_out(tmp_path):
+    data = json.loads(FIXTURE.read_text("utf-8"))
+    for item in data:
+        if item["metadata"]["event_code"] == "iam_icp_assessment_role_policies":
+            item["status_code"] = "FAIL"
+            item["status_detail"] = (
+                "Assessment role icp-assessment holds more than read-only audit policies: AdministratorAccess."
+            )
+    path = tmp_path / "over.json"
+    path.write_text(json.dumps(data), encoding="utf-8")
+    _, tenant, _, _ = _run(path)
+    assert tenant.coverage["assessment_role"]["status"] == "FAIL"
+
+
+def test_custom_checks_are_mounted_read_only_into_prowler():
+    import yaml
+
+    prowler = yaml.safe_load((REPO_ROOT / "docker-compose.yml").read_text("utf-8"))["services"]["prowler"]
+    mounts = [v for v in prowler["volumes"] if "prowler-checks" in v]
+    assert len(mounts) == 2 and all(m.endswith(":ro") for m in mounts)
+    for name in ("iam_icp_service_role_admin", "iam_icp_assessment_role_policies"):
+        folder = REPO_ROOT / "prowler-checks" / name
+        assert (folder / f"{name}.py").exists() and (folder / f"{name}.metadata.json").exists()
+        source = (folder / f"{name}.py").read_text("utf-8")
+        assert "client." not in source.replace("iam_client.", ""), "a custom check must make no AWS call"
