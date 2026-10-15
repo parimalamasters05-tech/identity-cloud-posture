@@ -200,4 +200,31 @@ def test_a_report_with_aws_names_it_as_an_account_read_by_prowler(tenant, result
     html = renderer.env.get_template("report.html").render(**context)
     text = _text(html)
     assert "made no requests to AWS: it read the results file Prowler wrote" in text
-    assert "Policies on the assessment role" in text and "SecurityAudit" in text
+    assert "Policies the assessment role was set up with" in text and "SecurityAudit" in text
+
+
+# -- Review of 14 Oct (second three-platform report) ---------------------------------
+
+
+def test_urgency_matches_the_overall_position(combined):
+    context, _, _ = combined
+    opening = context["summary"].opening
+    assert "this week" not in opening
+    if context["summary"].rating == "Action required":
+        assert "attention now" in opening
+
+
+def test_a_test_environment_is_said_on_the_cover_and_in_the_summary(tenant, result):
+    plain = ReportRenderer().build_context(tenant, result, client_name="Lab", assessor="T")
+    for flag, expected in ((False, 0), (True, 2)):
+        renderer = ReportRenderer(test_environment=flag)
+        text = _text(renderer.env.get_template("report.html").render(**plain))
+        assert text.count("Test environment") == expected
+
+
+def test_the_aws_read_only_claim_rests_on_cloudtrail_not_policy_names():
+    from icp.reporting.platform_text import AWS
+
+    assert "did not read back" in AWS.verification
+    assert "every event for it is a read" in AWS.verification
+    assert "set up with" in AWS.permissions_heading

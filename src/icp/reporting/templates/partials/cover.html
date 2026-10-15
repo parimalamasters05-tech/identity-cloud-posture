@@ -61,15 +61,17 @@
   <div class="callout">
     <h4 style="margin-top:0;">Incomplete coverage</h4>
     <p style="margin-bottom:0;">
-      Some data could not be retrieved during this assessment, so parts of your environment were
-      not examined. These areas are listed in the coverage notes and must not be read as having
-      passed. Not fully read: {{ degraded_areas | join('; ') }}.
+      {# Kept short: with three platforms the cover must still fit on one page. #}
+      Some areas could not be fully read. They are listed in the coverage notes and must not be
+      read as having passed. Not fully read: {{ degraded_areas | join('; ') }}.
     </p>
   </div>
   {% endif %}
 
   <p class="meta" style="margin-top:6pt;">
-    This report is a technical configuration review. It is not an audit, a certification, or an
+    {# One line with the disclaimer: a separate paragraph pushed it onto page 2. #}
+    {% if test_environment %}<strong>Test environment:</strong> deliberately set up with problems to
+    demonstrate the assessment; not a real organization's security. {% endif %}This report is a technical configuration review. It is not an audit, a certification, or an
     attestation against any framework, and it is not legal advice.
   </p>
 </section>

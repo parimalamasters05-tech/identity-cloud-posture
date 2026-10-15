@@ -192,14 +192,16 @@ AWS = PlatformText(
     ),
     method_opening=(
         "Read-only. Settings were read with Prowler, an open-source assessment tool, through a "
-        "role limited to AWS's own read-only audit policies, under a signed authorization letter."
+        "role set up with AWS's own audit policies, which grant reading and listing only, under a "
+        "signed authorization letter."
     ),
     retrieval=(
         "Configuration was read by Prowler, an open-source assessment tool, using a role in your "
-        "account that holds only the two AWS-managed policies listed below. This report's tool "
-        "then read Prowler's results; it did not contact AWS itself."
+        "account set up with only the two AWS-managed policies listed below. This report's tool "
+        "then read Prowler's results; it did not contact AWS itself, so it did not read the role "
+        "back to confirm which policies it holds."
     ),
-    permissions_heading="Policies on the assessment role",
+    permissions_heading="Policies the assessment role was set up with",
     permission_noun="policy",
     audit_log="AWS CloudTrail (CloudTrail > Event history, filtered by the assessment role's name)",
     licence_note=(
@@ -218,9 +220,11 @@ AWS = PlatformText(
     cover_name_source="the AWS account alias",
     verification=(
         "This report's tool made no requests to AWS: it read the results file Prowler wrote. "
-        "Prowler read the account through the assessment role, whose two AWS-managed policies "
-        "allow reading and listing only, so AWS itself would have refused any attempt to change "
-        "something. We recommend you confirm this independently in"
+        "Prowler read the account through the assessment role. The two AWS-managed policies it "
+        "was set up with grant only describe, get and list actions, so with those alone AWS would "
+        "refuse any attempt to change something. That rests on how the role was set up, which "
+        "this tool did not read back; the independent check is the record of what the role "
+        "actually did. We recommend you confirm that every event for it is a read, in"
     ),
 )
 
@@ -285,8 +289,7 @@ def combined(platforms: list[Platform]) -> PlatformText:
             f"Read-only. Settings were read through the official administrative interfaces of {names}, "
             "under a signed authorization letter."
             + (
-                " In AWS the reading was done by Prowler, an open-source assessment tool, through a "
-                "role limited to AWS's own read-only audit policies."
+                " In AWS, Prowler (an open-source tool) did the reading, through a read-only audit role."
                 if with_aws
                 else ""
             )

@@ -22,6 +22,11 @@
     </tr>
   </table>
 
+  {% if test_environment %}
+  <p class="callout" style="margin-top:0;"><strong>Test environment.</strong> These accounts were set up
+    deliberately with problems to show what the assessment finds. The findings describe that test
+    setup, not a real organization's security.</p>
+  {% endif %}
   <p>{{ summary.opening }}</p>
 
   <h3>The three things that matter most</h3>

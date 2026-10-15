@@ -210,6 +210,12 @@ def assess(ctx: click.Context, snapshot_path: Path | None, tenant: str | None) -
     default="",
     help="Your name or company, for the cover page. Default: $ICP_ASSESSOR.",
 )
+@click.option(
+    "--test-environment",
+    is_flag=True,
+    envvar="ICP_TEST_ENVIRONMENT",
+    help="Say on the cover and in the summary that this is a deliberately misconfigured test setup.",
+)
 @click.option("--engagement-ref", default="", help="Reference from the authorization letter.")
 @click.pass_context
 def report(
@@ -222,6 +228,7 @@ def report(
     client_name: str,
     assessor: str,
     engagement_ref: str,
+    test_environment: bool,
 ) -> None:
     """Generate the client-facing report.
 
@@ -290,7 +297,7 @@ def report(
             next((v for v, _ in pairs if v.organization_name), pairs[0][0]),
         )
         client_name = _client_name(override, named)
-        rendered = ReportRenderer().render_combined(
+        rendered = ReportRenderer(test_environment=test_environment).render_combined(
             pairs,
             settings.output_dir,
             client_name=client_name,
@@ -302,7 +309,7 @@ def report(
     else:
         tenant_view, result = assessed(snapshot_paths[0] if snapshot_paths else None)
         client_name = _client_name(override, tenant_view)
-        rendered = ReportRenderer().render(
+        rendered = ReportRenderer(test_environment=test_environment).render(
             tenant_view,
             result,
             settings.output_dir,

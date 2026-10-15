@@ -72,6 +72,7 @@ class ReportRenderer:
         library: RemediationLibrary | None = None,
         matrix: RiskMatrix | None = None,
         template_dir: Path | None = None,
+        test_environment: bool = False,
     ) -> None:
         self.library = library or RemediationLibrary.load_default()
         self.matrix = matrix or RiskMatrix.load_default()
@@ -90,6 +91,9 @@ class ReportRenderer:
         self.env.globals["app_kind"] = _app_kind
         self.env.globals["access"] = _access
         self.env.globals["platform_name"] = lambda finding: for_platform(finding.platform).name
+        #: A deliberately misconfigured lab, said on the cover and in the summary
+        #: so its findings are never read as a real organization's.
+        self.env.globals["test_environment"] = test_environment
 
     # -- context ---------------------------------------------------------------
 

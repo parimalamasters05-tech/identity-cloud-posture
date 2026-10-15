@@ -337,8 +337,10 @@ def _verdict(critical: int, high: int, rating: str) -> str:
     parts: list[str] = []
     if critical:
         parts.append(
-            f"We found {critical} issue{'s' if critical != 1 else ''} that we would ask you to "
-            f"address this week, and {high} further significant one{'s' if high != 1 else ''}. "
+            # "Now", matching the overall position above it ("critical gaps need
+            # attention now"); it once said "this week" beside that.
+            f"We found {critical} critical issue{'s' if critical != 1 else ''} that need{'s' if critical == 1 else ''} "
+            f"attention now, and {high} further significant one{'s' if high != 1 else ''}. "
         )
     elif high:
         parts.append(
