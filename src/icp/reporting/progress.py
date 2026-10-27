@@ -11,8 +11,6 @@ from __future__ import annotations
 from typing import Any
 
 from icp.delta.compare import compare
-from icp.models.enums import Severity
-from icp.models.finding import Finding
 from icp.normalizers.base import NormalizedTenant
 from icp.reporting.platform_text import for_platform
 from icp.rules.engine import AssessmentResult
@@ -24,6 +22,9 @@ _GROUPS = (
     ("regressed", "Worse"),
     ("new", "New"),
     ("persisting", "Unchanged"),
+    # Neither better nor worse: the two reviews could not see the same things.
+    ("not_revalidated", "Not rechecked"),
+    ("first_assessed", "First checked"),
 )
 
 
@@ -43,13 +44,12 @@ def build(
     if before_tenant.snapshot.collected_at >= after_tenant.snapshot.collected_at:
         raise ValueError("The earlier snapshot must be older than the one being reported")
 
-    def actionable(result: AssessmentResult) -> list[Finding]:
-        # Coverage notes are not problems, so they are not progress either.
-        return [f for f in result.findings if f.severity != Severity.INFO]
-
+    # Coverage notes go in with the findings: they are not progress, but they
+    # tell the comparison what each review could not see, so lost visibility
+    # is never reported as a fix. `compare` leaves them out of every group.
     delta = compare(
-        actionable(before_result),
-        actionable(after_result),
+        before_result.findings,
+        after_result.findings,
         previous_snapshot_id=before_tenant.snapshot.snapshot_id,
         current_snapshot_id=after_tenant.snapshot.snapshot_id,
         previous_at=before_tenant.snapshot.collected_at,
@@ -65,6 +65,16 @@ def build(
                 detail = "No longer found."
             elif key == "new":
                 detail = "Not present in the earlier review."
+            elif key == "not_revalidated":
+                detail = (
+                    "Not found this time, but this check, or the accounts it named, could not be fully "
+                    "read in this review. It is not shown to be fixed, and is left out of the risk total."
+                )
+            elif key == "first_assessed":
+                detail = (
+                    "This check could not be assessed in the earlier review, so this is the first reading, "
+                    "not a new problem. It is left out of the risk total."
+                )
             elif change is not None:
                 parts = []
                 if change.previous_count != change.current_count:
@@ -73,6 +83,10 @@ def build(
                     parts.append(f"No longer affected: {_names(change.removed)}.")
                 if change.added:
                     parts.append(f"Newly affected: {_names(change.added)}.")
+                if change.unconfirmed:
+                    parts.append(
+                        f"Not rechecked (their data could not be read): {_names(change.unconfirmed)}."
+                    )
                 detail = " ".join(parts) or "Same as before."
             rows.append({"outcome": label, "key": key, "finding": finding, "detail": detail})
 

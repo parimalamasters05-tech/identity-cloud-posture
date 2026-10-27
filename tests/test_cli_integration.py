@@ -54,7 +54,7 @@ def test_full_pipeline(workspace: Path):
 
     document = json.loads(findings_files[0].read_text("utf-8"))
     not_assessed = [k for k in document["summary"]["unassessable"] if k.startswith("GWS-")]
-    assert document["summary"]["rules_run"] + len(not_assessed) == 20
+    assert document["summary"]["rules_run"] + len(not_assessed) == 21
     assert document["summary"]["rules_failed"] == []
     assert document["summary"]["by_severity"]["critical"] >= 1
 

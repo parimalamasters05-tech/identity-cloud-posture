@@ -47,6 +47,7 @@ _COLLECTOR_IMPACT: dict[str, tuple[CheckFamily, ...]] = {
     ),
     "google.roles": (CheckFamily.ADMIN_ROLE_SPRAWL,),
     "google.role_assignments": (CheckFamily.ADMIN_ROLE_SPRAWL,),
+    "google.role_group_members": (CheckFamily.ADMIN_ROLE_SPRAWL,),
     "google.oauth_tokens": (CheckFamily.OAUTH_GRANTS, CheckFamily.SERVICE_ACCOUNT_PRIVILEGE),
     "google.public_drive_items": (CheckFamily.EXTERNAL_SHARING,),
     "google.drive_settings": (CheckFamily.EXTERNAL_SHARING,),
@@ -91,14 +92,27 @@ def normalize(snapshot: Snapshot, taxonomy: ScopeTaxonomy | None = None) -> Norm
 def _build_role_index(snapshot: Snapshot) -> dict[str, list[dict[str, Any]]]:
     """Map user id -> the role definitions assigned to them."""
     roles = {str(r.get("roleId")): r for r in snapshot.artifact("google.roles") or []}
+    # A role assigned to a group is held by everyone in it (indirect members
+    # included). Snapshots from before this was collected have no entry, and
+    # group assignments are then skipped, as they always were.
+    groups = snapshot.artifacts.get("google.role_group_members") or {}
+    everyone = [str(u.get("id")) for u in snapshot.artifact("google.users") or []]
     index: dict[str, list[dict[str, Any]]] = {}
     for assignment in snapshot.artifact("google.role_assignments") or []:
-        if assignment.get("assigneeType") not in (None, "user", "USER"):
-            continue
-        user_id = str(assignment.get("assignedTo"))
         role = roles.get(str(assignment.get("roleId")))
-        if role:
-            index.setdefault(user_id, []).append(role)
+        if not role:
+            continue
+        holder = str(assignment.get("assignedTo"))
+        if assignment.get("assigneeType") in (None, "user", "USER"):
+            holders = [holder]
+        elif holder in groups:
+            members = groups[holder]
+            holders = everyone if members.get("everyone") else list(members.get("users") or [])
+        else:
+            continue
+        for user_id in holders:
+            if role not in index.setdefault(user_id, []):
+                index[user_id].append(role)
     return index
 
 

@@ -1,8 +1,10 @@
 """The read-only scope allowlist -- control #1 of three.
 
-The tool's core promise to a client is that it cannot change anything in their
-tenant. That promise is enforced in three independent places, so that no single
-mistake can break it:
+The tool is designed for read-only collection: it never sends a request that
+changes a setting. That is a promise about behaviour, not access -- one scope
+here (admin.directory.user.security, see SCOPE_CAVEATS) permits more. The
+behaviour is enforced in three independent places, so that no single mistake
+can break it:
 
   1. this module  - only these scopes may ever be requested (runtime, pre-auth)
   2. readonly.py  - unsafe HTTP verbs are blocked in the transport (runtime)

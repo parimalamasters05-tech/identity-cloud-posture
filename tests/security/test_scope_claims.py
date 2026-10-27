@@ -104,3 +104,54 @@ def test_the_authorization_letter_matches_the_code():
     missing = [s for s in GOOGLE_READONLY_SCOPES if s not in letter]
     assert missing == []
     assert "the one scope that is not" in letter
+
+
+#: Claims about the client's environment, or about access rather than behaviour,
+#: that no tool can make for itself (review, 27 Oct 2026).
+ABSOLUTE_CLAIMS = (
+    r"No setting was changed",
+    r"cannot send any change",
+    r"cannot change anything",
+    r"changes nothing in your organization",
+    r"was changed at any point",
+)
+
+
+def test_the_report_states_what_the_tool_sent_not_what_cannot_happen(tenant, result):
+    from dataclasses import replace
+
+    html = _report(replace(tenant), result, (*sorted_scopes(), *optional_scopes()))
+    for claim in ABSOLUTE_CLAIMS:
+        assert not re.search(claim, html, re.IGNORECASE), claim
+    assert "This tool sent no request to change a setting" in html
+    assert "read-only verification lists every request" in html
+
+
+def test_for_aws_the_evidence_is_cloudtrail_not_this_tools_guard(tenant, result):
+    """Prowler reads AWS, outside this tool's request guard."""
+    from tests.rules.test_aws_rules import _run as run_aws
+
+    _, aws_tenant, aws_result, _ = run_aws()
+    renderer = ReportRenderer()
+    method = renderer.build_combined_context(
+        [(tenant, result), (aws_tenant, aws_result)], client_name="Lab", assessor="T"
+    )["scope_statement"]["method"]
+    assert "Outside AWS, this tool sent no request to change a setting" in method
+    assert "in AWS, Prowler's requests are in your CloudTrail" in method
+    alone = renderer.build_context(aws_tenant, aws_result, client_name="Lab", assessor="T")
+    assert "This tool sent" not in alone["scope_statement"]["method"]
+    assert "CloudTrail" in alone["scope_statement"]["method"]
+
+
+def test_the_microsoft_sign_in_is_said_to_appear_in_the_sign_in_logs():
+    from icp.reporting.platform_text import MICROSOFT
+
+    assert "appears in your sign-in logs" in MICROSOFT.request_note
+    assert "changes nothing" not in MICROSOFT.request_note
+
+
+@pytest.mark.parametrize("path", ["README.md", "docs/rules-of-engagement.md", "src/icp/security/scopes.py"])
+def test_the_documents_do_not_promise_zero_effect(path):
+    text = re.sub(r"\s+", " ", (REPO_ROOT / path).read_text("utf-8"))
+    for claim in (*ABSOLUTE_CLAIMS, r"No impact on service availability"):
+        assert not re.search(claim, text, re.IGNORECASE), (path, claim)

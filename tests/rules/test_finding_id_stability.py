@@ -98,7 +98,13 @@ def test_fixing_one_account_is_an_improvement_not_a_new_finding(snapshot, matrix
 
     enrolled = _with_users(
         snapshot,
-        lambda u: {**u, "isEnrolledIn2Sv": True} if u["primaryEmail"].startswith("pat.dunne") else u,
+        # The fix as the remediation describes it: enrolled, and enforced. Enrolled
+        # by choice alone is reported by GWS-MFA-004 (it can be switched off).
+        lambda u: (
+            {**u, "isEnrolledIn2Sv": True, "isEnforcedIn2Sv": True}
+            if u["primaryEmail"].startswith("pat.dunne")
+            else u
+        ),
     )
     q1 = assess(normalize(snapshot), matrix=matrix, now=FIXTURE_NOW).findings
     q2 = assess(normalize(enrolled), matrix=matrix, now=FIXTURE_NOW).findings

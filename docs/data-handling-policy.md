@@ -147,15 +147,28 @@ could identify a client or an individual.
 
 ## 8. Read-only operation
 
-The tooling enforces read-only operation in three independent ways: a scope
-allowlist checked before any credential is constructed; a transport wrapper that
-raises on any state-changing HTTP method before a request is sent; and a static
-analyser in CI that fails the build if a write-capable API call exists anywhere
-in the source.
+The tooling is designed for read-only collection, and enforces it for Google
+Workspace and Microsoft 365 in three independent ways: an allowlist of
+permissions checked before any credential is constructed; a transport wrapper
+that refuses any state-changing request, and any Microsoft Graph endpoint not on
+a reviewed list, before it is sent; and a static analyser in CI that fails the
+build if a write-capable API call exists anywhere in the source. Two
+permissions allow more than the tooling does (Google's
+`admin.directory.user.security`, Microsoft's `Sites.Read.All`); the
+authorization letter names them.
 
-Every API call made during collection is recorded and delivered alongside the
-snapshot, so the Client can reconcile it against their own admin audit log
-rather than taking our word for it.
+In AWS the reading is done by Prowler, an open-source scanner, which runs
+outside those controls. There read-only rests on the assessment role, which
+holds only AWS's own SecurityAudit and ViewOnlyAccess policies (a check run with
+every scan confirms it), and the evidence is the Client's CloudTrail.
+
+Every API call made during Google and Microsoft collection is recorded and
+delivered alongside the snapshot, so the Client can reconcile it against their
+own admin audit log rather than taking our word for it.
+
+Read-only is not the same as no effect: collection uses the Client's API
+quota, appears in their audit and sign-in logs, and leaves the assessor
+holding sensitive data, protected as this policy describes.
 
 ## 9. Personal data
 

@@ -33,11 +33,26 @@ Before the collection window:
 
 ## What happens during collection
 
-- Under one hour of read-only API calls, from the assessor's own infrastructure.
-- No impact on service availability, and no change to any setting.
-- A few hundred read requests appear in the client's admin audit log. **We
-  encourage the client to look.** The assessor supplies their own call log for
-  comparison.
+- Under one hour of read requests, from the assessor's own infrastructure. The
+  tooling is designed for read-only collection: it sends no request that changes
+  a setting, and blocks any that would. Two permissions allow more than the
+  tooling does (Google's `admin.directory.user.security`, Microsoft's
+  `Sites.Read.All`); the authorization letter names them.
+- In AWS, the reading is done by Prowler, an open-source scanner, through a role
+  holding only AWS's own audit policies (SecurityAudit and ViewOnlyAccess).
+  Prowler runs outside the tool's own request guard, so for AWS the evidence of
+  read-only behaviour is the client's CloudTrail.
+- Read-only is not the same as no effect. The client will see:
+  - read requests in the admin audit log (Google, Microsoft) and in CloudTrail
+    across all regions (AWS);
+  - a sign-in by the assessment service account or application in the sign-in
+    logs, and the token requests that go with it;
+  - use of the organization's API quota. Microsoft may slow a busy tenant's
+    responses (throttling); the tooling waits and retries rather than pressing on.
+- The assessor holds a sensitive map of the client's accounts and settings for
+  the retention period, protected as the data handling policy describes.
+- **We encourage the client to look.** The assessor supplies their own call log
+  for comparison, and the scan's start time for filtering CloudTrail.
 
 ## Communication
 

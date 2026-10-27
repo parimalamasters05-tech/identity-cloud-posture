@@ -111,7 +111,7 @@ def test_report_states_what_was_not_examined(html: str):
 
 def test_report_states_the_read_only_method(html: str):
     assert "read-only" in html.lower()
-    assert "nothing in your environment was changed" in html.lower()
+    assert "designed to read settings only, never to change them" in html
 
 
 def test_report_disclaims_certification(html: str):

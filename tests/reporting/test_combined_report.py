@@ -238,3 +238,34 @@ def test_combined_cover_says_sharepoint_sites_were_not_checked_for_public_links(
     assert any("SharePoint sites" in line for line in with_m365.not_examined)
     without = combined([Platform.GOOGLE_WORKSPACE, Platform.AWS])
     assert not any("SharePoint" in line for line in without.not_examined)
+
+
+def test_the_tracking_sheet_lists_every_action_in_the_action_plans_order(combined):
+    """The action plan is a shortlist; the tracking sheet is the whole list."""
+    context, _, _ = combined
+    sheet, plan = context["tracking_sheet"], context["action_plan"]
+    assert len(sheet) >= len(plan)
+    assert [r["finding"].finding_id for r in sheet[: len(plan)]] == [p["finding"].finding_id for p in plan]
+    actions = {f.remediation_key for f in (r["finding"] for r in sheet)}
+    assert len(actions) == len(sheet), "one row per action"
+    covered = sum(r["covers"] for r in sheet)
+    assert covered == context["total_findings"], "every finding is on the sheet"
+
+
+def test_the_tracking_sheet_is_the_last_page_with_a_reference_per_row(combined):
+    context, text, _ = combined
+    assert text.rstrip().endswith(context["tracking_sheet"][-1]["finding"].finding_id)
+    assert "Remediation tracking sheet" in text
+    for row in context["tracking_sheet"]:
+        assert row["finding"].finding_id in text.split("Remediation tracking sheet", 1)[1]
+
+
+def test_each_platforms_known_limits_are_stated_in_the_methodology(combined):
+    """Review, 27 Oct 2026: limits the checks have must be said, not found."""
+    from icp.reporting.platform_text import GOOGLE, MICROSOFT
+
+    _, text, _ = combined
+    for platform in (GOOGLE, MICROSOFT):
+        assert platform.limitations
+        for limit in platform.limitations:
+            assert f"{platform.name}: {limit}" in text.replace("&gt;", ">")

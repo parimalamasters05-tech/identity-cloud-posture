@@ -275,9 +275,12 @@ class M365NoOrganizationWideMfa(M365Rule):
         report_only = [
             f"'{p['name']}' ({'report-only' if 'Reporting' in str(p.get('state')) else 'off'})"
             for p in raw.get("conditional_access", [])
-            if p.get("state") != "enabled" and "mfa" in (p.get("grant") or [])
+            if p.get("state") != "enabled" and p.get("second_step", "mfa" in (p.get("grant") or []))
         ]
         admin_only = [f"'{p['name']}'" for p in raw.get("admin_mfa_policies", [])]
+        # Switched on, but narrowed: excluded groups, some locations, "MFA or a
+        # compliant device" and the like. Each named with what narrows it.
+        partial = [f"'{p['name']}' ({', '.join(p['why'])})" for p in raw.get("mfa_partial_policies", [])]
         return [
             self.make_finding(
                 tenant,
@@ -298,6 +301,11 @@ class M365NoOrganizationWideMfa(M365Rule):
                                 else ""
                             )
                             + (
+                                f" Switched on but not for everyone: {'; '.join(partial)}."
+                                if partial
+                                else ""
+                            )
+                            + (
                                 f" {', '.join(admin_only)} is switched on, but applies to "
                                 "administrator roles only."
                                 if admin_only
@@ -308,6 +316,7 @@ class M365NoOrganizationWideMfa(M365Rule):
                             "security_defaults_enabled": bool(raw.get("security_defaults_enabled")),
                             "enforcing_policies": len(raw.get("mfa_enforcing_policies", [])),
                             "policies_not_enforced": len(report_only),
+                            "policies_not_for_everyone": len(partial),
                         },
                     )
                 ],

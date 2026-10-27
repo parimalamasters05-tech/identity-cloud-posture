@@ -90,7 +90,7 @@ def _strip_query(uri: str) -> str:
 
 
 #: The only address a POST may go to beneath the guard: Google issues the
-#: access token there. It changes nothing in the tenant.
+#: access token there. It changes no setting in the tenant.
 GOOGLE_TOKEN_ENDPOINT = "https://oauth2.googleapis.com/token"  # noqa: S105  # nosec B105 - an address, not a secret
 
 

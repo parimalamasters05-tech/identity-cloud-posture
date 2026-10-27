@@ -343,3 +343,27 @@ def test_a_microsoft_key_others_can_read_is_refused(tmp_path, key):
         GraphCredentials.from_files(tenant_id="t", client_id="c", thumbprint="ab", key_file=pem).client_id
         == "c"
     )
+
+
+def test_parallel_reads_share_one_sign_in(creds):
+    """Per-user reads run on several threads; the report counts sign-in requests."""
+    import threading
+    import time as _time
+    from concurrent.futures import ThreadPoolExecutor
+
+    lock = threading.Lock()
+    requests: list[str] = []
+
+    def slow(request, timeout=None):
+        with lock:
+            requests.append(request.get_method())
+        if request.full_url == TOKEN_URL:
+            _time.sleep(0.05)  # widen the window two threads could both fetch a token in
+            return _Response(json.dumps({"access_token": "t", "expires_in": 3600}).encode())
+        return _Response(json.dumps({"value": []}).encode())
+
+    client = GraphReadOnly(creds, opener=slow)
+    with ThreadPoolExecutor(max_workers=8) as pool:
+        list(pool.map(lambda i: client.get(f"users/u{i}/authentication/methods"), range(24)))
+    assert requests.count("POST") == 1 and client.auth_requests == 1
+    assert len(client.calls) == 24

@@ -351,3 +351,31 @@ def test_an_anyone_link_on_a_later_page_of_permissions_is_found():
     ctx = _ctx(DANA)
     assert [f["name"] for f in m365._public_files(graph, ctx)] == ["budget.xlsx"]
     assert "m365.public_files" not in ctx["partial"]
+
+
+def test_per_user_reads_keep_the_users_order_whatever_finishes_first():
+    import random
+    import time as _time
+
+    def slow(u):
+        _time.sleep(random.uniform(0, 0.02))
+        return u["id"]
+
+    users = [{"id": f"u{i}"} for i in range(30)]
+    assert m365._per_user(slow, users) == [f"u{i}" for i in range(30)]
+
+
+def test_a_cut_off_drive_is_named_for_its_own_user_when_read_in_parallel():
+    page = _drive([{"id": "i1", "name": "a.docx", "file": {}}])
+    short = _drive([])
+    routes = {f"users/u-{n}/drive/root/delta": short for n in ("xavi", "yuki", "zoe")}
+    routes["users/u-dana/drive/root/delta"] = [page] * (m365.MAX_DRIVE_PAGES + 1)
+    graph = FakeGraph(routes)
+    others = [
+        {**DANA, "id": f"u-{n}", "userPrincipalName": f"{n}@lab.example"} for n in ("xavi", "yuki", "zoe")
+    ]
+    ctx = _ctx(DANA, *others)
+    m365._public_files(graph, ctx)
+    note = ctx["partial"]["m365.public_files"]
+    assert "dana@lab.example" in note
+    assert not any(f"{n}@lab.example" in note for n in ("xavi", "yuki", "zoe"))

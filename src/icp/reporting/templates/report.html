@@ -73,6 +73,17 @@
   table.scope-columns td { width: 50%; border-bottom: none; padding: 0 10pt 0 0; }
   table.scope-columns h3 { margin-top: 0; }
   table.scope-columns .steps li { margin-bottom: 2pt; }
+
+  /* Tracking sheet: one page, rows tall enough to write in. */
+  table.tracking-table { font-size: 8pt; margin-top: 4pt; }
+  .tracking-table td { height: 12pt; padding: 2pt 4pt; line-height: 1.25; }
+  .tracking-table td.mono { font-size: 7pt; }
+  .tracking-table .sev { font-size: 7pt; padding: 0 3pt; }
+  .tracking h2 { margin-bottom: 6pt; }
+  .tracking p.meta { margin-bottom: 4pt; }
+  .tracking-table td.tick { text-align: center; }
+  .tracking-table .box { display: inline-block; width: 9pt; height: 9pt; border: 0.75pt solid #16191c; }
+  .tracking-table tr { page-break-inside: avoid; }
 </style>
 </head>
 <body>
@@ -87,6 +98,7 @@
 {% include "partials/framework_mapping.html" %}
 {% include "partials/methodology.html" %}
 {% include "partials/evidence_appendix.html" %}
+{% include "partials/tracking_sheet.html" %}
 
 </body>
 </html>

@@ -65,6 +65,26 @@
     },
     {
       "affected": [
+        "900000000000000000009",
+        "900000000000000000011"
+      ],
+      "confidence": "confirmed",
+      "effort_hours": 1.2,
+      "evidence": [
+        "2 active accounts use two-step verification by choice: it is not enforced for them, so it can be switched off again. Enforced for 0 of 8 active accounts."
+      ],
+      "finding_id": "d9bdbac92ae643ce",
+      "framework_refs": [
+        "PR.AA-03"
+      ],
+      "remediation_key": "mfa.enforce_all_users",
+      "risk_score": 21.22,
+      "rule_id": "GWS-MFA-004",
+      "severity": "medium",
+      "title": "2 accounts could switch two-step verification off: the organization does not enforce it"
+    },
+    {
+      "affected": [
         "900000000000000000009"
       ],
       "confidence": "confirmed",

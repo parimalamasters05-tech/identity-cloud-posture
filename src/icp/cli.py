@@ -433,12 +433,21 @@ def delta(ctx: click.Context, previous: Path, current: Path) -> None:
     click.echo(f"  regressed    {summary['regressed']}")
     for finding in report_obj.open_in_both:
         change = report_obj.changes[finding.finding_id]
-        if change.added or change.removed:
+        if change.added or change.removed or change.unconfirmed:
             click.echo(
                 f"    {finding.rule_id}: {change.previous_count} -> {change.current_count}"
                 + (f"  fixed: {', '.join(change.removed)}" if change.removed else "")
                 + (f"  added: {', '.join(change.added)}" if change.added else "")
+                + (f"  not rechecked: {', '.join(change.unconfirmed)}" if change.unconfirmed else "")
             )
+    if report_obj.not_revalidated or report_obj.first_assessed:
+        click.secho(
+            f"  not rechecked {summary['not_revalidated']}   first checked {summary['first_assessed']}"
+            "  -- the two runs could not see the same checks; left out of resolved, new and risk",
+            fg="yellow",
+        )
+        for finding in report_obj.not_revalidated:
+            click.echo(f"    not rechecked: {finding.rule_id} {finding.title}")
     click.echo(f"  net change   {summary['net_change']:+d}")
     click.echo(
         f"  risk score   {summary['risk']['previous']} -> {summary['risk']['current']} "

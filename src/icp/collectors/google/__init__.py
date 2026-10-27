@@ -17,7 +17,7 @@ from icp.collectors.google.groups import GroupsCollector
 from icp.collectors.google.mfa import MfaCollector
 from icp.collectors.google.oauth import OAuthTokensCollector
 from icp.collectors.google.policies import WorkspacePoliciesCollector
-from icp.collectors.google.roles import RoleAssignmentsCollector, RolesCollector
+from icp.collectors.google.roles import RoleAssignmentsCollector, RoleGroupMembersCollector, RolesCollector
 from icp.collectors.google.sharing import DriveSettingsCollector, PublicDriveItemsCollector
 from icp.collectors.google.token_activity import TokenActivityCollector
 from icp.collectors.google.users import UsersCollector
@@ -33,6 +33,7 @@ COLLECTORS = (
     GroupsCollector,
     RolesCollector,
     RoleAssignmentsCollector,
+    RoleGroupMembersCollector,
     MfaCollector,
     OAuthTokensCollector,
     TokenActivityCollector,

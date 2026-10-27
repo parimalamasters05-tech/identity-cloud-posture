@@ -139,13 +139,18 @@ def _role_index(snapshot: Snapshot) -> dict[str, list[tuple[str, bool]]]:
     """principal id -> [(role name, is Global Administrator)]."""
     data = snapshot.artifact("m365.roles") or {}
     definitions = {d["id"]: d for d in data.get("definitions", [])}
+    # A role held by a group is held by each member (snapshots from before
+    # this was collected have none, and are read as before).
+    group_members = data.get("group_members") or {}
     index: dict[str, list[tuple[str, bool]]] = {}
     for a in data.get("assignments", []):
         d = definitions.get(a.get("roleDefinitionId"), {})
         is_global = (d.get("templateId") or d.get("id")) == GLOBAL_ADMIN_TEMPLATE
-        index.setdefault(str(a.get("principalId")), []).append(
-            (d.get("displayName") or "Unknown role", is_global)
-        )
+        role = (d.get("displayName") or "Unknown role", is_global)
+        principal = str(a.get("principalId"))
+        for holder in [principal, *group_members.get(principal, [])]:
+            if role not in index.setdefault(holder, []):
+                index[holder].append(role)
     return index
 
 
@@ -380,6 +385,66 @@ def _audit(snapshot: Snapshot) -> list[AuditStream]:
     ]
 
 
+#: Individual accounts an organization-wide policy may leave out and still be
+#: organization-wide: Microsoft's own guidance is to exclude one or two
+#: emergency-access ("break-glass") accounts. Groups, roles and guests are not
+#: allowed: their size cannot be told from the policy.
+_EMERGENCY_ACCOUNTS = 2
+
+
+def _requires_second_step(p: dict[str, Any]) -> bool:
+    """Does satisfying this policy need a second sign-in step?
+
+    An authentication strength always does. Built-in "mfa" does only if it is
+    not one option among several: with operator OR, "MFA or a compliant
+    device" is satisfied by the device alone. Snapshots from before the
+    operator was collected have none; "mfa" alone counts, a list does not.
+    """
+    if p.get("authentication_strength"):
+        return True
+    controls = p.get("grant_controls") or []
+    if "mfa" not in controls:
+        return False
+    return len(controls) == 1 or p.get("grant_operator") == "AND"
+
+
+def _why_not_org_wide(p: dict[str, Any]) -> list[str]:
+    """What keeps an enabled policy requiring a second step from covering everyone."""
+    users = p.get("users") or {}
+    reasons = []
+    if "All" not in (users.get("includeUsers") or []):
+        reasons.append("does not include all users")
+    if "All" not in ((p.get("applications") or {}).get("includeApplications") or []):
+        reasons.append("covers only some applications")
+    excluded_users = [u for u in users.get("excludeUsers") or [] if u != "GuestsOrExternalUsers"]
+    if len(excluded_users) > _EMERGENCY_ACCOUNTS:
+        reasons.append(f"excludes {len(excluded_users)} accounts")
+    if users.get("excludeGroups"):
+        reasons.append(f"excludes {len(users['excludeGroups'])} group(s)")
+    if users.get("excludeRoles"):
+        reasons.append(f"excludes {len(users['excludeRoles'])} role(s)")
+    if users.get("excludeGuestsOrExternalUsers") or "GuestsOrExternalUsers" in (
+        users.get("excludeUsers") or []
+    ):
+        reasons.append("excludes guests")
+    locations = p.get("locations") or {}
+    if locations.get("excludeLocations") or (
+        locations.get("includeLocations") and "All" not in locations["includeLocations"]
+    ):
+        reasons.append("applies only from some locations")
+    platforms = p.get("platforms") or {}
+    if platforms.get("excludePlatforms") or (
+        platforms.get("includePlatforms") and "all" not in platforms["includePlatforms"]
+    ):
+        reasons.append("applies only on some devices")
+    if p.get("sign_in_risk_levels") or p.get("user_risk_levels"):
+        reasons.append("applies only to risky sign-ins")
+    apps = p.get("client_app_types") or []
+    if apps and "all" not in apps:
+        reasons.append("applies only to some kinds of app")
+    return reasons
+
+
 def _policy(snapshot: Snapshot, domain: str) -> DomainPolicy:
     # Built from whatever was readable. A rule that needs one of these sources
     # names it in `requires_collectors`, so a missing one makes that rule "not
@@ -388,13 +453,14 @@ def _policy(snapshot: Snapshot, domain: str) -> DomainPolicy:
     sharing = snapshot.artifact("m365.sharepoint_settings") or {}
     grants = snapshot.artifact("m365.graph_permissions") or {}
     ca = policies.get("conditional_access", [])
-    mfa_policies = [
-        p
-        for p in ca
-        if p.get("state") == "enabled"
-        and "mfa" in (p.get("grant_controls") or [])
-        and "All" in ((p.get("users") or {}).get("includeUsers") or [])
-        and "All" in ((p.get("applications") or {}).get("includeApplications") or [])
+    enabled_second_step = [p for p in ca if p.get("state") == "enabled" and _requires_second_step(p)]
+    mfa_policies = [p for p in enabled_second_step if not _why_not_org_wide(p)]
+    # On but not for everyone: named in the finding, with what narrows each one.
+    # Policies for administrator roles are reported separately, below.
+    partial = [
+        {"name": p.get("displayName"), "why": _why_not_org_wide(p)}
+        for p in enabled_second_step
+        if _why_not_org_wide(p) and not (p.get("users") or {}).get("includeRoles")
     ]
     capability = sharing.get("sharingCapability")
     # A policy lists roles by template id; people hold them by name.
@@ -412,10 +478,16 @@ def _policy(snapshot: Snapshot, domain: str) -> DomainPolicy:
         raw={
             "security_defaults_enabled": policies.get("security_defaults_enabled"),
             "conditional_access": [
-                {"name": p.get("displayName"), "state": p.get("state"), "grant": p.get("grant_controls")}
+                {
+                    "name": p.get("displayName"),
+                    "state": p.get("state"),
+                    "grant": p.get("grant_controls"),
+                    "second_step": _requires_second_step(p),
+                }
                 for p in ca
             ],
             "mfa_enforcing_policies": [p.get("displayName") for p in mfa_policies],
+            "mfa_partial_policies": partial,
             # Enabled policies requiring a second step for administrator roles:
             # an admin with none registered is asked to set one up at next sign-in.
             # Each names the roles it covers: the Microsoft template covers 14,
@@ -429,10 +501,8 @@ def _policy(snapshot: Snapshot, domain: str) -> DomainPolicy:
                     ),
                     "excluded_users": list((p.get("users") or {}).get("excludeUsers") or []),
                 }
-                for p in ca
-                if p.get("state") == "enabled"
-                and "mfa" in (p.get("grant_controls") or [])
-                and (p.get("users") or {}).get("includeRoles")
+                for p in enabled_second_step
+                if (p.get("users") or {}).get("includeRoles")
                 and "All" in ((p.get("applications") or {}).get("includeApplications") or [])
             ],
             "consent_policies": (policies.get("authorization") or {}).get("permission_grant_policies", []),

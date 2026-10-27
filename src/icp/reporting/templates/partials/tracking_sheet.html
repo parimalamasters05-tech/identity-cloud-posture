@@ -1,0 +1,40 @@
+{# Last page — for whoever tracks the work. Printed or copied, filled in by hand.
+   Every action, not the shortlist; the reference is what the next review's
+   progress page reports on. #}
+<section class="page-break tracking">
+  <h2>Remediation tracking sheet</h2>
+  <p class="meta">
+    {{ client_name }} &middot; review of {{ generated_at.strftime('%d %B %Y') }} &middot;
+    {{ tracking_sheet | length }} action{{ 's' if tracking_sheet | length != 1 else '' }}, in the order of the
+    action plan. Fill in an owner and a date for each; tick it when its &ldquo;how to check it worked&rdquo;
+    step passes. The next review confirms each one by its reference.
+  </p>
+
+  <table class="tracking-table">
+    <thead>
+      <tr>
+        <th style="width:4%;">#</th>
+        <th style="width:52%;">Action</th>
+        <th style="width:9%;">Severity</th>
+        <th style="width:13%;">Reference</th>
+        <th style="width:11%;">Owner</th>
+        <th style="width:7%;">Due</th>
+        <th style="width:4%;">Done</th>
+      </tr>
+    </thead>
+    <tbody>
+      {% for item in tracking_sheet %}
+      <tr>
+        <td>{{ item.rank }}</td>
+        <td>{{ item.remediation.title }}{% if combined %} <span class="meta">({{ platform_name(item.finding) }})</span>{% endif %}{% if item.covers > 1 %}
+          <span class="meta">&mdash; covers {{ item.covers }} findings</span>{% endif %}</td>
+        <td><span class="sev sev-{{ item.finding.severity }}">{{ item.finding.severity | severity_label }}</span></td>
+        <td class="mono">{{ item.finding.finding_id }}</td>
+        <td></td>
+        <td></td>
+        <td class="tick"><span class="box"></span></td>
+      </tr>
+      {% endfor %}
+    </tbody>
+  </table>
+</section>

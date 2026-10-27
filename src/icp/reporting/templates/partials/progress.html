@@ -12,7 +12,7 @@
   <h3>{% if combined or progress | length > 1 %}{{ item.platform.name }}: {% endif %}{{ item.previous_at.strftime('%d %B %Y, %H:%M UTC') }} to {{ item.current_at.strftime('%d %B %Y, %H:%M UTC') }}</h3>
   <table>
     <thead>
-      <tr><th>Resolved</th><th>Improved</th><th>Worse</th><th>New</th><th>Unchanged</th><th>Total risk score</th></tr>
+      <tr><th>Resolved</th><th>Improved</th><th>Worse</th><th>New</th><th>Unchanged</th><th>Not rechecked</th><th>First checked</th><th>Total risk score</th></tr>
     </thead>
     <tbody>
       <tr>
@@ -21,6 +21,8 @@
         <td>{{ item.counts.regressed }}</td>
         <td>{{ item.counts.new }}</td>
         <td>{{ item.counts.persisting }}</td>
+        <td>{{ item.counts.not_revalidated }}</td>
+        <td>{{ item.counts.first_assessed }}</td>
         <td>{{ item.risk.previous }} to {{ item.risk.current }}{% if item.risk.change_pct %}
           ({{ 'down' if item.risk.change_pct < 0 else 'up' }} {{ item.risk.change_pct | abs }}%){% endif %}</td>
       </tr>
@@ -45,7 +47,9 @@
   <p class="meta">
     Earlier snapshot <span class="mono">{{ item.previous_snapshot_id }}</span>. A resolved row shows
     the finding as it stood in the earlier review. The total risk score adds up the score of every
-    open finding on each date, using the scoring set out in the methodology section.
+    open finding on each date, using the scoring set out in the methodology section. Findings
+    that could not be rechecked, or were checked for the first time, are left out of both totals:
+    the two reviews could not see the same things, so a change there is not a change in risk.
   </p>
   {% endfor %}
 </section>

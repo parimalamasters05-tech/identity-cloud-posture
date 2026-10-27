@@ -152,6 +152,7 @@ class ReportRenderer:
             "counts": lead_counts,
             "total_findings": len(leads),
             "total_checks_flagged": len(actionable),
+            "tracking_sheet": self._tracking_sheet(leads),
             "action_plan": [
                 {
                     "rank": entry.rank,
@@ -290,8 +291,7 @@ class ReportRenderer:
             caveat = (
                 " Not every permission is limited to settings: one could in principle remove "
                 "connections between staff accounts and outside applications, and one could open "
-                "file contents. The tool is built so that it cannot send any change or request a "
-                "file's contents, and it did neither."
+                "file contents. The tool blocks any request that would do either."
                 if any_write and any_content
                 else (_WRITE_CAVEAT if any_write else _CONTENT_CAVEAT)
             )
@@ -308,6 +308,7 @@ class ReportRenderer:
             "counts": lead_counts,
             "total_findings": len(leads),
             "total_checks_flagged": len(actionable),
+            "tracking_sheet": self._tracking_sheet(leads),
             "action_plan": [
                 {
                     "rank": entry.rank,
@@ -334,7 +335,7 @@ class ReportRenderer:
                 "not_examined": list(text.not_examined),
                 "method": _authorized(text.method_opening, engagement_ref)
                 + caveat
-                + " No setting was changed, and no message or file content was opened.",
+                + _requests_statement([t.platform for t in tenants]),
                 "point_in_time": max(t.snapshot.collected_at for t in tenants),
                 "degraded": [c for t in tenants for c in t.snapshot.degraded_collectors()],
             },
@@ -381,6 +382,23 @@ class ReportRenderer:
         write_private(html_path, html)
         pdf_path, pdf_error = self._render_pdf(html, file_in(output_dir, f"{stem}.pdf"))
         return RenderResult(html_path=html_path, pdf_path=pdf_path, pdf_error=pdf_error)
+
+    def _tracking_sheet(self, leads: list[Finding]) -> list[dict[str, Any]]:
+        """Every action, in the action plan's order, for the client to track.
+
+        The action plan is a shortlist; this is the whole list, one row per
+        action (findings fixed by the same action share a row), with the
+        finding reference that the next quarter's progress page reports on.
+        """
+        return [
+            {
+                "rank": entry.rank,
+                "finding": entry.finding,
+                "covers": entry.covers,
+                "remediation": self.library.get(entry.finding.remediation_key),
+            }
+            for entry in rank(leads, dedupe_by_action=True)
+        ]
 
     def _finding_context(self, finding: Finding) -> dict[str, Any]:
         return {
@@ -550,6 +568,7 @@ _COLLECTOR_AREAS = {
     "google.groups": "groups",
     "google.roles": "administrator role definitions",
     "google.role_assignments": "who holds which administrator role",
+    "google.role_group_members": "administrators who hold a role through a group",
     "google.mfa": "Google's report of which sign-in methods each person uses",
     "google.oauth_tokens": "the applications connected to staff accounts",
     "google.token_activity": "the history of when applications were connected and used",
@@ -647,15 +666,35 @@ def _app_kind(app: Application) -> str:
 #: change something. What we can promise is behaviour.
 _WRITE_CAVEAT = (
     " One permission Google requires for this review could in principle remove "
-    "connections between staff accounts and outside applications; the tool is built "
-    "so that it cannot send any change, and none was made."
+    "connections between staff accounts and outside applications; the tool blocks any "
+    "request that would."
 )
 #: Microsoft: read-only, but one permission could open file contents.
 _CONTENT_CAVEAT = (
     " Every permission used can only read, but one could in principle open file contents; "
-    "the tool reads only who each file is shared with, and is built so that it cannot "
-    "request a file's contents."
+    "the tool reads only who each file is shared with, and blocks any request for them."
 )
+
+
+def _requests_statement(platforms: list[Platform]) -> str:
+    """What the client can check about the requests made, platform by platform.
+
+    Not "no setting was changed": that is a claim about the client's
+    environment, which no tool can make for itself. For Google and Microsoft
+    this tool's own record of every request backs what it says it sent. In
+    AWS the requests were Prowler's, outside this tool's guard, so the
+    evidence is the client's own CloudTrail.
+    """
+    # Short on purpose: it is on the cover, which must stay one page.
+    with_aws = Platform.AWS in platforms
+    if with_aws and len(platforms) == 1:
+        return " Prowler's requests are in your CloudTrail."
+    if with_aws:
+        return (
+            " Outside AWS, this tool sent no request to change a setting or open a file; "
+            "in AWS, Prowler's requests are in your CloudTrail."
+        )
+    return " This tool sent no request to change a setting or open a file; read-only verification lists every request."
 
 
 def _scopes_for_claims(tenant: NormalizedTenant) -> tuple[str, ...]:
@@ -694,7 +733,7 @@ def _scope_statement(tenant: NormalizedTenant, engagement_ref: str = "") -> dict
         "method": (
             _authorized(text.method_opening, engagement_ref)
             + caveat
-            + " No setting was changed, and no message or file content was opened."
+            + _requests_statement([tenant.platform])
         ),
         "point_in_time": tenant.snapshot.collected_at,
         "degraded": list(tenant.snapshot.degraded_collectors()),

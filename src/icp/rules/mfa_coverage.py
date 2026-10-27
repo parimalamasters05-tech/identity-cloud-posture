@@ -200,3 +200,65 @@ class AdminsWithoutPhishingResistantMfa(Rule):
                 confidence=Confidence.HIGH,
             )
         ]
+
+
+@register
+class TwoStepNotEnforced(Rule):
+    """Enrolled, but free to switch it off.
+
+    Enrollment is each person's choice until the organization enforces it:
+    an enrolled account where it is not enforced can turn two-step
+    verification off again, and new accounts need never turn it on. The
+    collector always read Google's per-account enforcement flag; no rule used
+    it (review, 27 Oct 2026). Accounts not enrolled at all are reported by
+    GWS-MFA-001 and GWS-MFA-002, not here.
+    """
+
+    rule_id = "GWS-MFA-004"
+    check_family = CheckFamily.MFA_COVERAGE
+    title = "Two-step verification not enforced"
+
+    impact = 3
+    exposure = 3
+
+    # The same fix as GWS-MFA-002 (switch enforcement on), so the action plan
+    # lists it once.
+    remediation_key = "mfa.enforce_all_users"
+    framework_refs = ("PR.AA-03",)
+    default_effort_hours = 1.0
+
+    def evaluate(self, tenant: NormalizedTenant, ctx: RuleContext) -> list[Finding]:
+        affected = [u for u in tenant.active_users if u.mfa_enrolled and not u.mfa_enforced]
+        if not affected:
+            return []
+        total = len(tenant.active_users)
+        enforced = sum(1 for u in tenant.active_users if u.mfa_enforced)
+        return [
+            self.make_finding(
+                tenant,
+                ctx,
+                title=(
+                    f"{plural(len(affected), 'account')} could switch two-step verification off: "
+                    "the organization does not enforce it"
+                ),
+                entities=[entity_from_identity(u) for u in affected],
+                evidence=[
+                    Evidence(
+                        collector="google.users",
+                        pointer="/google.users",
+                        summary=(
+                            f"{plural(len(affected), 'active account')} "
+                            f"{'uses' if len(affected) == 1 else 'use'} two-step verification by "
+                            f"choice: it is not enforced for {'it' if len(affected) == 1 else 'them'}, "
+                            f"so it can be switched off again. Enforced for {enforced} of {total} "
+                            "active accounts."
+                        ),
+                        observed_values={
+                            "enrolled_not_enforced": len(affected),
+                            "enforced": enforced,
+                            "active_accounts": total,
+                        },
+                    )
+                ],
+            )
+        ]

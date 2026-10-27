@@ -271,6 +271,15 @@ class ExecutiveSummary:
     closing: str
 
 
+#: What the assessment did, not a claim about the client's environment. It used
+#: to say "nothing in your environment was changed at any point", which no tool
+#: can know for itself -- and in AWS the requests were Prowler's, not ours.
+_READ_ONLY_SENTENCE = (
+    "The assessment was designed to read settings only, never to change them; the "
+    "methodology shows how to confirm this in your own logs."
+)
+
+
 def build(
     tenant: NormalizedTenant, findings: list[Finding], library: RemediationLibrary | None = None
 ) -> ExecutiveSummary:
@@ -326,7 +335,7 @@ def _opening(tenant: NormalizedTenant, findings: list[Finding], rating: str) -> 
         ]
     if apps:
         parts.append(f" and {apps} connected third-party applications")
-    parts.append(". The assessment was read-only: nothing in your environment was changed at any point. ")
+    parts.append(f". {_READ_ONLY_SENTENCE} ")
     parts.append(_verdict(critical, high, rating))
     return "".join(parts)
 
@@ -461,7 +470,7 @@ def build_combined(
             else ""
         )
         + "".join(f", and the identity and storage settings of {_aws_account(t)}" for t in clouds)
-        + ". The assessment was read-only: nothing in your environments was changed at any point. "
+        + f". {_READ_ONLY_SENTENCE} "
         + _verdict(critical, high, rating)
     )
 

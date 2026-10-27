@@ -133,7 +133,12 @@ def _partial_coverage_findings(
                             "These checks ran on incomplete data. Their findings stand, but a clean "
                             f"result in this area is not proof that nothing is wrong. Reason: {gap.reason}"
                         ),
-                        observed_values={"missed": len(gap.missed)},
+                        # Every area the gap touches, for the delta: a finding gone
+                        # from any of them was not fully rechecked.
+                        observed_values={
+                            "missed": len(gap.missed),
+                            "families": ",".join(str(f) for f in assessed),
+                        },
                     ),
                 ),
                 remediation_key="coverage.restore_access",

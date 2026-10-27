@@ -15,6 +15,7 @@ from __future__ import annotations
 import logging
 import secrets
 from collections.abc import Callable
+from concurrent.futures import ThreadPoolExecutor
 from datetime import UTC, datetime, timedelta
 from typing import Any
 
@@ -107,21 +108,42 @@ def _mfa_registration(c: GraphReadOnly, _ctx: dict[str, Any]) -> dict[str, Any]:
     return {"entries": [_keep(r, fields) for r in rows]}
 
 
+#: Users read at once for the per-user requests (sign-in methods, OneDrive).
+#: One at a time, they grew with headcount: 40 seconds for 24 users on the lab,
+#: about 8 minutes for 300 staff, past the brief's five-minute collection
+#: budget. The same as the Google collectors; throttling is retried by the client.
+_MAX_WORKERS = 8
+
+
+def _per_user(fn: Callable[[dict[str, Any]], Any], users: list[dict[str, Any]]) -> list[Any]:
+    """`fn` for each user, several at a time; results in the users' order."""
+    if len(users) < 2:
+        return [fn(u) for u in users]
+    with ThreadPoolExecutor(max_workers=_MAX_WORKERS) as pool:
+        return list(pool.map(fn, users))
+
+
 def _auth_methods(c: GraphReadOnly, ctx: dict[str, Any]) -> dict[str, Any]:
     """Each member's registered sign-in method *types*, never their details.
 
     Read directly per user because the registration report above can lag by
     a day or more on a new tenant (it returned no rows on day one).
     """
+
+    def methods_of(u: dict[str, Any]) -> list[dict[str, Any]] | GraphError:
+        try:
+            return list(c.get(f"users/{u['id']}/authentication/methods").get("value", []))
+        except GraphError as exc:
+            return exc
+
     entries: dict[str, list[dict[str, Any]]] = {}
     failed: list[str] = []
-    for u in ctx.get("users", []):
-        if u.get("userType") == "Guest":
-            continue
-        try:
-            methods = c.get(f"users/{u['id']}/authentication/methods").get("value", [])
-        except GraphError as exc:
-            logger.warning("Sign-in methods unreadable for %s: %s", u.get("userPrincipalName"), exc.code)
+    members = [u for u in ctx.get("users", []) if u.get("userType") != "Guest"]
+    for u, methods in zip(members, _per_user(methods_of, members), strict=True):
+        if isinstance(methods, GraphError):
+            logger.warning(
+                "Sign-in methods unreadable for %s: %s", u.get("userPrincipalName"), methods.code
+            )
             failed.append(str(u.get("userPrincipalName")))
             continue
         entries[u["id"]] = [
@@ -138,7 +160,7 @@ def _auth_methods(c: GraphReadOnly, ctx: dict[str, Any]) -> dict[str, Any]:
     return {"entries": entries}
 
 
-def _roles(c: GraphReadOnly, _ctx: dict[str, Any]) -> dict[str, Any]:
+def _roles(c: GraphReadOnly, ctx: dict[str, Any]) -> dict[str, Any]:
     definitions = c.paginate(
         "roleManagement/directory/roleDefinitions", {"$select": "id,displayName,isBuiltIn,templateId"}
     )
@@ -146,7 +168,31 @@ def _roles(c: GraphReadOnly, _ctx: dict[str, Any]) -> dict[str, Any]:
         "roleManagement/directory/roleAssignments",
         {"$select": "id,principalId,roleDefinitionId,directoryScopeId"},
     )
-    return {"definitions": definitions, "assignments": assignments}
+    # A role held by a group is held by everyone in it. Only role-assignable
+    # groups can hold a directory role, and they cannot contain other groups,
+    # so their direct members are the whole answer. IDs and types only.
+    assignable = {
+        str(g.get("id"))
+        for g in c.paginate(
+            "groups", {"$filter": "isAssignableToRole eq true", "$select": "id", "$top": "999"}
+        )
+    }
+    holders = sorted({str(a.get("principalId")) for a in assignments} & assignable)
+    group_members: dict[str, list[str]] = {}
+    unread: list[str] = []
+    for group in holders:
+        try:
+            members = c.paginate(f"groups/{group}/members", {"$select": "id", "$top": "999"})
+        except GraphError as exc:
+            unread.append(f"{group} ({exc.code})")
+            continue
+        group_members[group] = sorted(str(m.get("id")) for m in members if m.get("id"))
+    if unread:
+        ctx["partial"]["m365.roles"] = (
+            "The members of some groups holding an administrator role could not be read, so "
+            "administrators who hold a role through them are not counted: " + "; ".join(unread) + "."
+        )
+    return {"definitions": definitions, "assignments": assignments, "group_members": group_members}
 
 
 def _groups(c: GraphReadOnly, _ctx: dict[str, Any]) -> list[dict[str, Any]]:
@@ -267,6 +313,21 @@ def _policies(c: GraphReadOnly, _ctx: dict[str, Any]) -> dict[str, Any]:
                 "applications": ((p.get("conditions") or {}).get("applications")) or {},
                 "client_app_types": ((p.get("conditions") or {}).get("clientAppTypes")) or [],
                 "grant_controls": ((p.get("grantControls") or {}).get("builtInControls")) or [],
+                # "OR": any one control will do, so "MFA or a compliant device"
+                # does not require MFA. "AND": every control is required.
+                "grant_operator": (p.get("grantControls") or {}).get("operator"),
+                # An authentication strength requires a second step without
+                # listing "mfa" among the built-in controls. Its name only.
+                "authentication_strength": _keep(
+                    (p.get("grantControls") or {}).get("authenticationStrength") or {},
+                    ("id", "displayName"),
+                )
+                or None,
+                # Conditions that narrow a policy to some sign-ins only.
+                "locations": ((p.get("conditions") or {}).get("locations")) or {},
+                "platforms": ((p.get("conditions") or {}).get("platforms")) or {},
+                "sign_in_risk_levels": ((p.get("conditions") or {}).get("signInRiskLevels")) or [],
+                "user_risk_levels": ((p.get("conditions") or {}).get("userRiskLevels")) or [],
             }
             for p in ca
         ],
@@ -320,26 +381,22 @@ def _public_files(c: GraphReadOnly, ctx: dict[str, Any]) -> list[dict[str, Any]]
     looked at, and the report says so. A drive longer than MAX_DRIVE_PAGES
     pages is checked only that far, and named as partial coverage.
     """
-    found: list[dict[str, Any]] = []
-    skipped: list[str] = []
-    truncated: list[str] = []
-    for u in ctx.get("users", []):
-        if u.get("userType") == "Guest" or not u.get("assignedLicenses"):
-            continue  # guests and unlicensed accounts have no OneDrive
-        before = len(c.truncations)
+
+    def one_drive(u: dict[str, Any]) -> tuple[list[dict[str, Any]], list[str], bool]:
+        """(public items, what could not be checked, cut short?) for one user."""
+        path = f"users/{u['id']}/drive/root/delta"
         try:
             items = c.paginate(
-                f"users/{u['id']}/drive/root/delta",
+                path,
                 {"$select": "id,name,shared,deleted,parentReference,lastModifiedDateTime,file,folder"},
                 max_pages=MAX_DRIVE_PAGES,
             )
         except GraphError as exc:
             if exc.status == 404:
-                continue  # OneDrive not provisioned yet (never signed in)
-            skipped.append(f"{u.get('userPrincipalName')} ({exc.code})")
-            continue
-        if len(c.truncations) > before:
-            truncated.append(str(u.get("userPrincipalName")))
+                return [], [], False  # OneDrive not provisioned yet (never signed in)
+            return [], [f"{u.get('userPrincipalName')} ({exc.code})"], False
+        public: list[dict[str, Any]] = []
+        unread: list[str] = []
         for item in items:
             if "shared" not in item or "deleted" in item:
                 continue
@@ -347,7 +404,7 @@ def _public_files(c: GraphReadOnly, ctx: dict[str, Any]) -> list[dict[str, Any]]
             try:
                 perms = c.paginate(f"drives/{drive_id}/items/{item['id']}/permissions")
             except GraphError as exc:
-                skipped.append(f"{item.get('name')} ({exc.code})")
+                unread.append(f"{item.get('name')} ({exc.code})")
                 continue
             scopes = sorted(
                 {
@@ -357,7 +414,7 @@ def _public_files(c: GraphReadOnly, ctx: dict[str, Any]) -> list[dict[str, Any]]
                 }
             )
             if "anonymous" in scopes:
-                found.append(
+                public.append(
                     {
                         "id": item["id"],
                         "name": item.get("name"),
@@ -369,6 +426,19 @@ def _public_files(c: GraphReadOnly, ctx: dict[str, Any]) -> list[dict[str, Any]]
                         "link_scopes": scopes,
                     }
                 )
+        # By this user's own path: other users' drives are read at the same time.
+        return public, unread, path in c.truncations
+
+    # Guests and unlicensed accounts have no OneDrive.
+    owners = [u for u in ctx.get("users", []) if u.get("userType") != "Guest" and u.get("assignedLicenses")]
+    found: list[dict[str, Any]] = []
+    skipped: list[str] = []
+    truncated: list[str] = []
+    for u, (public, unread, cut_short) in zip(owners, _per_user(one_drive, owners), strict=True):
+        found += public
+        skipped += unread
+        if cut_short:
+            truncated.append(str(u.get("userPrincipalName")))
     notes = []
     if skipped:
         notes.append(
@@ -393,7 +463,11 @@ def _audit_readiness(c: GraphReadOnly, _ctx: dict[str, Any]) -> dict[str, Any]:
         ("sign_ins", "auditLogs/signIns", "createdDateTime"),
     ):
         try:
-            rows = c.get(path, {"$filter": f"{field} ge {since}", "$top": "50"}).get("value", [])
+            # One event is enough: the check asks only "any in the window, or none?".
+            # Measured on the lab tenant, 27 Oct 2026: the date filter costs about 27s
+            # for the directory audit log whether 50 events are asked for or 1; asking
+            # for the newest event instead ($orderby, no filter) took 93s. Kept as is.
+            rows = c.get(path, {"$filter": f"{field} ge {since}", "$top": "1"}).get("value", [])
             streams[name] = {"available": True, "events_sampled": len(rows)}
         except GraphError as exc:
             streams[name] = {"available": False, "reason": f"HTTP {exc.status} {exc.code}"}

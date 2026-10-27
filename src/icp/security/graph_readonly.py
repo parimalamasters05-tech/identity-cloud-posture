@@ -5,7 +5,7 @@ Three rules, enforced on every request before it leaves the tool:
 1. Graph is GET only. Any other verb to graph.microsoft.com is refused.
 2. The single exception is authentication: one POST, to exactly this tenant's
    token endpoint on login.microsoftonline.com, to exchange the certificate
-   for an access token. It changes nothing in the tenant. It is counted
+   for an access token. It changes no setting in the tenant. It is counted
    separately and never mixed into the read-only call trail.
 3. No file content. `Sites.Read.All` could read documents; Microsoft has no
    metadata-only file permission. Any URL whose path asks for content
@@ -26,6 +26,7 @@ from __future__ import annotations
 
 import base64
 import json
+import threading
 import time
 import urllib.error
 import urllib.parse
@@ -66,6 +67,7 @@ _ENDPOINTS: frozenset[tuple[str, ...]] = frozenset(
         "drives/*/root/delta",
         "drives/*/items/*/permissions",
         "groups",
+        "groups/*/members",  # members of a group holding an administrator role
         "reports/authenticationMethods/userRegistrationDetails",
         "roleManagement/directory/roleDefinitions",
         "roleManagement/directory/roleAssignments",
@@ -293,10 +295,18 @@ class GraphReadOnly:
         self._sleep = sleep
         self._token: str | None = None
         self._token_expires = 0.0
+        self._lock = threading.Lock()  # one token fetch at a time
+        self._count_lock = threading.Lock()
 
     # -- authentication ---------------------------------------------------------
 
     def _access_token(self) -> str:
+        # Per-user reads run on several threads: one sign-in for all of them,
+        # not one each (the report states how many sign-in requests were made).
+        with self._lock:
+            return self._fresh_token()
+
+    def _fresh_token(self) -> str:
         if self._token and time.time() < self._token_expires - 60:
             return self._token
         form = urllib.parse.urlencode(
@@ -384,7 +394,8 @@ class GraphReadOnly:
                 if exc.status not in (None, 429, 502, 503, 504) or attempt == self._attempts:
                     raise
                 last = exc
-                self.retries += 1
+                with self._count_lock:
+                    self.retries += 1
                 self._sleep(min(exc.retry_after or 2.0 ** (attempt - 1), 30.0))
         raise last or GraphError(None, "error", "request failed")  # pragma: no cover
 

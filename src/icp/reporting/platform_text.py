@@ -45,6 +45,9 @@ class PlatformText:
     #: Replaces the request-count paragraph under "Read-only verification",
     #: for a platform this tool does not contact itself (AWS, read by Prowler).
     verification: str = ""
+    #: What the checks for this platform do not reach, for the methodology's
+    #: limitations list (review, 27 Oct 2026). Stated, not left to be found.
+    limitations: tuple[str, ...] = ()
 
     @property
     def permission_nouns(self) -> str:
@@ -93,6 +96,13 @@ GOOGLE = PlatformText(
     write_capable=lambda scopes: google_write_capable(scopes),
     family_titles={CheckFamily.MFA_COVERAGE: "Two-step verification coverage"},
     cover_name_source="the Google Workspace account profile",
+    limitations=(
+        "Public links were looked for as the reviewing administrator sees Drive: files in shared drives that "
+        "administrator is not a member of were not checked. Files shared with named people outside the "
+        "organization were not listed; only links that anyone can open.",
+        "Which service accounts hold domain-wide delegation was not examined: Google offers no way to list "
+        "it. Review it in the Admin console under Security > API controls > Domain-wide delegation.",
+    ),
 )
 
 
@@ -164,9 +174,14 @@ MICROSOFT = PlatformText(
     family_titles={CheckFamily.MFA_COVERAGE: "Second sign-in step coverage"},
     request_note=(
         " In addition, one sign-in request was sent to Microsoft's login service to obtain the "
-        "access token; it changes nothing in your organization."
+        "access token. It changes no setting, and appears in your sign-in logs as a sign-in by "
+        "the assessment application."
     ),
     cover_name_source="the Microsoft 365 organization profile",
+    limitations=(
+        "The OneDrives of accounts without a licence were not checked for public links. When a departed "
+        "person's licence is removed, their OneDrive and its links remain until Microsoft deletes it.",
+    ),
 )
 
 
@@ -220,6 +235,10 @@ AWS = PlatformText(
         CheckFamily.OAUTH_GRANTS: "Access given to other accounts",
     },
     cover_name_source="the AWS account alias",
+    limitations=(
+        "People who sign in through IAM Identity Center or another identity provider were not examined: the "
+        "checks cover IAM users, roles and the root user.",
+    ),
     verification=(
         "This report's tool made no requests to AWS: it read the results file Prowler wrote. "
         "Prowler read the account through the assessment role. The two AWS-managed policies it "

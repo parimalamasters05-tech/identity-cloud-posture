@@ -62,3 +62,47 @@ def test_cover_fits_one_page_with_four_areas_not_fully_read(snapshot):
     assert "Not fully read" in first
     assert "not legal advice" in first, "the cover overflowed onto page 2"
     assert second.strip().startswith("Executive summary")
+
+
+def test_a_three_platform_test_environment_cover_fits_one_page(snapshot):
+    """Seen live (27 Oct 2026): Google, Microsoft 365 and AWS together, marked as
+    a test environment and with areas not fully read, pushed the disclaimer onto
+    an otherwise blank page 2."""
+    from tests.rules.test_aws_rules import _run as run_aws
+    from tests.rules.test_m365_rules import _run as run_m365
+
+    from icp.collectors.microsoft import PERMISSIONS_USED
+
+    # As in the live report: one Google area and one AWS area not fully read.
+    def degraded(collector: str) -> CollectionError:
+        return CollectionError(
+            collector=collector, assessability=Assessability.NOT_ASSESSABLE_PERMISSION, message="test"
+        )
+
+    google = normalize(snapshot.model_copy(update={"errors": (degraded("google.public_drive_items"),)}))
+    m365_tenant, m365_result, _ = run_m365(scopes_used=PERMISSIONS_USED)
+    _, aws_tenant, aws_result, _ = run_aws()
+    aws_tenant.snapshot = aws_tenant.snapshot.model_copy(
+        update={"errors": (*aws_tenant.snapshot.errors, degraded("aws.accessanalyzer"))}
+    )
+    renderer = ReportRenderer(test_environment=True)
+    context = renderer.build_combined_context(
+        [(google, assess(google)), (m365_tenant, m365_result), (aws_tenant, aws_result)],
+        client_name="Identity Posture Lab",
+        assessor="T",
+    )
+    # The live report had 22 actions; one page holds about 28 at a writable size.
+    assert len(context["tracking_sheet"]) > 22
+    context["tracking_sheet"] = context["tracking_sheet"][:22]
+    try:
+        document = weasyprint.HTML(
+            string=renderer.env.get_template("report.html").render(**context)
+        ).render()
+    except OSError as exc:
+        pytest.skip(f"WeasyPrint cannot render here: {exc}")
+
+    first, second = _page_text(document.pages[0]), _page_text(document.pages[1])
+    assert "not legal advice" in first, "the cover overflowed onto page 2"
+    assert second.strip().startswith("Executive summary")
+    # At that size the tracking sheet is one page: the last page starts with its heading.
+    assert "Remediation tracking sheet" in _page_text(document.pages[-1])

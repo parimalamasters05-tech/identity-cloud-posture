@@ -597,3 +597,106 @@ def test_a_snapshot_taken_before_this_check_says_not_assessed_not_clean():
     assert "M365-SHR-004" not in by_rule and "M365-SHR-005" not in by_rule
     assert {"M365-SHR-004", "M365-SHR-005"} <= set(result.unassessable)
     assert "M365-SHR-001" in by_rule  # the rest of the sharing family still runs
+
+
+# -- organization-wide second step: what really counts (review, 27 Oct 2026) ------
+
+
+def _all_users_policy(**changes):
+    """The fixture's 'all users' policy, switched on, with `changes` applied."""
+    artifacts = deepcopy(_artifacts())
+    policy = artifacts["m365.policies"]["conditional_access"][1]
+    policy["state"] = "enabled"
+    for key, value in changes.items():
+        if key == "users":
+            policy["users"] = {**policy["users"], **value}
+        else:
+            policy[key] = value
+    _, _, by_rule = _run(artifacts)
+    return by_rule
+
+
+def test_emergency_access_accounts_may_be_left_out():
+    """Microsoft's guidance: exclude one or two break-glass accounts."""
+    assert "M365-MFA-004" not in _all_users_policy(users={"excludeUsers": ["bg-1", "bg-2"]})
+
+
+@pytest.mark.parametrize(
+    ("changes", "why"),
+    [
+        ({"users": {"excludeUsers": ["a", "b", "c"]}}, "excludes 3 accounts"),
+        ({"users": {"excludeGroups": ["most-staff"]}}, "excludes 1 group(s)"),
+        ({"users": {"excludeRoles": ["role"]}}, "excludes 1 role(s)"),
+        ({"users": {"excludeUsers": ["GuestsOrExternalUsers"]}}, "excludes guests"),
+        (
+            {"locations": {"includeLocations": ["All"], "excludeLocations": ["AllTrusted"]}},
+            "some locations",
+        ),
+        ({"platforms": {"includePlatforms": ["android"]}}, "some devices"),
+        ({"sign_in_risk_levels": ["high"]}, "risky sign-ins"),
+        ({"client_app_types": ["browser"]}, "some kinds of app"),
+    ],
+)
+def test_an_all_users_policy_that_leaves_people_out_is_not_organization_wide(changes, why):
+    """It used to count: the exclusions and conditions were never read."""
+    by_rule = _all_users_policy(**changes)
+    [finding] = by_rule["M365-MFA-004"]
+    summary = finding.evidence[0].summary
+    assert "Switched on but not for everyone" in summary and why in summary
+    assert "Require multifactor authentication for all users" in summary
+
+
+def test_mfa_as_one_option_among_several_is_not_a_requirement():
+    """'MFA or a compliant device' is satisfied by the device alone."""
+    by_rule = _all_users_policy(grant_controls=["mfa", "compliantDevice"], grant_operator="OR")
+    assert "M365-MFA-004" in by_rule
+    both = _all_users_policy(grant_controls=["mfa", "compliantDevice"], grant_operator="AND")
+    assert "M365-MFA-004" not in both
+
+
+def test_an_authentication_strength_is_a_second_step_requirement():
+    """It used to be missed: no 'mfa' among the built-in controls."""
+    by_rule = _all_users_policy(
+        grant_controls=[],
+        authentication_strength={
+            "id": "00000000-0000-0000-0000-000000000002",
+            "displayName": "Multifactor authentication",
+        },
+    )
+    assert "M365-MFA-004" not in by_rule
+
+
+def test_the_collector_keeps_what_the_evaluation_needs():
+    from icp.collectors import microsoft as m365
+
+    class Graph:
+        def get(self, path, params=None):
+            return {"isEnabled": False} if "Defaults" in path else {}
+
+        def paginate(self, path, params=None, **_):
+            return [
+                {
+                    "displayName": "p",
+                    "state": "enabled",
+                    "conditions": {
+                        "users": {"includeUsers": ["All"]},
+                        "locations": {"excludeLocations": ["AllTrusted"]},
+                        "signInRiskLevels": ["high"],
+                    },
+                    "grantControls": {
+                        "operator": "OR",
+                        "builtInControls": ["mfa"],
+                        "authenticationStrength": {
+                            "id": "s1",
+                            "displayName": "Phishing-resistant",
+                            "policyType": "x",
+                        },
+                    },
+                }
+            ]
+
+    [policy] = m365._policies(Graph(), {})["conditional_access"]
+    assert policy["grant_operator"] == "OR"
+    assert policy["authentication_strength"] == {"id": "s1", "displayName": "Phishing-resistant"}
+    assert policy["locations"] == {"excludeLocations": ["AllTrusted"]}
+    assert policy["sign_in_risk_levels"] == ["high"]

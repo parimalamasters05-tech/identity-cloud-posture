@@ -45,9 +45,14 @@ constraint buys four things that are each expensive to retrofit:
 
 ## Read-only, enforced three ways
 
-The core promise to a client is that this tool cannot change anything in their
-tenant. That promise is enforced in three independent places, so no single
-mistake can break it:
+The tool is designed for read-only collection: it reads settings and never
+sends a request that changes one. That is a claim about the tool's behaviour,
+not about its access. One Google permission (`admin.directory.user.security`)
+and one Microsoft permission (`Sites.Read.All`) allow more than the tool does,
+and in AWS the reading is done by Prowler, outside the tool's guards (there the
+assessment role's policies and the client's CloudTrail are the evidence). The
+behaviour is enforced in three independent places, so no single mistake can
+break it:
 
 | # | Control | Where | When |
 |---|---------|-------|------|
@@ -77,7 +82,7 @@ pip install -e ".[dev]"
 icp run --fixtures --client-name "Riverside Community Trust" --assessor "Your Name"
 ```
 
-That collects from fixtures, runs 19 rules, and writes an HTML and PDF report to
+That collects from fixtures, runs the 21 Google Workspace rules, and writes an HTML and PDF report to
 `output/`. Expect 24 findings: 4 critical, 11 high, 8 medium, 1 low.
 
 PDF generation needs WeasyPrint's system libraries. If they are missing you get
@@ -255,14 +260,15 @@ engagement ends.
 
 ## What it checks
 
-Nineteen rules across the seven check families:
+Twenty-one Google Workspace rules across the seven check families (Microsoft 365
+and AWS have their own: 21 and 22, in the same families):
 
 | Family | Rules | What it answers |
 |---|---|---|
-| MFA coverage | `GWS-MFA-001..003` | Who can get in with a password alone, and whose second factor can be phished |
+| MFA coverage | `GWS-MFA-001..004` | Who can get in with a password alone, whose second factor can be phished, and who could switch it off |
 | Admin role sprawl | `GWS-ADM-001..002` | How many people hold the keys, and whether any of them stopped showing up |
 | Stale accounts | `GWS-STA-001..003` | Accounts still working that nobody is using |
-| Service account privilege | `GWS-SVC-001..002` | Software connections holding administrative authority |
+| Service account privilege | `GWS-SVC-001..003` | Software connections holding administrative authority |
 | External sharing | `GWS-SHR-001..002` | Files reachable by anyone with a link |
 | Logging readiness | `GWS-LOG-001..002` | Whether an incident six weeks ago could be reconstructed |
 | **Third-party OAuth grants** | `GWS-OAU-001..005` | **What staff already consented to hand over** |
@@ -315,7 +321,7 @@ src/icp/
   collectors/google/     nine collectors; raw API responses only, no judgement
   normalizers/           provider JSON -> normalized tenant view
   models/                Identity, OAuthGrant, Resource, Finding, Snapshot
-  rules/                 19 rules, one module per check family, platform-agnostic
+  rules/                 64 rules (21 Google, 21 Microsoft 365, 22 AWS), one module per family
   risk/                  scope taxonomy, severity matrix, scoring, ranking
   reporting/             Jinja2 templates, executive summary, PDF renderer
   delta/                 assessment-over-time comparison (the retainer)

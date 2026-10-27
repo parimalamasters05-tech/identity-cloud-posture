@@ -23,13 +23,22 @@ RUN apt-get update && apt-get install -y --no-install-recommends \
 
 WORKDIR /build
 
-# pyproject declares `readme = "README.md"`, so the build fails without it.
-COPY pyproject.toml README.md ./
-COPY src ./src
-
+# Dependencies first, in their own layer: read from pyproject.toml alone, so
+# this slow step (WeasyPrint, the Google client, cryptography) is reused from
+# the build cache until the dependency list itself changes. Before, any edit
+# under src/ or to README.md reinstalled all of them.
+COPY pyproject.toml ./
 RUN python -m venv /opt/venv \
     && /opt/venv/bin/pip install --upgrade pip setuptools wheel \
-    && /opt/venv/bin/pip install .
+    && python -c "import tomllib; print('\n'.join(tomllib.load(open('pyproject.toml', 'rb'))['project']['dependencies']))" \
+        > /tmp/requirements.txt \
+    && /opt/venv/bin/pip install -r /tmp/requirements.txt
+
+# Then the tool itself, without touching the dependencies installed above.
+# pyproject declares `readme = "README.md"`, so the build fails without it.
+COPY README.md ./
+COPY src ./src
+RUN /opt/venv/bin/pip install --no-deps .
 
 
 # ---------------------------------------------------------------------------

@@ -122,6 +122,10 @@ class FindingStatus(StrEnum):
     IMPROVED = "improved"
     RESOLVED = "resolved"
     REGRESSED = "regressed"
+    #: Gone, but its check or accounts could not be fully assessed this time.
+    NOT_REVALIDATED = "not_revalidated"
+    #: Present now; its check could not be assessed last time, so not "new".
+    FIRST_ASSESSED = "first_assessed"
 
 
 class Assessability(StrEnum):

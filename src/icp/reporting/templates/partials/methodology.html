@@ -128,6 +128,7 @@
     <li>Configuration and metadata only. No message or file content was accessed, so this report cannot say anything about what your data contains.</li>
     {% for part in parts %}<li>{{ part.platform.licence_note }}</li>{% endfor %}
     {% for part in parts %}{% if part.platform.name == "Microsoft 365" %}<li>Administrator roles that someone is eligible to switch on for a limited time (Privileged Identity Management, which needs a Microsoft Entra ID P2 licence) were not examined. The administrator counts in this report are of roles held permanently.</li>{% endif %}{% endfor %}
+    {% for part in parts %}{% for limit in part.platform.limitations %}<li>{% if combined %}{{ part.platform.name }}: {% endif %}{{ limit }}</li>{% endfor %}{% endfor %}
     <li>Findings marked medium or low confidence are inferred from indirect signals and should be confirmed before acting.</li>
   </ul>
 </section>
