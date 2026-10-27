@@ -15,12 +15,10 @@ from pathlib import Path
 
 from icp.models.snapshot import SCHEMA_VERSION, Snapshot
 from icp.security import crypto
-from icp.storage._permissions import restrict
+from icp.storage._permissions import private_dir, write_private
 
 logger = logging.getLogger(__name__)
 
-_FILE_MODE = 0o600
-_DIR_MODE = 0o700
 
 #: Snapshot filenames only: `tenant__YYYYMMDDTHHMMSSmmmZ-<hex>.json[.enc]`.
 #:
@@ -40,8 +38,7 @@ class SnapshotStore:
         self.root = Path(root)
         self.encrypt = encrypt
         self.key_b64 = key_b64
-        self.root.mkdir(parents=True, exist_ok=True)
-        restrict(self.root, _DIR_MODE)
+        private_dir(self.root)
 
     # -- paths ------------------------------------------------------------------
 
@@ -74,8 +71,7 @@ class SnapshotStore:
             # another tenant's snapshot without failing decryption.
             payload = crypto.encrypt(payload, key_b64=self.key_b64, aad=snapshot.snapshot_id.encode())
 
-        path.write_bytes(payload)
-        restrict(path, _FILE_MODE)
+        write_private(path, payload)
 
         logger.info(
             "Wrote snapshot %s (%d artifacts, encrypted=%s)",

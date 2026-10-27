@@ -128,12 +128,20 @@ the above, which is why the compose file exists.
 cp .env.example .env
 $EDITOR .env                    # also set ICP_HOST_KEY_FILE to your key's path
 
+.\tools\protect-data-folders.ps1  # Windows: data folders to you only, checked (run-all.ps1 does this)
 docker compose run --rm preflight # verify delegation FIRST -- seconds, seven reads
 docker compose run --rm collect   # the ONLY service that collects data
 docker compose run --rm assess    # network_mode: none
 docker compose run --rm report    # network_mode: none
 docker compose run --rm purge
 ```
+
+Client data is never written in plaintext by a live collection unless
+`ICP_TEST_ENVIRONMENT=true` (your own test tenant; its reports say so). Every
+file the tool writes is owner-only; on a Docker Desktop bind mount that has to
+come from the host folder, which `tools/protect-data-folders.ps1` sets and
+verifies. Reports and findings are not encrypted by the tool: send them only
+over an encrypted, access-controlled channel (see the data handling policy).
 
 Keep each client in its own working copy (or its own `ICP_SNAPSHOT_DIR`,
 `ICP_OUTPUT_DIR` and `ICP_SNAPSHOT_KEY`). Snapshot file names carry a label,
@@ -234,9 +242,14 @@ icp delta --previous output/<first>__findings.json --current output/<second>__fi
 icp purge --operator "Your Name"
 ```
 
-Deletes snapshots past `ICP_RETENTION_DAYS` and writes a deletion attestation to
-hand to the client. The retention window must match what
-`docs/data-handling-policy.md` promises them.
+Deletes each kind of file past its own retention period — snapshots
+(`ICP_RETENTION_DAYS`, 30), API call trails (`ICP_AUDIT_TRAIL_RETENTION_DAYS`,
+365), findings and deltas (`ICP_FINDINGS_RETENTION_DAYS`, 30), reports
+(`ICP_REPORT_RETENTION_DAYS`, kept unless set) — and writes a deletion
+attestation of exactly what it deleted, to hand to the client. The periods must
+match what `docs/data-handling-policy.md` promises them. It does not touch the
+encryption key: delete `ICP_SNAPSHOT_KEY` from your secret manager when the
+engagement ends.
 
 ---
 

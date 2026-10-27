@@ -8,6 +8,10 @@
       Google Workspace  collect            (if ICP_TENANT_ID and ICP_HOST_KEY_FILE are set)
       Microsoft 365     collect-m365       (if ICP_M365_TENANT_ID is set)
       AWS               prowler, collect-aws (if ICP_AWS_ROLE_ARN is set)
+    First, tools\protect-data-folders.ps1 restricts the folders client data is
+    written to (snapshots, output, prowler-output, evidence) to you, and checks
+    that it worked; if it did not, nothing is collected.
+
     Every step is read-only. If a platform's collection fails, no report is
     written: re-run, or pass -UseSavedSnapshots to report that platform from
     its newest saved snapshot instead. Either way the report checks every
@@ -72,6 +76,16 @@ foreach ($name in $settings.Keys) {
     }
 }
 
+# The containers cannot set file permissions on a Docker Desktop bind mount,
+# so the host folders' access lists are what keep client data private.
+Write-Host ""
+Write-Host "== Client-data folders: restrict to you ==" -ForegroundColor Cyan
+& (Join-Path $PSScriptRoot "tools\protect-data-folders.ps1")
+if ($LASTEXITCODE -ne 0) {
+    Write-Host "Nothing collected: fix the access problems above first." -ForegroundColor Red
+    exit 1
+}
+
 function Step([string]$title, [string[]]$compose) {
     Write-Host ""
     Write-Host "== $title ==" -ForegroundColor Cyan
@@ -79,7 +93,10 @@ function Step([string]$title, [string[]]$compose) {
     # errors when output is captured; success is judged by the exit code only.
     $ErrorActionPreference = "Continue"
     if ($compose[0] -ne "prowler") {
-        & docker compose run --rm @compose
+        # The folders' access lists were checked above, so the containers'
+        # "cannot set permissions here" notice is informational, not a warning.
+        # (Not passed to Prowler: that image gets only the three AWS values.)
+        & docker compose run --rm -e ICP_HOST_FOLDERS_VERIFIED=true @compose
         return ($LASTEXITCODE -eq 0)
     }
     # Prowler prints every read AWS refused (an organization policy, say) as a

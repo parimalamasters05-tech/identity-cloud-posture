@@ -17,13 +17,12 @@ from icp.models.finding import ID_NAMESPACE, Finding
 from icp.risk import scoring
 from icp.risk.severity import RiskMatrix
 from icp.rules.engine import AssessmentResult
-from icp.storage._permissions import restrict
+from icp.storage._permissions import private_dir, write_private
 
 #: 1.1 added summary.partial_coverage (additive).
 #: 2.0 finding IDs no longer hash the affected accounts (`id_scheme`). Not
 #:     additive: a 1.x file's IDs cannot be matched against a 2.x file's.
 FINDINGS_SCHEMA_VERSION = "2.0"
-_FILE_MODE = 0o600
 
 
 class IncompatibleFindings(Exception):
@@ -33,7 +32,7 @@ class IncompatibleFindings(Exception):
 class FindingStore:
     def __init__(self, root: Path) -> None:
         self.root = Path(root)
-        self.root.mkdir(parents=True, exist_ok=True)
+        private_dir(self.root)
 
     def path_for(self, tenant_id: str, snapshot_id: str) -> Path:
         return self.root / f"{tenant_id}__{snapshot_id}__findings.json"
@@ -73,8 +72,7 @@ class FindingStore:
             ],
         }
 
-        path.write_text(json.dumps(document, indent=2, sort_keys=False), encoding="utf-8")
-        restrict(path, _FILE_MODE)
+        write_private(path, json.dumps(document, indent=2, sort_keys=False))
         return path
 
     def load(self, path: Path) -> list[Finding]:
@@ -99,18 +97,40 @@ class FindingStore:
         return self.load(candidates[-1]) if candidates else []
 
 
-def deletion_attestation(tenant_id: str, deleted: list[str], *, operator: str = "") -> dict[str, Any]:
+#: What `purge` does to a file, and nothing more. It never touches the
+#: encryption key: that lives in a secret manager, outside this tool's reach.
+DELETION_METHOD = (
+    "Each file's contents overwritten once with random data, then the file unlinked. "
+    "On copy-on-write and flash-backed storage overwriting does not guarantee the old "
+    "blocks are unrecoverable; the data handling policy (section 5) explains the other "
+    "controls. Encryption keys are not handled by this tool."
+)
+
+
+def deletion_attestation(
+    tenant_id: str,
+    deleted: dict[str, list[str]],
+    *,
+    retention: dict[str, int | None],
+    failed: dict[str, str] | None = None,
+    operator: str = "",
+) -> dict[str, Any]:
     """The document handed to a client when their data is destroyed.
 
     Promised by the data handling policy; generating it from the actual delete
-    operation rather than writing it by hand is what makes it true.
+    operation rather than writing it by hand is what makes it true. So it lists
+    only files actually deleted, and names any that could not be.
     """
+    names = sorted(name for group in deleted.values() for name in group)
     return {
         "attestation": "client data deletion",
         "tenant_id": tenant_id,
         "deleted_at": datetime.now(UTC).isoformat(),
-        "file_count": len(deleted),
-        "files": sorted(deleted),
+        "file_count": len(names),
+        "files": names,
+        "by_kind": {kind: sorted(group) for kind, group in sorted(deleted.items())},
+        "retention_days": {kind: days if days is not None else "kept" for kind, days in retention.items()},
+        "not_deleted": [{"file": name, "reason": why} for name, why in sorted((failed or {}).items())],
         "operator": operator or os.environ.get("ICP_OPERATOR", "unspecified"),
-        "method": "cryptographic key material and file contents overwritten, then unlinked",
+        "method": DELETION_METHOD,
     }

@@ -17,6 +17,7 @@ from datetime import UTC, datetime
 from pathlib import Path
 
 from icp.models.snapshot import ApiCallRecord
+from icp.storage._permissions import private_dir, write_private
 
 
 def summarize(calls: list[ApiCallRecord]) -> dict[str, int]:
@@ -29,7 +30,7 @@ def summarize(calls: list[ApiCallRecord]) -> dict[str, int]:
 
 def write_audit_trail(path: Path, calls: list[ApiCallRecord], *, tenant_id: str) -> Path:
     """Write the JSONL trail plus a sidecar digest."""
-    path.parent.mkdir(parents=True, exist_ok=True)
+    private_dir(path.parent)
     lines = [
         json.dumps(
             {"method": c.method, "url": c.url, "status": c.status, "at": c.at.isoformat()},
@@ -38,7 +39,7 @@ def write_audit_trail(path: Path, calls: list[ApiCallRecord], *, tenant_id: str)
         for c in calls
     ]
     body = "\n".join(lines) + ("\n" if lines else "")
-    path.write_text(body, encoding="utf-8")
+    write_private(path, body)
 
     digest = hashlib.sha256(body.encode("utf-8")).hexdigest()
     manifest = {
@@ -48,7 +49,5 @@ def write_audit_trail(path: Path, calls: list[ApiCallRecord], *, tenant_id: str)
         "verb_counts": summarize(calls),
         "sha256": digest,
     }
-    path.with_suffix(".manifest.json").write_text(
-        json.dumps(manifest, indent=2, sort_keys=True), encoding="utf-8"
-    )
+    write_private(path.with_suffix(".manifest.json"), json.dumps(manifest, indent=2, sort_keys=True))
     return path

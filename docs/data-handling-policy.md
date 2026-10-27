@@ -53,20 +53,43 @@ capable of holding message or file content. Both properties are asserted by
   one client's snapshot cannot be read, or reported, under another's settings.
   As a second check, `report` refuses any snapshot whose Google domain,
   Microsoft tenant or AWS account differs from the engagement's settings.
-- **File permissions:** owner-read/write only (0600), in a 0700 directory.
+- **Encryption is not optional for a client:** live collection refuses to write
+  an unencrypted snapshot unless the run is marked as the assessor's own test
+  tenant (`ICP_TEST_ENVIRONMENT=true`), and every report from such a run says so
+  on its cover.
+- **File permissions:** every file the tool writes about a client — snapshot,
+  call trail, findings, comparison, report, attestation — is created owner-only
+  (0600), in a 0700 directory. Where the tool runs in Docker Desktop on Windows
+  or macOS, the container cannot set permissions on the host folder; there the
+  host folder's access list is the control. `tools/protect-data-folders.ps1`
+  restricts the data folders to the assessor (with SYSTEM and Administrators),
+  then reads the access lists back and fails if anyone else can open them.
+  `run-all.ps1` runs it before every collection, and collects nothing if it fails.
+- **Findings and reports are not encrypted by the tool.** They are deliverables
+  the Client opens with ordinary software, and they name accounts and
+  administrators. They are protected by the folder permissions above,
+  full-disk encryption, and the transfer rule below.
 - **Full-disk encryption** is enabled on every device that handles client data.
+- **Transfer:** reports and findings reach the Client only through an
+  encrypted channel with access limited to named Client contacts (an
+  encrypted file share or portal, or an encrypted archive whose password is
+  sent separately). Never as a plain email attachment, and never through a
+  public link.
 - **Logs are redacted** at the logging boundary: email local parts are masked,
   private keys, bearer tokens, and long secrets are removed
   (`src/icp/security/redaction.py`).
 
 ## 4. How long it is kept
 
-| Item | Retention |
-|---|---|
-| Configuration snapshot | **30 days** after report delivery |
-| Machine-readable findings | 30 days, unless a retainer is agreed |
-| The report itself | Kept per the engagement letter; the Client keeps their own copy |
-| API call audit trail | 12 months, as evidence of read-only behaviour |
+| Item | Retention | Enforced by `icp purge` through |
+|---|---|---|
+| Configuration snapshot | **30 days** after collection | `ICP_RETENTION_DAYS` (30) |
+| Machine-readable findings, and comparisons built from them | 30 days, unless a retainer is agreed | `ICP_FINDINGS_RETENTION_DAYS` (30) |
+| The report itself | Kept per the engagement letter; the Client keeps their own copy | `ICP_REPORT_RETENTION_DAYS`, set to the letter's period (unset: kept) |
+| API call audit trail | 12 months, as evidence of read-only behaviour | `ICP_AUDIT_TRAIL_RETENTION_DAYS` (365) |
+
+Each period counts from the collection time in the file's name, so no file is
+kept longer than the table says.
 
 Where a retainer includes quarterly comparison, snapshots are retained for the
 term of the retainer so that change over time can be shown. That is agreed in
@@ -75,18 +98,27 @@ days.
 
 ## 5. Destruction
 
-Destruction is performed by `icp purge`, which derives each file's age from the
-timestamp in its filename rather than its filesystem modification time —
-copying a file between machines resets mtime and would otherwise silently extend
-retention beyond what was promised.
+Destruction is performed by `icp purge`, which applies each period in section 4
+to its own kind of file: snapshots and API call trails in the snapshot
+directory, findings, comparisons and reports in the output directory. It
+derives each file's age from the timestamp in its filename rather than its
+filesystem modification time — copying a file between machines resets mtime
+and would otherwise silently extend retention beyond what was promised. Files
+the tool did not write are never touched.
 
 File contents are overwritten before unlinking. We state honestly that on
 copy-on-write and flash-backed filesystems overwriting does not guarantee the
 original blocks are unrecoverable; the real controls are the short retention
-window and full-disk encryption.
+window, encryption at rest and full-disk encryption.
 
-A **deletion attestation** is issued to the Client on request, recording what was
-destroyed, when, by whom, and by what method.
+`icp purge` does not handle encryption keys. When the engagement ends, the
+assessor deletes its `ICP_SNAPSHOT_KEY` from the secret manager, which leaves
+any remaining copy of an encrypted snapshot (in a backup, say) unreadable.
+
+A **deletion attestation** is issued to the Client on request. It is generated
+by `icp purge` from what it actually did: the files destroyed, by kind, when,
+by whom, the retention periods applied, the method, and any file that could not
+be deleted. It does not claim that keys were destroyed.
 
 ## 6. Access
 

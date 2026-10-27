@@ -19,6 +19,7 @@ import click
 from icp import __version__
 from icp.config import ConfigError, Settings
 from icp.security.redaction import configure_logging
+from icp.storage._permissions import private_dir, write_private
 
 logger = logging.getLogger("icp")
 
@@ -30,6 +31,30 @@ def _settings(ctx: click.Context) -> Settings:
 def _fail(message: str) -> None:
     click.secho(f"error: {message}", fg="red", err=True)
     sys.exit(1)
+
+
+def _encrypt_live(settings: Settings, no_encrypt: bool) -> bool:
+    """Whether a live snapshot is encrypted. Always, unless this is a test tenant.
+
+    --no-encrypt or ICP_ENCRYPT_AT_REST=false alone used to be enough to write
+    a client's tenant in plaintext. Now plaintext also needs
+    ICP_TEST_ENVIRONMENT=true, which every report from it then states on its cover.
+    """
+    if settings.encrypt_at_rest and not no_encrypt:
+        return True
+    if not settings.test_environment:
+        _fail(
+            "refusing to write an unencrypted snapshot of a live tenant "
+            f"({'--no-encrypt' if no_encrypt else 'ICP_ENCRYPT_AT_REST=false'}). Client data is "
+            "always encrypted at rest. Only for your own deliberately misconfigured test tenant, "
+            "set ICP_TEST_ENVIRONMENT=true (its reports then say so on the cover)."
+        )
+    click.secho(
+        "warning: writing an unencrypted snapshot (ICP_TEST_ENVIRONMENT=true: test tenant only).",
+        fg="yellow",
+        err=True,
+    )
+    return False
 
 
 @click.group(context_settings={"help_option_names": ["-h", "--help"]})
@@ -49,7 +74,11 @@ def cli(ctx: click.Context, verbose: bool, json_logs: bool) -> None:
 
 @cli.command()
 @click.option("--tenant", help="Override ICP_TENANT_ID.")
-@click.option("--no-encrypt", is_flag=True, help="Write plaintext. Dev tenants only.")
+@click.option(
+    "--no-encrypt",
+    is_flag=True,
+    help="Write plaintext. Needs ICP_TEST_ENVIRONMENT=true (test tenants only).",
+)
 @click.option("--fixtures", is_flag=True, help="Build a snapshot from frozen fixtures, offline.")
 @click.pass_context
 def collect(ctx: click.Context, tenant: str | None, no_encrypt: bool, fixtures: bool) -> None:
@@ -65,6 +94,10 @@ def collect(ctx: click.Context, tenant: str | None, no_encrypt: bool, fixtures: 
     if tenant:
         settings = Settings(**{**settings.__dict__, "tenant_id": tenant})
 
+    # Decided before collecting, so a refusal costs no read of the client's tenant.
+    # Fixtures hold no client data; they are written as they always were.
+    encrypt = False if fixtures else _encrypt_live(settings, no_encrypt)
+
     try:
         if fixtures:
             click.echo("Building snapshot from fixtures (offline, no credentials used).")
@@ -77,14 +110,6 @@ def collect(ctx: click.Context, tenant: str | None, no_encrypt: bool, fixtures: 
         _fail(str(exc))
     except Exception as exc:
         _fail(f"{type(exc).__name__}: {exc}")
-
-    encrypt = settings.encrypt_at_rest and not no_encrypt and not fixtures
-    if not encrypt and not fixtures:
-        click.secho(
-            "warning: writing an unencrypted snapshot. Acceptable for a dev tenant only.",
-            fg="yellow",
-            err=True,
-        )
 
     # Writing is as failure-prone as collecting -- a missing ICP_SNAPSHOT_KEY is
     # the single most common second-run mistake, and its exception already
@@ -356,7 +381,7 @@ def report(
 @click.option("--client-name", default="", help="Override the name Google reports for the organization.")
 @click.option("--assessor", envvar="ICP_ASSESSOR", default="")
 @click.option("--fixtures", is_flag=True, help="Offline run against frozen fixtures.")
-@click.option("--no-encrypt", is_flag=True)
+@click.option("--no-encrypt", is_flag=True, help="Write plaintext. Needs ICP_TEST_ENVIRONMENT=true.")
 @click.pass_context
 def run(ctx: click.Context, client_name: str, assessor: str, fixtures: bool, no_encrypt: bool) -> None:
     """Collect, assess, and report in one pass."""
@@ -419,8 +444,11 @@ def delta(ctx: click.Context, previous: Path, current: Path) -> None:
         f"({summary['risk']['change']:+.2f})"
     )
 
-    out = settings.output_dir / "delta.json"
-    out.write_text(json.dumps(summary, indent=2), encoding="utf-8")
+    # Named after the current findings file (tenant__<snapshot>__delta.json), so
+    # retention ages it with the findings it was built from. A file whose name
+    # carries no date would be kept forever.
+    out = settings.output_dir / f"{current.stem.removesuffix('__findings')}__delta.json"
+    write_private(out, json.dumps(summary, indent=2))
     click.secho(f"Written: {out}", fg="green")
 
 
@@ -495,7 +523,11 @@ def preflight_m365() -> None:
     is_flag=True,
     help="Keep Prowler's unencrypted results file after import (default: delete it).",
 )
-@click.option("--no-encrypt", is_flag=True, help="Write the snapshot unencrypted (test accounts only).")
+@click.option(
+    "--no-encrypt",
+    is_flag=True,
+    help="Write the snapshot unencrypted. Needs ICP_TEST_ENVIRONMENT=true (test accounts only).",
+)
 @click.pass_context
 def collect_aws(
     ctx: click.Context,
@@ -535,7 +567,7 @@ def collect_aws(
     except ProwlerImportError as exc:
         _fail(str(exc))
 
-    encrypt = settings.encrypt_at_rest and not no_encrypt
+    encrypt = _encrypt_live(settings, no_encrypt)
     try:
         path = SnapshotStore(settings.snapshot_dir, encrypt=encrypt).save(snapshot)
     except Exception as exc:
@@ -572,7 +604,11 @@ def collect_aws(
 
 
 @cli.command(name="collect-m365")
-@click.option("--no-encrypt", is_flag=True, help="Write the snapshot unencrypted (dev tenants only).")
+@click.option(
+    "--no-encrypt",
+    is_flag=True,
+    help="Write the snapshot unencrypted. Needs ICP_TEST_ENVIRONMENT=true (test tenants only).",
+)
 @click.pass_context
 def collect_m365(ctx: click.Context, no_encrypt: bool) -> None:
     """Microsoft 365: read the tenant through Graph and write a snapshot.
@@ -588,13 +624,13 @@ def collect_m365(ctx: click.Context, no_encrypt: bool) -> None:
     from icp.storage.snapshot_store import SnapshotStore
 
     settings = _settings(ctx)
+    encrypt = _encrypt_live(settings, no_encrypt)  # before signing in: a refusal costs no read
     client = _m365_client()
     try:
         snapshot = m365.collect(client, tenant_id=os.environ.get("ICP_M365_TENANT_LABEL", "m365"))
     except Exception as exc:
         _fail(f"{type(exc).__name__}: {exc}")
 
-    encrypt = settings.encrypt_at_rest and not no_encrypt
     try:
         path = SnapshotStore(settings.snapshot_dir, encrypt=encrypt).save(snapshot)
         trail = write_audit_trail(
@@ -746,25 +782,58 @@ def freeze_fixtures(
 @click.option("--operator", default="", help="Who performed the deletion, for the attestation.")
 @click.pass_context
 def purge(ctx: click.Context, dry_run: bool, operator: str) -> None:
-    """Delete snapshots past the retention window and write a deletion attestation."""
+    """Delete files past their retention period and write a deletion attestation.
+
+    Each kind has its own period (data handling policy, section 4): snapshots
+    ICP_RETENTION_DAYS, API call trails ICP_AUDIT_TRAIL_RETENTION_DAYS,
+    findings and deltas ICP_FINDINGS_RETENTION_DAYS, reports
+    ICP_REPORT_RETENTION_DAYS (unset: kept). The encryption key is not
+    touched: destroy it in the secret manager when the engagement ends.
+    """
     from icp.storage.finding_store import deletion_attestation
+    from icp.storage.retention import KINDS
     from icp.storage.retention import purge as run_purge
 
     settings = _settings(ctx)
-    deleted = run_purge(settings.snapshot_dir, settings.retention_days, dry_run=dry_run)
+    try:
+        retention = settings.retention()
+    except ConfigError as exc:
+        _fail(str(exc))
+    folders = {"snapshots": settings.snapshot_dir, "output": settings.output_dir}
+    result = run_purge(folders, retention, dry_run=dry_run)
 
-    if not deleted:
-        click.echo(f"Nothing older than {settings.retention_days} days.")
+    verb = "Would delete" if dry_run else "Deleted"
+    for kind in KINDS:
+        days = retention[kind.name]
+        label = kind.name.replace("_", " ")
+        if days is None:
+            click.echo(f"  {label}: kept ({kind.setting} not set)")
+        else:
+            count = len(result.deleted.get(kind.name, []))
+            click.echo(f"  {label}: {verb.lower()} {count} older than {days} days")
+    for name, why in sorted(result.failed.items()):
+        click.secho(f"  could not delete {name}: {why}", fg="red")
+
+    if not result.count and not result.failed:
+        click.echo("Nothing past its retention period.")
         return
-
-    click.secho(f"{'Would delete' if dry_run else 'Deleted'} {len(deleted)} file(s).", fg="green")
+    click.secho(f"{verb} {result.count} file(s).", fg="green")
     if not dry_run:
-        attestation = deletion_attestation(settings.tenant_id, deleted, operator=operator)
-        stamp = datetime.now(UTC).strftime("%Y%m%d")
+        attestation = deletion_attestation(
+            settings.tenant_id,
+            result.deleted,
+            retention=retention,
+            failed=result.failed,
+            operator=operator,
+        )
+        # To the second: a second purge on the same day must not overwrite the first's record.
+        stamp = datetime.now(UTC).strftime("%Y%m%dT%H%M%SZ")
         path = settings.output_dir / f"deletion-attestation-{stamp}.json"
-        path.parent.mkdir(parents=True, exist_ok=True)
-        path.write_text(json.dumps(attestation, indent=2), encoding="utf-8")
+        private_dir(path.parent)
+        write_private(path, json.dumps(attestation, indent=2))
         click.secho(f"Attestation: {path}", fg="green")
+    if result.failed:
+        _fail(f"{len(result.failed)} file(s) could not be deleted; the attestation names them.")
 
 
 @cli.command()

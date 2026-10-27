@@ -14,7 +14,7 @@ from cryptography.exceptions import InvalidTag
 from icp.models.snapshot import Snapshot
 from icp.security import crypto
 from icp.storage.finding_store import FindingStore, deletion_attestation
-from icp.storage.retention import expired_files, purge
+from icp.storage.retention import KINDS, expired_files, purge
 from icp.storage.snapshot_store import SnapshotStore, SnapshotStoreError
 
 
@@ -159,11 +159,18 @@ def test_findings_from_the_old_id_scheme_are_refused_for_comparison(tmp_path: Pa
 
 # -- retention -----------------------------------------------------------------
 
+SNAPSHOTS = KINDS[0]
+_KEEP_ALL_BUT_SNAPSHOTS = {"snapshots": 30, "audit_trails": None, "findings": None, "reports": None}
+
 
 def _write(root: Path, stamp: str) -> Path:
     path = root / f"dev-icp__{stamp}-abcd1234.json"
     path.write_bytes(b"{}")
     return path
+
+
+def _folders(root: Path) -> dict[str, Path]:
+    return {"snapshots": root, "output": root}
 
 
 def test_expired_files_use_the_filename_timestamp(tmp_path: Path):
@@ -173,7 +180,7 @@ def test_expired_files_use_the_filename_timestamp(tmp_path: Path):
     recent = _write(tmp_path, "20260828T000000Z")
     os.utime(old, None)  # fresh mtime, old name
 
-    expired = expired_files(tmp_path, retention_days=30, now=now)
+    expired = expired_files(tmp_path, SNAPSHOTS, retention_days=30, now=now)
     assert old in expired
     assert recent not in expired
 
@@ -181,16 +188,16 @@ def test_expired_files_use_the_filename_timestamp(tmp_path: Path):
 def test_purge_deletes_and_reports(tmp_path: Path):
     now = datetime(2026, 9, 1, tzinfo=UTC)
     old = _write(tmp_path, "20260101T000000Z")
-    deleted = purge(tmp_path, retention_days=30, now=now)
-    assert deleted == [old.name]
+    result = purge(_folders(tmp_path), _KEEP_ALL_BUT_SNAPSHOTS, now=now)
+    assert result.deleted == {"snapshots": [old.name]}
     assert not old.exists()
 
 
 def test_dry_run_deletes_nothing(tmp_path: Path):
     now = datetime(2026, 9, 1, tzinfo=UTC)
     old = _write(tmp_path, "20260101T000000Z")
-    deleted = purge(tmp_path, retention_days=30, dry_run=True, now=now)
-    assert deleted == [old.name]
+    result = purge(_folders(tmp_path), _KEEP_ALL_BUT_SNAPSHOTS, dry_run=True, now=now)
+    assert result.deleted == {"snapshots": [old.name]}
     assert old.exists()
 
 
@@ -198,16 +205,87 @@ def test_unrecognized_filenames_are_left_alone(tmp_path: Path):
     """Never delete a file this tool did not create."""
     stray = tmp_path / "client-notes.txt"
     stray.write_text("do not delete")
-    purge(tmp_path, retention_days=1, now=datetime(2030, 1, 1, tzinfo=UTC))
-    assert stray.exists()
+    attestation = tmp_path / "deletion-attestation-20200101T000000Z.json"
+    attestation.write_text("{}")
+    every_kind = {kind.name: 1 for kind in KINDS}
+    purge(_folders(tmp_path), every_kind, now=datetime(2030, 1, 1, tzinfo=UTC))
+    assert stray.exists() and attestation.exists()
+
+
+def test_each_kind_of_file_has_its_own_retention_period(tmp_path: Path):
+    """Data handling policy, section 4: snapshots and findings 30 days, API call
+    trails 12 months, reports per the engagement letter."""
+    snapshots, output = tmp_path / "snapshots", tmp_path / "output"
+    snapshots.mkdir()
+    output.mkdir()
+    old = "20260101T000000000Z-abcd1234"  # 8 months before `now`
+    files = {
+        "snapshot": snapshots / f"m365__{old}.json.enc",
+        "trail": snapshots / f"{old}.apicalls.jsonl",
+        "trail manifest": snapshots / f"{old}.apicalls.manifest.json",
+        "findings": output / f"m365__{old}__findings.json",
+        "delta": output / f"m365__{old}__delta.json",
+        "report": output / f"client__combined__{old}.pdf",
+    }
+    for path in files.values():
+        path.write_bytes(b"{}")
+
+    result = purge(
+        {"snapshots": snapshots, "output": output},
+        {"snapshots": 30, "audit_trails": 365, "findings": 30, "reports": None},
+        now=datetime(2026, 9, 1, tzinfo=UTC),
+    )
+    assert sorted(result.deleted) == ["findings", "snapshots"]
+    assert not files["snapshot"].exists() and not files["findings"].exists() and not files["delta"].exists()
+    assert files["trail"].exists() and files["trail manifest"].exists()  # kept a year
+    assert files["report"].exists()  # kept until ICP_REPORT_RETENTION_DAYS is set
+
+    later = purge(
+        {"snapshots": snapshots, "output": output},
+        {"snapshots": 30, "audit_trails": 365, "findings": 30, "reports": 180},
+        now=datetime(2027, 1, 2, tzinfo=UTC),
+    )
+    assert sorted(later.deleted) == ["audit_trails", "reports"]
+    assert not any(path.exists() for path in files.values())
+
+
+def test_a_file_that_cannot_be_deleted_is_reported_not_attested(tmp_path: Path, monkeypatch):
+    old = _write(tmp_path, "20260101T000000Z")
+
+    def refuse(path):
+        raise PermissionError(13, "Permission denied")
+
+    monkeypatch.setattr(crypto, "secure_delete", refuse)
+    result = purge(_folders(tmp_path), _KEEP_ALL_BUT_SNAPSHOTS, now=datetime(2026, 9, 1, tzinfo=UTC))
+    assert result.deleted == {}
+    assert "Permission denied" in result.failed[old.name]
+
+    attestation = deletion_attestation("dev-icp", result.deleted, retention={}, failed=result.failed)
+    assert attestation["file_count"] == 0
+    assert attestation["not_deleted"][0]["file"] == old.name
 
 
 def test_deletion_attestation_records_what_was_destroyed():
-    attestation = deletion_attestation("dev-icp", ["a.json", "b.json"], operator="P. Nagaraj")
+    attestation = deletion_attestation(
+        "dev-icp",
+        {"snapshots": ["a.json"], "findings": ["b.json"]},
+        retention={"snapshots": 30, "reports": None},
+        operator="P. Nagaraj",
+    )
     assert attestation["tenant_id"] == "dev-icp"
     assert attestation["file_count"] == 2
+    assert attestation["by_kind"] == {"findings": ["b.json"], "snapshots": ["a.json"]}
+    assert attestation["retention_days"] == {"snapshots": 30, "reports": "kept"}
     assert attestation["operator"] == "P. Nagaraj"
     assert "deleted_at" in attestation
+
+
+def test_deletion_attestation_claims_only_what_purge_does():
+    """purge overwrites and unlinks files; it never handles the encryption key."""
+    method = deletion_attestation("dev-icp", {}, retention={})["method"]
+    assert "overwritten" in method and "unlinked" in method
+    assert "key material" not in method
+    assert "Encryption keys are not handled" in method
 
 
 def test_retention_handles_both_timestamp_precisions(tmp_path: Path):
@@ -222,7 +300,7 @@ def test_retention_handles_both_timestamp_precisions(tmp_path: Path):
     old_seconds.write_bytes(b"{}")
     old_millis.write_bytes(b"{}")
 
-    expired = expired_files(tmp_path, retention_days=30, now=now)
+    expired = expired_files(tmp_path, SNAPSHOTS, retention_days=30, now=now)
     assert set(expired) == {old_seconds, old_millis}
 
 

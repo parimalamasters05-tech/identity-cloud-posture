@@ -42,6 +42,7 @@ from icp.rules.base import rules_for
 from icp.rules.engine import AssessmentResult
 from icp.rules.microsoft import readable_kinds
 from icp.security.scopes import optional_scopes, sorted_scopes
+from icp.storage._permissions import FILE_MODE, private_dir, restrict, write_private
 
 logger = logging.getLogger(__name__)
 
@@ -371,12 +372,12 @@ class ReportRenderer:
         html = self.env.get_template("report.html").render(**context)
 
         output_dir = Path(output_dir)
-        output_dir.mkdir(parents=True, exist_ok=True)
+        private_dir(output_dir)
         latest = max((t.snapshot for t, _ in assessed), key=lambda s: s.collected_at)
         stem = basename or f"{_slug(client_name)}__combined__{latest.snapshot_id}"
 
         html_path = output_dir / f"{stem}.html"
-        html_path.write_text(html, encoding="utf-8")
+        write_private(html_path, html)
         pdf_path, pdf_error = self._render_pdf(html, output_dir / f"{stem}.pdf")
         return RenderResult(html_path=html_path, pdf_path=pdf_path, pdf_error=pdf_error)
 
@@ -488,11 +489,11 @@ class ReportRenderer:
         html = self.env.get_template("report.html").render(**context)
 
         output_dir = Path(output_dir)
-        output_dir.mkdir(parents=True, exist_ok=True)
+        private_dir(output_dir)
         stem = basename or f"{_slug(client_name)}__{tenant.snapshot.snapshot_id}"
 
         html_path = output_dir / f"{stem}.html"
-        html_path.write_text(html, encoding="utf-8")
+        write_private(html_path, html)
 
         pdf_path, pdf_error = self._render_pdf(html, output_dir / f"{stem}.pdf")
         return RenderResult(html_path=html_path, pdf_path=pdf_path, pdf_error=pdf_error)
@@ -511,6 +512,7 @@ class ReportRenderer:
 
         try:
             HTML(string=html, base_url=str(TEMPLATE_DIR)).write_pdf(str(target))
+            restrict(target, FILE_MODE)
             return target, None
         except Exception as exc:
             message = f"PDF generation failed: {type(exc).__name__}: {exc}"

@@ -21,6 +21,7 @@ prowler-output/*
 *.apicalls.manifest.json
 *__findings.json
 delta.json
+*__delta.json
 deletion-attestation-*.json
 /*.html
 /*.pdf
