@@ -228,3 +228,13 @@ def test_the_aws_read_only_claim_rests_on_cloudtrail_not_policy_names():
     assert "did not read back" in AWS.verification
     assert "every event for it is a read" in AWS.verification
     assert "set up with" in AWS.permissions_heading
+
+
+def test_combined_cover_says_sharepoint_sites_were_not_checked_for_public_links():
+    from icp.models.enums import Platform
+    from icp.reporting.platform_text import combined
+
+    with_m365 = combined([Platform.GOOGLE_WORKSPACE, Platform.MICROSOFT_365])
+    assert any("SharePoint sites" in line for line in with_m365.not_examined)
+    without = combined([Platform.GOOGLE_WORKSPACE, Platform.AWS])
+    assert not any("SharePoint" in line for line in without.not_examined)

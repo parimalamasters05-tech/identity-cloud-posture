@@ -23,6 +23,7 @@ class FakeGraph:
         self.calls: list[Any] = []
         self.auth_requests = 1
         self.requested: list[str] = []
+        self.truncations: list[str] = []
 
     def _answer(self, path: str) -> Any:
         self.requested.append(path)
@@ -37,7 +38,13 @@ class FakeGraph:
         return self._answer(path)
 
     def paginate(self, path: str, params: dict | None = None, *, max_pages: int | None = None) -> list:
-        return list(self._answer(path).get("value", []))
+        """A route answered with a list is pages: followed up to `max_pages`, like Graph."""
+        answer = self._answer(path)
+        pages = answer if isinstance(answer, list) else [answer]
+        if max_pages is not None and len(pages) > max_pages:
+            self.truncations.append(path)
+            pages = pages[:max_pages]
+        return [item for page in pages for item in page.get("value", [])]
 
 
 DANA = {
@@ -312,3 +319,35 @@ def test_a_refused_collector_names_the_permission_to_grant(monkeypatch):
 
 def test_every_collector_has_a_named_permission():
     assert {name for name, _ in m365.COLLECTORS} == set(m365.COLLECTOR_PERMISSIONS)
+
+
+def test_a_drive_longer_than_the_page_limit_is_named_as_partial_coverage():
+    """Ten pages examined, more offered: the check must not read as complete."""
+    page = _drive([{"id": "i1", "name": "a.docx", "file": {}}])
+    graph = FakeGraph({"users/u-dana/drive/root/delta": [page] * (m365.MAX_DRIVE_PAGES + 1)})
+    ctx = _ctx(DANA)
+    m365._public_files(graph, ctx)
+    note = ctx["partial"]["m365.public_files"]
+    assert "dana@lab.example" in note and f"first {m365.MAX_DRIVE_PAGES} pages" in note
+
+
+def test_an_anyone_link_on_a_later_page_of_permissions_is_found():
+    shared = {
+        "id": "i1",
+        "name": "budget.xlsx",
+        "shared": {},
+        "file": {},
+        "parentReference": {"driveId": "d1"},
+    }
+    graph = FakeGraph(
+        {
+            "users/u-dana/drive/root/delta": _drive([shared]),
+            "drives/d1/items/i1/permissions": [
+                {"value": [{"link": {"scope": "organization"}}]},
+                {"value": [{"link": {"scope": "anonymous"}}]},
+            ],
+        }
+    )
+    ctx = _ctx(DANA)
+    assert [f["name"] for f in m365._public_files(graph, ctx)] == ["budget.xlsx"]
+    assert "m365.public_files" not in ctx["partial"]

@@ -131,6 +131,9 @@ MICROSOFT = PlatformText(
     ),
     not_examined=(
         "The contents of any email, document, or file. Settings and account details only.",
+        "Files in SharePoint team and communication sites: public links were looked for in each "
+        "staff member's OneDrive only. The organization-wide sharing setting, which applies to "
+        "both, was examined",
         "Laptops, phones, networks, or anything outside Microsoft 365",
         "Any attempt to break in, test passwords, or exploit a weakness",
         "Ongoing monitoring: this is a snapshot of one moment",
@@ -279,6 +282,11 @@ def combined(platforms: list[Platform]) -> PlatformText:
         ),
         not_examined=(
             "The contents of any email, document, or file. Settings and account details only.",
+            *(
+                ("Files in SharePoint sites: in Microsoft 365, public links were checked in OneDrive only",)
+                if Platform.MICROSOFT_365 in platforms
+                else ()
+            ),
             f"Laptops, phones, networks, or anything outside {names}",
             "Any attempt to break in, test passwords, or exploit a weakness",
             "Ongoing monitoring: this is a snapshot of one moment",

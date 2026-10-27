@@ -41,9 +41,11 @@ PERMISSIONS_USED: tuple[str, ...] = (
     "UserAuthenticationMethod.Read.All",
 )
 
-#: Upper bound on OneDrive items examined per user; a cap that trips is
-#: recorded as partial coverage, never silently.
-MAX_DRIVE_PAGES = 10
+#: Upper bound on OneDrive pages examined per user; a cap that trips is
+#: recorded as partial coverage, never silently. Was 10 (about 2,000 items),
+#: which a drive backing up a laptop's Desktop and Documents passes easily.
+#: 500 matches the Google client's cap: about 100,000 items, one read a page.
+MAX_DRIVE_PAGES = 500
 
 
 def _keep(item: dict[str, Any], fields: tuple[str, ...]) -> dict[str, Any]:
@@ -313,12 +315,18 @@ def _public_files(c: GraphReadOnly, ctx: dict[str, Any]) -> list[dict[str, Any]]
     directly. Listed with `delta`, which walks the whole drive; `search` fails
     app-only (HTTP 500 generalException, seen live on day one). Then one read
     per shared item for its permissions. Names and link scope only; contents are never fetched.
+
+    OneDrive only: files kept in SharePoint team or communication sites are not
+    looked at, and the report says so. A drive longer than MAX_DRIVE_PAGES
+    pages is checked only that far, and named as partial coverage.
     """
     found: list[dict[str, Any]] = []
     skipped: list[str] = []
+    truncated: list[str] = []
     for u in ctx.get("users", []):
         if u.get("userType") == "Guest" or not u.get("assignedLicenses"):
             continue  # guests and unlicensed accounts have no OneDrive
+        before = len(c.truncations)
         try:
             items = c.paginate(
                 f"users/{u['id']}/drive/root/delta",
@@ -330,12 +338,14 @@ def _public_files(c: GraphReadOnly, ctx: dict[str, Any]) -> list[dict[str, Any]]
                 continue  # OneDrive not provisioned yet (never signed in)
             skipped.append(f"{u.get('userPrincipalName')} ({exc.code})")
             continue
+        if len(c.truncations) > before:
+            truncated.append(str(u.get("userPrincipalName")))
         for item in items:
             if "shared" not in item or "deleted" in item:
                 continue
             drive_id = (item.get("parentReference") or {}).get("driveId")
             try:
-                perms = c.get(f"drives/{drive_id}/items/{item['id']}/permissions").get("value", [])
+                perms = c.paginate(f"drives/{drive_id}/items/{item['id']}/permissions")
             except GraphError as exc:
                 skipped.append(f"{item.get('name')} ({exc.code})")
                 continue
@@ -359,10 +369,18 @@ def _public_files(c: GraphReadOnly, ctx: dict[str, Any]) -> list[dict[str, Any]]
                         "link_scopes": scopes,
                     }
                 )
+    notes = []
     if skipped:
-        ctx["partial"]["m365.public_files"] = (
+        notes.append(
             "Some OneDrive locations could not be checked for public links: " + "; ".join(skipped) + "."
         )
+    if truncated:
+        notes.append(
+            f"These OneDrives hold more than the first {MAX_DRIVE_PAGES} pages of files the check "
+            "reads, so only part of each was checked for public links: " + "; ".join(truncated) + "."
+        )
+    if notes:
+        ctx["partial"]["m365.public_files"] = " ".join(notes)
     return found
 
 

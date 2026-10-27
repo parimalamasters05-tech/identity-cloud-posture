@@ -161,6 +161,18 @@ def test_pagination_follows_next_links_but_only_to_graph(creds):
     assert len(client.calls) == 2
 
 
+def test_a_listing_stopped_at_its_page_limit_is_recorded_as_truncated(creds):
+    more = {"value": [{"id": "1"}], "@odata.nextLink": f"{GRAPH}/users?$skiptoken=x"}
+    client = GraphReadOnly(creds, opener=_FakeMicrosoft([more, more]))
+    assert client.paginate("users", max_pages=1) == [{"id": "1"}]
+    assert client.truncations == ["users"]
+
+    last = {"value": [{"id": "2"}]}
+    client = GraphReadOnly(creds, opener=_FakeMicrosoft([more, last]))
+    assert len(client.paginate("users", max_pages=2)) == 2
+    assert client.truncations == []  # the limit reached on the last page is not a truncation
+
+
 def test_microsofts_error_code_is_kept(creds):
     def refuse(request, timeout=None):
         if request.full_url == TOKEN_URL:

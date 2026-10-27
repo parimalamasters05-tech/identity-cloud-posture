@@ -190,6 +190,9 @@ class GraphReadOnly:
         #: Repeats of a request that timed out or was throttled. Every repeat
         #: is the same read again; counted so the run's request total is honest.
         self.retries = 0
+        #: Listings cut short by `max_pages` while more pages existed (the
+        #: path, without its query), so a collector can say its data is partial.
+        self.truncations: list[str] = []
         self._open = opener or _OPENER.open
         self._timeout = timeout
         self._attempts = max(1, attempts)
@@ -246,13 +249,22 @@ class GraphReadOnly:
     def paginate(
         self, path: str, params: dict[str, Any] | None = None, *, max_pages: int | None = None
     ) -> list[dict[str, Any]]:
+        """Every page of a listing, or the first `max_pages` of it.
+
+        A listing stopped at `max_pages` with a next page still offered is
+        recorded in `truncations`: returning it as if complete would let a
+        check read as assessed over data it never saw.
+        """
         items: list[dict[str, Any]] = []
         page = self.get(path, params)
         pages = 1
         while True:
             items.extend(page.get("value", []))
             next_link = page.get("@odata.nextLink")
-            if not next_link or (max_pages is not None and pages >= max_pages):
+            if not next_link:
+                return items
+            if max_pages is not None and pages >= max_pages:
+                self.truncations.append(path)
                 return items
             page = self.get(str(next_link))  # checked like any other URL
             pages += 1
