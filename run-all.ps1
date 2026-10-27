@@ -8,9 +8,11 @@
       Google Workspace  collect            (if ICP_TENANT_ID and ICP_HOST_KEY_FILE are set)
       Microsoft 365     collect-m365       (if ICP_M365_TENANT_ID is set)
       AWS               prowler, collect-aws (if ICP_AWS_ROLE_ARN is set)
-    Every step is read-only. A platform whose collection fails is not fatal:
-    the report then uses that platform's newest saved snapshot, whose capture
-    date is printed on the cover.
+    Every step is read-only. If a platform's collection fails, no report is
+    written: re-run, or pass -UseSavedSnapshots to report that platform from
+    its newest saved snapshot instead. Either way the report checks every
+    snapshot's tenant or account against .env and prints each capture date
+    on the cover.
 
     Finally: report --latest --with-progress, one report across every platform,
     each compared with its previous snapshot.
@@ -21,11 +23,17 @@
 
 .PARAMETER NoProgress
     Leave out the "Progress since the previous review" pages.
+
+.PARAMETER UseSavedSnapshots
+    Acknowledge older data: if a platform's collection fails, report it from
+    its newest saved snapshot, and accept snapshots older than
+    ICP_MAX_SNAPSHOT_AGE_DAYS (default 7; report --allow-stale).
 #>
 param(
     [ValidateSet("google", "m365", "aws")]
     [string[]]$Skip = @(),
-    [switch]$NoProgress
+    [switch]$NoProgress,
+    [switch]$UseSavedSnapshots
 )
 
 $ErrorActionPreference = "Stop"
@@ -93,17 +101,18 @@ function Step([string]$title, [string[]]$compose) {
     return ($code -eq 0)
 }
 
+$failed = "FAILED - newest saved snapshot used"
 $results = [ordered]@{}
 
 if ($Skip -contains "google") { $results["Google Workspace"] = "skipped" }
 elseif ((IsSet "ICP_TENANT_ID") -and (IsSet "ICP_HOST_KEY_FILE")) {
-    $results["Google Workspace"] = if (Step "Google Workspace: collect" @("collect")) { "collected" } else { "FAILED - newest saved snapshot used" }
+    $results["Google Workspace"] = if (Step "Google Workspace: collect" @("collect")) { "collected" } else { $failed }
 }
 else { $results["Google Workspace"] = "not configured" }
 
 if ($Skip -contains "m365") { $results["Microsoft 365"] = "skipped" }
 elseif (IsSet "ICP_M365_TENANT_ID") {
-    $results["Microsoft 365"] = if (Step "Microsoft 365: collect" @("collect-m365")) { "collected" } else { "FAILED - newest saved snapshot used" }
+    $results["Microsoft 365"] = if (Step "Microsoft 365: collect" @("collect-m365")) { "collected" } else { $failed }
 }
 else { $results["Microsoft 365"] = "not configured" }
 
@@ -117,11 +126,20 @@ elseif (IsSet "ICP_AWS_ROLE_ARN") {
         $ok = Step "AWS: import Prowler results" @("collect-aws")
     }
     else { $ok = $false }
-    $results["AWS"] = if ($ok) { "collected" } else { "FAILED - newest saved snapshot used" }
+    $results["AWS"] = if ($ok) { "collected" } else { $failed }
 }
 else { $results["AWS"] = "not configured" }
 
+$failures = @($results.Keys | Where-Object { $results[$_] -eq $failed })
+if ($failures -and -not $UseSavedSnapshots) {
+    Write-Host ""
+    Write-Host ("Collection failed for: " + ($failures -join ", ") + ". No report written.") -ForegroundColor Red
+    Write-Host "Fix the cause above and run again, or add -UseSavedSnapshots to report those platforms from their newest saved snapshots." -ForegroundColor Red
+    exit 1
+}
+
 $reportArgs = @("report", "report", "--latest")
+if ($UseSavedSnapshots) { $reportArgs += "--allow-stale" }
 if (-not $NoProgress) { $reportArgs += "--with-progress" }
 $reported = Step "One report across every platform" $reportArgs
 

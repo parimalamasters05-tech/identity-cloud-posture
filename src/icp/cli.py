@@ -217,6 +217,19 @@ def assess(ctx: click.Context, snapshot_path: Path | None, tenant: str | None) -
     help="Say on the cover and in the summary that this is a deliberately misconfigured test setup.",
 )
 @click.option("--engagement-ref", default="", help="Reference from the authorization letter.")
+@click.option(
+    "--max-age-days",
+    type=click.IntRange(min=0),
+    envvar="ICP_MAX_SNAPSHOT_AGE_DAYS",
+    default=7,
+    show_default=True,
+    help="A snapshot collected longer ago than this is reported only with --allow-stale.",
+)
+@click.option(
+    "--allow-stale",
+    is_flag=True,
+    help="Report snapshots older than --max-age-days as they were (their dates are on the cover).",
+)
 @click.pass_context
 def report(
     ctx: click.Context,
@@ -229,11 +242,16 @@ def report(
     assessor: str,
     engagement_ref: str,
     test_environment: bool,
+    max_age_days: int,
+    allow_stale: bool,
 ) -> None:
     """Generate the client-facing report.
 
     With one snapshot (or none: the latest for the tenant), a report for that
     platform. With --snapshot given once per platform, one combined report.
+    Every snapshot is checked against this engagement's tenant and account
+    identifiers (ICP_GOOGLE_PRIMARY_DOMAIN, ICP_M365_TENANT_ID, ICP_AWS_ROLE_ARN),
+    and one older than --max-age-days needs --allow-stale.
     """
     from icp.normalizers import normalize_snapshot as normalize
     from icp.reporting.renderer import ReportRenderer
@@ -258,8 +276,11 @@ def report(
             "--with-progress works with --latest; otherwise name the earlier snapshot with --previous-snapshot."
         )
 
-    def assessed(path: Path | None):  # type: ignore[no-untyped-def]
+    def assessed(path: Path | None, *, current: bool = True):  # type: ignore[no-untyped-def]
         snapshot = _load_snapshot(store, path, tenant or settings.tenant_id)
+        _check_identity(snapshot, path)
+        if current:
+            _check_age(snapshot, path, max_age_days, allow_stale)
         view = normalize(snapshot)
         # As of collection, like `assess`: a report written weeks later must
         # show the findings the snapshot had, not ones aged by today's date.
@@ -273,7 +294,7 @@ def report(
 
         sections = []
         for path in previous_paths:
-            earlier = assessed(path)
+            earlier = assessed(path, current=False)
             match = next((p for p in pairs if p[0].platform == earlier[0].platform), None)
             if match is None:
                 _fail(f"--previous-snapshot {path.name} is for a platform this report does not cover.")
@@ -346,7 +367,8 @@ def run(ctx: click.Context, client_name: str, assessor: str, fixtures: bool, no_
     assessor = _cover_name(assessor, "assessor", "--assessor", "ICP_ASSESSOR")
     ctx.invoke(collect, no_encrypt=no_encrypt, fixtures=fixtures)
     ctx.invoke(assess)
-    ctx.invoke(report, client_name=client_name, assessor=assessor)
+    # Frozen fixtures keep the date they were captured on.
+    ctx.invoke(report, client_name=client_name, assessor=assessor, allow_stale=fixtures)
 
 
 # -- delta ---------------------------------------------------------------------
@@ -953,18 +975,27 @@ def _latest_per_platform(store, settings, with_progress: bool):  # type: ignore[
     """The newest snapshot for each configured platform, and the one before it.
 
     By configured label only, so a sample or test snapshot saved under another
-    label (aws-sample, say) is never picked up into a client's report.
+    label (aws-sample, say) is never picked up into a client's report. And
+    only for a platform this engagement's settings set up: a Microsoft or AWS
+    snapshot left from another engagement under the default label is not this
+    client's. (The report then checks each snapshot's tenant or account.)
     """
     import os
 
+    from icp.models.enums import Platform
+    from icp.storage import identity
+
     labels = [
-        ("Google Workspace", settings.tenant_id),
-        ("Microsoft 365", os.environ.get("ICP_M365_TENANT_LABEL", "m365")),
-        ("AWS", os.environ.get("ICP_AWS_TENANT_LABEL", "aws")),
+        ("Google Workspace", Platform.GOOGLE_WORKSPACE, settings.tenant_id),
+        ("Microsoft 365", Platform.MICROSOFT_365, os.environ.get("ICP_M365_TENANT_LABEL", "m365")),
+        ("AWS", Platform.AWS, os.environ.get("ICP_AWS_TENANT_LABEL", "aws")),
     ]
     current: list[Path] = []
     previous: list[Path] = []
-    for name, label in labels:
+    for name, platform, label in labels:
+        if platform != Platform.GOOGLE_WORKSPACE and not identity.configured(platform):
+            click.echo(f"  {name}: not configured in this engagement's settings, left out")
+            continue
         found = store.list_snapshots(label) if label else []
         if not found:
             click.echo(f"  {name}: no snapshot (label {label or 'not set'}), left out")
@@ -978,6 +1009,47 @@ def _latest_per_platform(store, settings, with_progress: bool):  # type: ignore[
     if not current:
         _fail("No snapshots found for any configured platform. Collect first.")
     return tuple(current), tuple(previous)
+
+
+def _check_identity(snapshot, path: Path | None) -> None:  # type: ignore[no-untyped-def]
+    """Stop if the snapshot is of another tenant or account than this engagement's."""
+    from icp.storage import identity
+
+    name = path.name if path else snapshot.snapshot_id
+    result = identity.check(snapshot)
+    if result.expected and result.found and not result.matches:
+        _fail(
+            f"{name} is of {result.found}, but {result.setting} in this engagement's settings "
+            f"names {result.expected}: it may be another client's snapshot, so no report was "
+            "written. Keep each engagement in its own working copy (or ICP_SNAPSHOT_DIR) with "
+            "its own ICP_SNAPSHOT_KEY."
+        )
+    elif result.expected and not result.found:
+        click.secho(
+            f"  {name}: holds no tenant or account identifier, so it cannot be checked against "
+            f"{result.setting}. Confirm it is this client's before sending the report.",
+            fg="yellow",
+        )
+    elif not result.expected:
+        click.secho(
+            f"  {name}: {result.found or 'no identifier'}; not checked, as {result.setting} is not set.",
+            fg="yellow",
+        )
+
+
+def _check_age(snapshot, path: Path | None, max_age_days: int, allow_stale: bool) -> None:  # type: ignore[no-untyped-def]
+    """Stop on a snapshot older than the limit, unless the assessor accepted that."""
+    age = datetime.now(UTC) - snapshot.collected_at
+    if age.days < max_age_days:
+        return
+    name = path.name if path else snapshot.snapshot_id
+    when = f"{snapshot.collected_at:%Y-%m-%d}, {age.days} days ago"
+    if not allow_stale:
+        _fail(
+            f"{name} was collected {when} (limit: {max_age_days} days, ICP_MAX_SNAPSHOT_AGE_DAYS). "
+            "Collect again, or pass --allow-stale to report it as it was."
+        )
+    click.secho(f"  {name}: collected {when}; reported as it was (--allow-stale).", fg="yellow")
 
 
 def _load_snapshot(store, snapshot_path: Path | None, tenant_id: str | None):  # type: ignore[no-untyped-def]

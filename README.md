@@ -135,6 +135,15 @@ docker compose run --rm report    # network_mode: none
 docker compose run --rm purge
 ```
 
+Keep each client in its own working copy (or its own `ICP_SNAPSHOT_DIR`,
+`ICP_OUTPUT_DIR` and `ICP_SNAPSHOT_KEY`). Snapshot file names carry a label,
+not the client, so `report` also checks every snapshot against the
+engagement's settings — Google primary domain (`ICP_GOOGLE_PRIMARY_DOMAIN`),
+Microsoft tenant (`ICP_M365_TENANT_ID`), AWS account (from `ICP_AWS_ROLE_ARN`) —
+and stops on a mismatch. A snapshot older than `ICP_MAX_SNAPSHOT_AGE_DAYS`
+(default 7) is reported only with `--allow-stale`; in `run-all.ps1`, a failed
+collection stops the run unless `-UseSavedSnapshots` is given.
+
 Collection is the only stage with a network. Everything downstream works on
 local files, and the compose file enforces that at the container level — which
 turns the architecture's central claim into something you can check rather than

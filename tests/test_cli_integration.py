@@ -260,6 +260,8 @@ def test_report_latest_picks_each_configured_platform_and_its_previous_snapshot(
         (tmp_path / name).write_bytes(b"x")
     monkeypatch.delenv("ICP_M365_TENANT_LABEL", raising=False)
     monkeypatch.delenv("ICP_AWS_TENANT_LABEL", raising=False)
+    monkeypatch.setenv("ICP_M365_TENANT_ID", "00000000-0000-0000-0000-000000000001")
+    monkeypatch.setenv("ICP_AWS_ROLE_ARN", "arn:aws:iam::111122223333:role/icp-assessment")
 
     class _Settings:
         tenant_id = "dev"
@@ -274,3 +276,109 @@ def test_report_latest_picks_each_configured_platform_and_its_previous_snapshot(
         "dev__20260929T081813285Z-7e376b99.json.enc",
         "aws__20261014T202612306Z-ac55d486.json.enc",
     ]
+
+
+def test_report_latest_leaves_out_a_platform_this_engagement_did_not_set_up(tmp_path, monkeypatch):
+    """A Microsoft or AWS snapshot under the default label, left from another
+    engagement, is not this client's."""
+    from icp.cli import _latest_per_platform
+    from icp.storage.snapshot_store import SnapshotStore
+
+    for name in (
+        "dev__20260929T082517155Z-686ca914.json.enc",
+        "m365__20261014T033834656Z-bcdab18e.json.enc",
+        "aws__20261014T213019769Z-441373ef.json.enc",
+    ):
+        (tmp_path / name).write_bytes(b"x")
+    for name in ("ICP_M365_TENANT_LABEL", "ICP_AWS_TENANT_LABEL", "ICP_M365_TENANT_ID", "ICP_AWS_ROLE_ARN"):
+        monkeypatch.delenv(name, raising=False)
+
+    class _Settings:
+        tenant_id = "dev"
+
+    current, _ = _latest_per_platform(SnapshotStore(tmp_path, encrypt=False), _Settings(), False)
+    assert [p.name for p in current] == ["dev__20260929T082517155Z-686ca914.json.enc"]
+
+
+def _saved(workspace: Path, platform, artifacts: dict, *, days_old: int = 0) -> Path:
+    from datetime import UTC, datetime, timedelta
+
+    from icp.models.snapshot import Snapshot
+    from icp.storage.snapshot_store import SnapshotStore
+
+    snapshot = Snapshot(
+        snapshot_id="20261014T033834656Z-bcdab18e",
+        tenant_id="label",
+        platform=platform,
+        collected_at=datetime.now(UTC) - timedelta(days=days_old),
+        artifacts=artifacts,
+    )
+    return SnapshotStore(workspace / "snapshots", encrypt=False).save(snapshot)
+
+
+@pytest.mark.parametrize(
+    ("platform", "artifacts", "setting", "value"),
+    [
+        (
+            "microsoft_365",
+            {"m365.organization": {"id": "aaaaaaaa-0000-0000-0000-000000000002", "domains": []}},
+            "ICP_M365_TENANT_ID",
+            "00000000-0000-0000-0000-000000000001",
+        ),
+        (
+            "aws",
+            {"aws.account": {"account_id": "444455556666", "alias": ""}},
+            "ICP_AWS_ROLE_ARN",
+            "arn:aws:iam::111122223333:role/icp-assessment",
+        ),
+        (
+            "google_workspace",
+            {"google.customer": {"customer_domain": "other-client.example"}},
+            "ICP_GOOGLE_PRIMARY_DOMAIN",
+            "clientdomain.example",
+        ),
+    ],
+)
+def test_report_refuses_another_tenants_snapshot(
+    workspace: Path, monkeypatch, platform, artifacts, setting, value
+):
+    monkeypatch.setenv(setting, value)
+    path = _saved(workspace, platform, artifacts)
+    result = CliRunner().invoke(
+        cli,
+        ["report", "--snapshot", str(path), "--assessor", "Tester", "--client-name", "Client A"],
+        obj={},
+    )
+    assert result.exit_code == 1
+    assert setting in result.output and "another client's snapshot" in result.output
+    assert not list((workspace / "output").glob("*.html"))
+
+
+def test_report_accepts_a_tenant_named_by_a_verified_domain(monkeypatch):
+    from icp.models.snapshot import Snapshot
+    from icp.storage import identity
+
+    monkeypatch.setenv("ICP_M365_TENANT_ID", "Contoso.onmicrosoft.com")
+    snapshot = Snapshot(
+        snapshot_id="20261014T033834656Z-bcdab18e",
+        tenant_id="m365",
+        platform="microsoft_365",
+        artifacts={"m365.organization": {"id": "x", "domains": [{"name": "contoso.onmicrosoft.com"}]}},
+    )
+    assert identity.check(snapshot).matches
+
+
+def test_report_needs_acknowledgement_for_an_old_snapshot(workspace: Path, monkeypatch):
+    monkeypatch.setenv("ICP_AWS_ROLE_ARN", "arn:aws:iam::111122223333:role/icp-assessment")
+    path = _saved(workspace, "aws", {"aws.account": {"account_id": "111122223333"}}, days_old=10)
+    args = ["report", "--snapshot", str(path), "--assessor", "Tester", "--client-name", "Client A"]
+
+    refused = CliRunner().invoke(cli, args, obj={})
+    assert refused.exit_code == 1
+    assert "10 days ago" in refused.output and "--allow-stale" in refused.output
+
+    roomier = CliRunner().invoke(cli, [*args, "--max-age-days", "30"], obj={})
+    assert "--allow-stale" not in roomier.output
+
+    accepted = CliRunner().invoke(cli, [*args, "--allow-stale"], obj={})
+    assert "reported as it was (--allow-stale)" in accepted.output

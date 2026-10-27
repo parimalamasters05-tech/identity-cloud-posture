@@ -48,6 +48,11 @@ capable of holding message or file content. Both properties are asserted by
   (`src/icp/security/crypto.py`)
 - **Key management:** the encryption key is held in a secret manager, never on
   the same medium as the encrypted data, and never written to disk by the tool.
+- **One engagement, one store:** each engagement has its own working copy (or
+  `ICP_SNAPSHOT_DIR` and `ICP_OUTPUT_DIR`) and its own `ICP_SNAPSHOT_KEY`, so
+  one client's snapshot cannot be read, or reported, under another's settings.
+  As a second check, `report` refuses any snapshot whose Google domain,
+  Microsoft tenant or AWS account differs from the engagement's settings.
 - **File permissions:** owner-read/write only (0600), in a 0700 directory.
 - **Full-disk encryption** is enabled on every device that handles client data.
 - **Logs are redacted** at the logging boundary: email local parts are masked,
