@@ -66,30 +66,23 @@ def test_default_method_is_get():
     assert inner.seen[0][0] == "GET"
 
 
-def test_batch_post_with_only_get_subrequests_is_allowed():
-    """Google's batch endpoint is POST-only but carries GETs."""
-    inner = FakeHttp()
-    http = guard(inner)
-    body = b"--b\r\nContent-Type: application/http\r\n\r\nGET /admin/directory/v1/users\r\n--b--"
-    http.request("https://www.googleapis.com/batch/admin/directory_v1", method="POST", body=body)
-    assert len(inner.seen) == 1
+@pytest.mark.parametrize(
+    "body",
+    [
+        None,  # the old exemption let a batch POST with no body through
+        b"--b\r\nContent-Type: application/http\r\n\r\nGET /admin/directory/v1/users\r\n--b--",
+        b"--b\r\nContent-Type: application/http\r\n\r\nDELETE /admin/directory/v1/users/1\r\n--b--",
+    ],
+    ids=["no body", "only GETs", "a DELETE"],
+)
+def test_a_batch_post_is_blocked_whatever_it_carries(body):
+    """No collector batches, so the batch endpoint has no exemption to abuse."""
+    from icp.security.readonly import token_guard
 
-
-def test_batch_post_containing_a_write_is_blocked():
-    """The narrow batch exemption must not become a bypass."""
-    inner = FakeHttp()
-    http = guard(inner)
-    body = b"--b\r\nContent-Type: application/http\r\n\r\nDELETE /admin/directory/v1/users/1\r\n--b--"
-    with pytest.raises(WriteAttemptBlocked):
-        http.request("https://www.googleapis.com/batch/admin/directory_v1", method="POST", body=body)
-    assert inner.seen == []
-
-
-def test_post_to_a_non_batch_url_is_blocked_even_with_get_body():
-    """The exemption is host- and path-scoped, not body-scoped."""
-    http = guard(FakeHttp())
-    with pytest.raises(WriteAttemptBlocked):
-        http.request("https://evil.example.com/batch/", method="POST", body=b"GET /x")
+    for http in (guard(FakeHttp()), token_guard(FakeHttp())):
+        with pytest.raises(WriteAttemptBlocked):
+            http.request("https://www.googleapis.com/batch/admin/directory_v1", method="POST", body=body)
+        assert http._inner.seen == []
 
 
 def test_calls_are_recorded_with_query_strings_stripped():

@@ -77,9 +77,72 @@ def test_file_content_is_never_fetched(path):
 
 def test_sharing_metadata_is_allowed():
     check_request("GET", f"{GRAPH}/drives/d1/items/i1/permissions", token_url=TOKEN_URL)
-    check_request(
-        "GET", f"{GRAPH}/users/u1/drive/root/children?$select=id,name,shared", token_url=TOKEN_URL
-    )
+    check_request("GET", f"{GRAPH}/users/u1/drive/root/delta?$select=id,name,shared", token_url=TOKEN_URL)
+    # The form Graph may give a OneDrive delta's next-page link.
+    check_request("GET", f"{GRAPH}/drives/b!aB3-x_y.Z/root/delta?token=abc", token_url=TOKEN_URL)
+
+
+@pytest.mark.parametrize(
+    "path",
+    [
+        "drives/d1/items/i1/%63ontent",  # the bypass the review found
+        "drives/d1/items/i1/%2563ontent",  # double-encoded
+        "drives/d1/items/i1/CONTENT",
+        "drives/d1/items/%2e%2e/content",
+        "users/u1/photo/%24value",
+    ],
+)
+def test_an_encoded_path_cannot_reach_file_content(path):
+    """Graph decodes the path; the guard decodes it first, or refuses it."""
+    with pytest.raises(WriteAttemptBlocked):
+        check_request("GET", f"{GRAPH}/{path}", token_url=TOKEN_URL)
+
+
+@pytest.mark.parametrize(
+    "path",
+    [
+        "users/u1/drive/root/children",  # metadata, but not something the tool reads
+        "users/u1/messages",
+        "me",
+        "beta/users",
+        "users/u1%2Fmessages",  # an encoded separator inside an ID
+        "users/u1/drive/root/delta(token='x')",
+        "v1.0/users",  # the version twice
+    ],
+)
+def test_only_reviewed_endpoints_are_read(path):
+    with pytest.raises(WriteAttemptBlocked):
+        check_request("GET", f"{GRAPH}/{path}", token_url=TOKEN_URL)
+
+
+def test_every_endpoint_the_collectors_read_is_reviewed():
+    """Each path shape in the live call trails (27 Oct 2026) passes the guard."""
+    for path in (
+        "organization",
+        "users",
+        "users/0f6c1e2a-0000-4000-8000-000000000001/authentication/methods",
+        "users/0f6c1e2a-0000-4000-8000-000000000001/drive/root/delta",
+        "drives/b!x/items/01ABC/permissions",
+        "groups",
+        "reports/authenticationMethods/userRegistrationDetails",
+        "roleManagement/directory/roleDefinitions",
+        "roleManagement/directory/roleAssignments",
+        "servicePrincipals",
+        "servicePrincipals/0f6c1e2a-0000-4000-8000-000000000002/appRoleAssignedTo",
+        "servicePrincipals/0f6c1e2a-0000-4000-8000-000000000002/delegatedPermissionClassifications",
+        "oauth2PermissionGrants",
+        "applications",
+        "identity/conditionalAccess/policies",
+        "policies/identitySecurityDefaultsEnforcementPolicy",
+        "policies/authorizationPolicy",
+        "policies/crossTenantAccessPolicy/default",
+        "policies/crossTenantAccessPolicy/partners",
+        "admin/sharepoint/settings",
+        "auditLogs/directoryAudits",
+        "auditLogs/signIns",
+        "sites/root",
+    ):
+        check_request("GET", f"{GRAPH}/{path}?$top=1", token_url=TOKEN_URL)
 
 
 @pytest.mark.parametrize(
@@ -258,3 +321,25 @@ def test_a_refusal_is_not_retried(creds):
     with pytest.raises(GraphError):
         client.get("users")
     assert fake.graph_requests == 1 and client.retries == 0
+
+
+def test_the_private_key_is_never_in_the_credentials_repr(creds):
+    assert b"PRIVATE KEY" in creds.private_key_pem
+    assert "PRIVATE" not in repr(creds) and "private_key_pem" not in repr(creds)
+
+
+@pytest.mark.skipif(__import__("os").name != "posix", reason="POSIX permissions only")
+def test_a_microsoft_key_others_can_read_is_refused(tmp_path, key):
+    """The Microsoft key used to be read with no permission check at all."""
+    from icp.security.credentials import CredentialError
+
+    pem = tmp_path / "m365-key.pem"
+    pem.write_bytes(b"-----BEGIN PRIVATE KEY-----\nx\n-----END PRIVATE KEY-----\n")
+    pem.chmod(0o644)
+    with pytest.raises(CredentialError, match="0644"):
+        GraphCredentials.from_files(tenant_id="t", client_id="c", thumbprint="ab", key_file=pem)
+    pem.chmod(0o600)
+    assert (
+        GraphCredentials.from_files(tenant_id="t", client_id="c", thumbprint="ab", key_file=pem).client_id
+        == "c"
+    )

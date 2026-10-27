@@ -40,17 +40,58 @@ class GoogleCredentialSource:
     detail: str  # path or a non-sensitive description -- never key material
 
 
-def _is_foreign_mount(path: Path) -> bool:
-    """Is this file on a filesystem that cannot express POSIX mode bits?
+#: Filesystems through which Docker Desktop shares host files with a container.
+#: None can express POSIX modes (every file reports as 0777 or 0644), so access
+#: is controlled by the host's own permissions. Seen live: WSL2 shares a
+#: Windows drive as 9p with aname=drvfs.
+_HOST_SHARE_TYPES = frozenset({"fakeowner", "fuse.grpcfuse", "grpcfuse", "osxfs", "fuse.osxfs", "drvfs"})
 
-    Docker Desktop on Windows and macOS exposes host files through a translation
-    layer that reports every file as 0777, because NTFS and APFS have no POSIX
-    mode bits to report. `chmod` on such a file silently does nothing.
+_MOUNTINFO = Path("/proc/self/mountinfo")
 
-    Detected by attempting the change rather than by sniffing the platform: the
-    container is Linux either way, so `os.name` cannot tell us, and mount-table
-    parsing is brittle across Docker versions. If a chmod does not stick, the
-    filesystem is not enforcing modes and the check cannot mean anything.
+
+def _mount_type(path: Path, mountinfo: Path = _MOUNTINFO) -> tuple[str, str] | None:
+    """(filesystem type, its options) of the mount holding `path`, if known."""
+    try:
+        lines = mountinfo.read_text("utf-8").splitlines()
+    except OSError:
+        return None
+    target = str(path.resolve())
+    best: tuple[int, str, str] | None = None
+    for line in lines:
+        head, sep, tail = line.partition(" - ")
+        fields = head.split()
+        if not sep or len(fields) < 5:
+            continue
+        # Spaces and similar arrive octal-escaped (\040).
+        point = fields[4].encode().decode("unicode_escape")
+        if target != point and not target.startswith(point.rstrip("/") + "/"):
+            continue
+        parts = tail.split()
+        if parts and (best is None or len(point) > best[0]):
+            best = (len(point), parts[0], parts[2] if len(parts) > 2 else "")
+    return (best[1], best[2]) if best else None
+
+
+def _is_host_share(path: Path, mountinfo: Path = _MOUNTINFO) -> bool:
+    """Is this file shared from the host by Docker Desktop (no POSIX modes)?
+
+    Identified by the mount's filesystem type, never by a failed chmod: a key
+    mounted read-only from an ordinary Linux disk also refuses chmod, and its
+    loose mode is real. Treating that failure as "cannot check" let such a key
+    through.
+    """
+    found = _mount_type(path, mountinfo)
+    if found is None:
+        return False
+    fstype, options = found
+    return fstype in _HOST_SHARE_TYPES or (fstype == "9p" and "aname=drvfs" in options)
+
+
+def _chmod_is_ignored(path: Path) -> bool | None:
+    """Does a chmod on this file silently not take effect? None: it was refused.
+
+    For a translation layer not in `_HOST_SHARE_TYPES`. A refusal (read-only,
+    not ours) proves nothing about enforcement, so the caller fails closed.
     """
     try:
         original = stat.S_IMODE(path.stat().st_mode)
@@ -62,38 +103,56 @@ def _is_foreign_mount(path: Path) -> bool:
         if original != 0o600:
             path.chmod(original)
         return False
-    except (OSError, PermissionError):
-        # Read-only mount, or not ours to modify. Treat as unenforceable.
-        return True
+    except OSError:
+        return None
 
 
-def _check_file_permissions(path: Path) -> None:
-    """Refuse to read a key file that others can read.
+def _check_file_permissions(path: Path, *, mountinfo: Path = _MOUNTINFO) -> None:
+    """Refuse to read a key file that others can read, or whose access cannot be checked.
 
     A world-readable key in a shared directory is the most common real-world
-    leak of a service account, so this is a genuine control on Linux and macOS
-    hosts. It is skipped where the filesystem cannot express permissions at all
-    -- demanding a `chmod` that provably cannot take effect would teach the
-    operator to ignore the check, which is worse than not having it.
+    leak of a service account. Only a file shared from the host by Docker
+    Desktop, whose filesystem has no modes, is let through with a warning:
+    there the host's access list is the control, and run-all.ps1 checks it.
+    Anything else that cannot be verified is refused.
     """
     if os.name != "posix":
+        logger.warning(
+            "Credential file %s: permissions are not checked on Windows by this tool. "
+            "run-all.ps1 checks the key file's access list on the host.",
+            path,
+        )
         return
 
     mode = stat.S_IMODE(path.stat().st_mode)
     if not (mode & ~_MAX_PERMISSIONS):
         return
 
-    if _is_foreign_mount(path):
+    if _is_host_share(path, mountinfo):
         logger.warning(
-            "Credential file %s reports mode %04o, but its filesystem does not enforce "
-            "POSIX permissions -- typically a Docker Desktop bind mount from Windows or "
-            "macOS. Permission checking is not possible here; secure the file on the host "
-            "instead.",
+            "Credential file %s reports mode %04o, but it is shared from the host by Docker "
+            "Desktop, which has no POSIX permissions. Its access is controlled on the host: "
+            "run-all.ps1 checks that only you, SYSTEM and Administrators can read it.",
             path,
             mode,
         )
         return
 
+    ignored = _chmod_is_ignored(path)
+    if ignored:
+        logger.warning(
+            "Credential file %s reports mode %04o on a filesystem that ignores chmod. "
+            "Permission checking is not possible here; secure the file on the host.",
+            path,
+            mode,
+        )
+        return
+    if ignored is None:
+        raise CredentialError(
+            f"Credential file {path} has permissions {mode:04o} and they cannot be checked or "
+            "tightened here (read-only or not ours). Tighten it where it is stored "
+            f"(`chmod 600`) before running against any tenant."
+        )
     raise CredentialError(
         f"Credential file {path} has permissions {mode:04o}. "
         f"Tighten it to 0600 (`chmod 600 {path}`) before running against any tenant."

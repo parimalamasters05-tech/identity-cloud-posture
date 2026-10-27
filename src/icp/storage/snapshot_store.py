@@ -16,6 +16,7 @@ from pathlib import Path
 from icp.models.snapshot import SCHEMA_VERSION, Snapshot
 from icp.security import crypto
 from icp.storage._permissions import private_dir, write_private
+from icp.storage.paths import component, file_in
 
 logger = logging.getLogger(__name__)
 
@@ -45,7 +46,12 @@ class SnapshotStore:
     def path_for(self, snapshot: Snapshot) -> Path:
         suffix = "json.enc" if self.encrypt else "json"
         tenant = _safe_component(snapshot.tenant_id)
-        return self.root / f"{tenant}__{snapshot.snapshot_id}.{suffix}"
+        snapshot_id = component(snapshot.snapshot_id, "Snapshot ID")
+        return file_in(self.root, f"{tenant}__{snapshot_id}.{suffix}")
+
+    def trail_path_for(self, snapshot: Snapshot) -> Path:
+        """Where the snapshot's API call trail goes, beside it."""
+        return file_in(self.root, f"{component(snapshot.snapshot_id, 'Snapshot ID')}.apicalls.jsonl")
 
     def list_snapshots(self, tenant_id: str | None = None) -> list[Path]:
         """Snapshots for a tenant, oldest first.

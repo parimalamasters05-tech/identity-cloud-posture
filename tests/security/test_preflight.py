@@ -211,23 +211,55 @@ def test_every_probe_is_a_read():
 
 # -- platform-specific permission checking -------------------------------------
 
+#: The mount table line seen live: WSL2 sharing a Windows drive with a container.
+_DRVFS = (
+    "477 461 0:71 /claude_test_cyber/secrets/sa-key.json {point} ro,noatime - 9p D:\\134 "
+    "rw,aname=drvfs;path=D:\\;uid=0;gid=0;metadata;symlinkroot=/mnt/host/\n"
+)
+_EXT4 = "29 1 8:1 / {point} ro,relatime - ext4 /dev/sda1 ro\n"
 
-@pytest.mark.skipif(__import__("os").name != "posix", reason="POSIX permissions only")
-def test_a_filesystem_that_cannot_enforce_modes_warns_instead_of_blocking(tmp_path, monkeypatch):
-    """Docker Desktop on Windows reports every bind-mounted file as 0777.
 
-    NTFS has no POSIX mode bits, so `chmod 600` provably does nothing there.
-    Demanding it would make the tool unusable on Windows and would teach the
-    operator to ignore a security message -- worse than not having the check.
-    """
-    from icp.security import credentials
-
+def _leaky_key(tmp_path):
     key = tmp_path / "sa.json"
     key.write_text("{}")
     key.chmod(0o644)
+    return key
 
-    monkeypatch.setattr(credentials, "_is_foreign_mount", lambda _p: True)
-    credentials._check_file_permissions(key)  # warns, does not raise
+
+def _mountinfo(tmp_path, template, point):
+    path = tmp_path / "mountinfo"
+    path.write_text("22 1 8:1 / / rw - ext4 /dev/root rw\n" + template.format(point=point))
+    return path
+
+
+@pytest.mark.skipif(__import__("os").name != "posix", reason="POSIX permissions only")
+def test_a_docker_desktop_host_share_warns_instead_of_blocking(tmp_path):
+    """Docker Desktop on Windows reports every shared file as 0777; NTFS has no
+    POSIX mode bits, so the host's access list is the control (run-all.ps1)."""
+    from icp.security import credentials
+
+    key = _leaky_key(tmp_path)
+    mountinfo = _mountinfo(tmp_path, _DRVFS, key.resolve())
+    credentials._check_file_permissions(key, mountinfo=mountinfo)  # warns, does not raise
+
+
+@pytest.mark.skipif(__import__("os").name != "posix", reason="POSIX permissions only")
+def test_a_leaky_key_on_a_read_only_linux_mount_is_refused(tmp_path, monkeypatch):
+    """chmod fails on any read-only mount. That used to count as "cannot check",
+    which let a world-readable key on an ordinary Linux disk through."""
+    from pathlib import Path
+
+    from icp.security.credentials import CredentialError, _check_file_permissions
+
+    key = _leaky_key(tmp_path)
+    mountinfo = _mountinfo(tmp_path, _EXT4, tmp_path.resolve())
+
+    def read_only(self, mode):
+        raise OSError(30, "Read-only file system")
+
+    monkeypatch.setattr(Path, "chmod", read_only)
+    with pytest.raises(CredentialError, match="cannot be checked"):
+        _check_file_permissions(key, mountinfo=mountinfo)
 
 
 @pytest.mark.skipif(__import__("os").name != "posix", reason="POSIX permissions only")
@@ -235,28 +267,21 @@ def test_a_real_posix_filesystem_still_blocks_a_leaky_key(tmp_path):
     """The control must keep working where it can actually mean something."""
     from icp.security.credentials import CredentialError, _check_file_permissions
 
-    key = tmp_path / "sa.json"
-    key.write_text("{}")
-    key.chmod(0o644)
-
+    key = _leaky_key(tmp_path)
     with pytest.raises(CredentialError, match="0644"):
-        _check_file_permissions(key)
-
-
-@pytest.mark.skipif(__import__("os").name != "posix", reason="POSIX permissions only")
-def test_foreign_mount_detection_is_false_on_a_normal_filesystem(tmp_path):
-    """Detected by whether a chmod sticks, not by guessing at the platform."""
-    from icp.security.credentials import _is_foreign_mount
-
-    key = tmp_path / "sa.json"
-    key.write_text("{}")
-    key.chmod(0o644)
-
-    assert _is_foreign_mount(key) is False
+        _check_file_permissions(key, mountinfo=_mountinfo(tmp_path, _EXT4, tmp_path.resolve()))
     # And the probe must leave the file as it found it.
     import stat as _stat
 
     assert _stat.S_IMODE(key.stat().st_mode) == 0o644
+
+
+def test_the_mount_holding_a_file_is_the_longest_matching_one(tmp_path):
+    from icp.security.credentials import _mount_type
+
+    mountinfo = _mountinfo(tmp_path, _DRVFS, "/run/secrets/sa-key.json")
+    assert _mount_type(__import__("pathlib").Path("/run/secrets/sa-key.json"), mountinfo)[0] == "9p"
+    assert _mount_type(__import__("pathlib").Path("/etc/hosts"), mountinfo)[0] == "ext4"
 
 
 def test_an_unenabled_api_is_not_reported_as_a_missing_scope():

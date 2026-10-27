@@ -131,9 +131,14 @@ could identify a client or an individual.
 
 - The assessor never requests, accepts, or uses an individual user's password or
   second factor.
-- Service account keys are stored with 0600 permissions; the tooling refuses to
-  read a key file that other users can read
-  (`src/icp/security/credentials.py`).
+- Private keys (the Google service-account key and the Microsoft 365
+  certificate key) are readable only by the assessor. The tooling refuses to
+  read a key file that other users can read, or whose permissions it cannot
+  verify (`src/icp/security/credentials.py`). On Windows, where Docker Desktop
+  shows every shared file as world-readable, `run-all.ps1` checks each key's
+  access list on the host and stops if anyone but the assessor, SYSTEM and
+  Administrators can open it. Key material never appears in the tool's
+  representations of its credentials, so it cannot reach a log or traceback.
 - Keys are never committed to version control. This is enforced by
   `.gitignore`, a `detect-private-key` pre-commit hook, and a gitleaks scan in
   CI.

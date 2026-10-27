@@ -80,7 +80,13 @@ foreach ($name in $settings.Keys) {
 # so the host folders' access lists are what keep client data private.
 Write-Host ""
 Write-Host "== Client-data folders: restrict to you ==" -ForegroundColor Cyan
-& (Join-Path $PSScriptRoot "tools\protect-data-folders.ps1")
+# Only the keys of platforms being collected: a key deleted for a platform
+# left out with -Skip (an expired trial, say) must not stop the others.
+$keys = @(
+    @{ Platform = "google"; Setting = "ICP_HOST_KEY_FILE" },
+    @{ Platform = "m365"; Setting = "ICP_HOST_M365_KEY_FILE" }
+) | Where-Object { ($Skip -notcontains $_.Platform) -and (IsSet $_.Setting) } | ForEach-Object { $settings[$_.Setting] }
+& (Join-Path $PSScriptRoot "tools\protect-data-folders.ps1") -KeyFiles $keys
 if ($LASTEXITCODE -ne 0) {
     Write-Host "Nothing collected: fix the access problems above first." -ForegroundColor Red
     exit 1

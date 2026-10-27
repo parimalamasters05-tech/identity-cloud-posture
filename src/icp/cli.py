@@ -20,6 +20,7 @@ from icp import __version__
 from icp.config import ConfigError, Settings
 from icp.security.redaction import configure_logging
 from icp.storage._permissions import private_dir, write_private
+from icp.storage.paths import file_in
 
 logger = logging.getLogger("icp")
 
@@ -120,7 +121,7 @@ def collect(ctx: click.Context, tenant: str | None, no_encrypt: bool, fixtures: 
 
         if snapshot.api_calls:
             trail = write_audit_trail(
-                settings.snapshot_dir / f"{snapshot.snapshot_id}.apicalls.jsonl",
+                store.trail_path_for(snapshot),
                 list(snapshot.api_calls),
                 tenant_id=snapshot.tenant_id,
             )
@@ -447,7 +448,7 @@ def delta(ctx: click.Context, previous: Path, current: Path) -> None:
     # Named after the current findings file (tenant__<snapshot>__delta.json), so
     # retention ages it with the findings it was built from. A file whose name
     # carries no date would be kept forever.
-    out = settings.output_dir / f"{current.stem.removesuffix('__findings')}__delta.json"
+    out = file_in(settings.output_dir, f"{current.stem.removesuffix('__findings')}__delta.json")
     write_private(out, json.dumps(summary, indent=2))
     click.secho(f"Written: {out}", fg="green")
 
@@ -462,7 +463,7 @@ def preflight_m365() -> None:
     import os
 
     from icp.preflight_m365 import run
-    from icp.security.graph_readonly import GraphCredentials, GraphError, GraphReadOnly
+    from icp.security.graph_readonly import GraphError
 
     missing = [
         v
@@ -476,13 +477,7 @@ def preflight_m365() -> None:
     ]
     if missing:
         _fail(f"Set {', '.join(missing)} in .env.")
-    creds = GraphCredentials.from_files(
-        tenant_id=os.environ["ICP_M365_TENANT_ID"],
-        client_id=os.environ["ICP_M365_CLIENT_ID"],
-        thumbprint=os.environ["ICP_M365_CERT_THUMBPRINT"],
-        key_file=Path(os.environ["ICP_M365_KEY_FILE"]),
-    )
-    client = GraphReadOnly(creds)
+    client = _m365_client()
     try:
         results = run(client)
     except GraphError as exc:  # sign-in itself failed
@@ -632,9 +627,10 @@ def collect_m365(ctx: click.Context, no_encrypt: bool) -> None:
         _fail(f"{type(exc).__name__}: {exc}")
 
     try:
-        path = SnapshotStore(settings.snapshot_dir, encrypt=encrypt).save(snapshot)
+        store = SnapshotStore(settings.snapshot_dir, encrypt=encrypt)
+        path = store.save(snapshot)
         trail = write_audit_trail(
-            settings.snapshot_dir / f"{snapshot.snapshot_id}.apicalls.jsonl",
+            store.trail_path_for(snapshot),
             list(snapshot.api_calls),
             tenant_id=snapshot.tenant_id,
         )
@@ -668,6 +664,7 @@ def collect_m365(ctx: click.Context, no_encrypt: bool) -> None:
 def _m365_client():  # type: ignore[no-untyped-def]
     import os
 
+    from icp.security.credentials import CredentialError
     from icp.security.graph_readonly import GraphCredentials, GraphReadOnly
 
     needed = ("ICP_M365_TENANT_ID", "ICP_M365_CLIENT_ID", "ICP_M365_CERT_THUMBPRINT", "ICP_M365_KEY_FILE")
@@ -683,6 +680,8 @@ def _m365_client():  # type: ignore[no-untyped-def]
         )
     except OSError as exc:
         _fail(f"Cannot read the Microsoft 365 private key: {exc}")
+    except CredentialError as exc:
+        _fail(f"Microsoft 365 private key refused: {exc}")
     return GraphReadOnly(creds)
 
 
@@ -1133,7 +1132,12 @@ def _load_snapshot(store, snapshot_path: Path | None, tenant_id: str | None):  #
 
 
 def main() -> None:
-    cli(obj={})
+    from icp.storage.paths import UnsafePathError
+
+    try:
+        cli(obj={})
+    except UnsafePathError as exc:  # a crafted or corrupted snapshot: say so, no traceback
+        _fail(str(exc))
 
 
 if __name__ == "__main__":

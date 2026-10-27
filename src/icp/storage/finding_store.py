@@ -18,6 +18,7 @@ from icp.risk import scoring
 from icp.risk.severity import RiskMatrix
 from icp.rules.engine import AssessmentResult
 from icp.storage._permissions import private_dir, write_private
+from icp.storage.paths import component, file_in
 
 #: 1.1 added summary.partial_coverage (additive).
 #: 2.0 finding IDs no longer hash the affected accounts (`id_scheme`). Not
@@ -35,7 +36,11 @@ class FindingStore:
         private_dir(self.root)
 
     def path_for(self, tenant_id: str, snapshot_id: str) -> Path:
-        return self.root / f"{tenant_id}__{snapshot_id}__findings.json"
+        # The tenant label as snapshot file names write it; the snapshot ID checked.
+        from icp.storage.snapshot_store import _safe_component
+
+        name = f"{_safe_component(tenant_id)}__{component(snapshot_id, 'Snapshot ID')}__findings.json"
+        return file_in(self.root, name)
 
     def save(
         self,
@@ -93,7 +98,9 @@ class FindingStore:
         return [Finding.model_validate(f) for f in data.get("findings", [])]
 
     def load_latest(self, tenant_id: str) -> list[Finding]:
-        candidates = sorted(self.root.glob(f"{tenant_id}__*__findings.json"))
+        from icp.storage.snapshot_store import _safe_component
+
+        candidates = sorted(self.root.glob(f"{_safe_component(tenant_id)}__*__findings.json"))
         return self.load(candidates[-1]) if candidates else []
 
 

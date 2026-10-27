@@ -20,12 +20,12 @@ logger = logging.getLogger(__name__)
 SAFE_METHODS: frozenset[str] = frozenset({"GET", "HEAD", "OPTIONS"})
 
 #: Verbs that can. Any of these aborts the run.
+#:
+#: There is no exception for Google's batch endpoint (POST, carrying GET
+#: sub-requests): no collector batches, and the exemption it used to have
+#: accepted a missing body and scanned lines rather than parsing the
+#: multipart body. A collector that needs batching must bring a strict parser.
 UNSAFE_METHODS: frozenset[str] = frozenset({"POST", "PUT", "PATCH", "DELETE"})
-
-#: Narrow exception: Google's batch endpoint is POST-only but carries GET
-#: sub-requests. Allowed only for this exact host+path, and only when every
-#: sub-request inside the body is itself a GET (checked below).
-_BATCH_ENDPOINTS = ("https://www.googleapis.com/batch/",)
 
 
 class WriteAttemptBlocked(RuntimeError):
@@ -34,23 +34,6 @@ class WriteAttemptBlocked(RuntimeError):
     Reaching this exception means a control failed upstream. It should be treated
     as a defect and investigated, not caught and ignored.
     """
-
-
-def _is_permitted_batch(method: str, uri: str, body: Any) -> bool:
-    if method.upper() != "POST":
-        return False
-    if not any(uri.startswith(prefix) for prefix in _BATCH_ENDPOINTS):
-        return False
-    if body is None:
-        return True
-    text = body.decode("utf-8", "ignore") if isinstance(body, bytes) else str(body)
-    # Every sub-request line must be a GET.
-    verbs = [
-        line.split(" ", 1)[0].upper()
-        for line in text.splitlines()
-        if line[:4].upper() in ("GET ", "POST", "PUT ", "PATC", "DELE")
-    ]
-    return bool(verbs) and all(v == "GET" for v in verbs)
 
 
 class ReadOnlyHttp:
@@ -80,7 +63,7 @@ class ReadOnlyHttp:
     ) -> Any:
         verb = (method or "GET").upper()
 
-        if verb not in SAFE_METHODS and not _is_permitted_batch(verb, uri, body):
+        if verb not in SAFE_METHODS:
             self._recorder.append(ApiCallRecord(method=verb, url=_strip_query(uri), status=None))
             raise WriteAttemptBlocked(
                 f"Blocked {verb} to {_strip_query(uri)}. "
@@ -136,7 +119,7 @@ class TokenOrReadHttp:
     ) -> Any:
         verb = (method or "GET").upper()
         is_token = verb == "POST" and _strip_query(uri) == self._token_endpoint
-        if verb not in SAFE_METHODS and not is_token and not _is_permitted_batch(verb, uri, body):
+        if verb not in SAFE_METHODS and not is_token:
             raise WriteAttemptBlocked(
                 f"Blocked {verb} to {_strip_query(uri)} beneath the guard. Only reads and the "
                 "token request may use this connection."
@@ -165,9 +148,9 @@ def assert_no_writes(calls: list[ApiCallRecord]) -> None:
     Called at the end of every collection. Cheap, and it turns a silent control
     failure into a loud one.
     """
+    # Every recorded call passed ReadOnlyHttp, which lets no unsafe verb through,
+    # so any unsafe verb here means that guard was bypassed.
     unsafe = [c for c in calls if c.method.upper() in UNSAFE_METHODS]
-    # Permitted batch POSTs are recorded as GET-equivalent by _is_permitted_batch,
-    # so anything left here is a genuine violation.
     if unsafe:
         detail = ", ".join(f"{c.method} {c.url}" for c in unsafe[:5])
         raise WriteAttemptBlocked(f"Read-only attestation failed: {len(unsafe)} unsafe call(s): {detail}")

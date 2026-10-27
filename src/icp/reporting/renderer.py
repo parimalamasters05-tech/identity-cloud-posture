@@ -43,6 +43,7 @@ from icp.rules.engine import AssessmentResult
 from icp.rules.microsoft import readable_kinds
 from icp.security.scopes import optional_scopes, sorted_scopes
 from icp.storage._permissions import FILE_MODE, private_dir, restrict, write_private
+from icp.storage.paths import component, file_in
 
 logger = logging.getLogger(__name__)
 
@@ -374,11 +375,11 @@ class ReportRenderer:
         output_dir = Path(output_dir)
         private_dir(output_dir)
         latest = max((t.snapshot for t, _ in assessed), key=lambda s: s.collected_at)
-        stem = basename or f"{_slug(client_name)}__combined__{latest.snapshot_id}"
+        stem = basename or f"{_slug(client_name)}__combined__{component(latest.snapshot_id, 'Snapshot ID')}"
 
-        html_path = output_dir / f"{stem}.html"
+        html_path = file_in(output_dir, f"{stem}.html")
         write_private(html_path, html)
-        pdf_path, pdf_error = self._render_pdf(html, output_dir / f"{stem}.pdf")
+        pdf_path, pdf_error = self._render_pdf(html, file_in(output_dir, f"{stem}.pdf"))
         return RenderResult(html_path=html_path, pdf_path=pdf_path, pdf_error=pdf_error)
 
     def _finding_context(self, finding: Finding) -> dict[str, Any]:
@@ -490,12 +491,12 @@ class ReportRenderer:
 
         output_dir = Path(output_dir)
         private_dir(output_dir)
-        stem = basename or f"{_slug(client_name)}__{tenant.snapshot.snapshot_id}"
+        stem = basename or f"{_slug(client_name)}__{component(tenant.snapshot.snapshot_id, 'Snapshot ID')}"
 
-        html_path = output_dir / f"{stem}.html"
+        html_path = file_in(output_dir, f"{stem}.html")
         write_private(html_path, html)
 
-        pdf_path, pdf_error = self._render_pdf(html, output_dir / f"{stem}.pdf")
+        pdf_path, pdf_error = self._render_pdf(html, file_in(output_dir, f"{stem}.pdf"))
         return RenderResult(html_path=html_path, pdf_path=pdf_path, pdf_error=pdf_error)
 
     def _render_pdf(self, html: str, target: Path) -> tuple[Path | None, str | None]:

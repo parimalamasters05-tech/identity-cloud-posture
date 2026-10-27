@@ -13,7 +13,9 @@ Three rules, enforced on every request before it leaves the tool:
    file but never open it.
 
 Any host other than those two is refused too, including an `@odata.nextLink`
-that points somewhere unexpected.
+that points somewhere unexpected. And on Graph itself, only the endpoints in
+`_ENDPOINTS` -- the ones the collectors read -- checked after decoding the
+path, so an escaped segment (`%63ontent`) cannot slip past either rule.
 
 Authentication is a certificate (client assertion, RFC 7523), not a secret.
 The private key is read from a file mounted read-only at runtime; it never
@@ -30,7 +32,7 @@ import urllib.parse
 import urllib.request
 import uuid
 from collections.abc import Callable
-from dataclasses import dataclass
+from dataclasses import dataclass, field
 from pathlib import Path
 from typing import Any
 
@@ -43,6 +45,83 @@ GRAPH_SCOPE = "https://graph.microsoft.com/.default"
 
 #: Path segments that return a file's bytes rather than its metadata.
 _CONTENT_SEGMENTS = frozenset({"content", "$value", "contentstream"})
+
+_API_VERSION = "v1.0"
+#: Stands for one ID segment (a GUID, a UPN, a drive or item ID) in `_ENDPOINTS`.
+_ID = "*"
+#: An ID as Graph writes it: no separators, no escapes, no OData function syntax.
+_ID_CHARS = frozenset("abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789!._@-")
+
+#: Every Graph endpoint the collectors and the preflight read, and nothing
+#: else. Built from the call trails of the live dev tenant (27 Oct 2026); a
+#: new collector adds its endpoint here, in review. `drives/*/root/delta` is
+#: the form Graph may give a OneDrive delta's next-page link.
+_ENDPOINTS: frozenset[tuple[str, ...]] = frozenset(
+    tuple(path.lower().split("/"))
+    for path in (
+        "organization",
+        "users",
+        "users/*/authentication/methods",
+        "users/*/drive/root/delta",
+        "drives/*/root/delta",
+        "drives/*/items/*/permissions",
+        "groups",
+        "reports/authenticationMethods/userRegistrationDetails",
+        "roleManagement/directory/roleDefinitions",
+        "roleManagement/directory/roleAssignments",
+        "servicePrincipals",
+        "servicePrincipals/*/appRoleAssignedTo",
+        "servicePrincipals/*/delegatedPermissionClassifications",
+        "oauth2PermissionGrants",
+        "applications",
+        "identity/conditionalAccess/policies",
+        "policies/identitySecurityDefaultsEnforcementPolicy",
+        "policies/authorizationPolicy",
+        "policies/crossTenantAccessPolicy/default",
+        "policies/crossTenantAccessPolicy/partners",
+        "admin/sharepoint/settings",
+        "auditLogs/directoryAudits",
+        "auditLogs/signIns",
+        "sites/root",
+    )
+)
+
+
+def _canonical_segments(path: str) -> list[str]:
+    """The path's segments, decoded exactly once, or refused.
+
+    Matching the raw path let `/%63ontent` past the content check: Graph
+    would decode it to `/content`, the guard never did. So each segment is
+    decoded before any check, and one that is still encoded after that (a
+    double encoding), or that decodes to a separator or a dot-segment, is
+    refused rather than guessed at.
+    """
+    segments = []
+    for raw in path.split("/"):
+        if not raw:
+            continue
+        try:
+            decoded = urllib.parse.unquote(raw, errors="strict")
+        except UnicodeDecodeError:
+            raise WriteAttemptBlocked(f"Blocked request with an undecodable path: {path}") from None
+        if "%" in decoded or "/" in decoded or "\\" in decoded or decoded in (".", ".."):
+            raise WriteAttemptBlocked(f"Blocked request with an encoded or ambiguous path: {path}")
+        segments.append(decoded)
+    return segments
+
+
+def _is_reviewed(segments: list[str]) -> bool:
+    if not segments or segments[0] != _API_VERSION:
+        return False
+    rest = segments[1:]
+    for pattern in _ENDPOINTS:
+        if len(pattern) == len(rest) and all(
+            (p == _ID and s and set(s) <= _ID_CHARS) or p == s.lower()
+            for p, s in zip(pattern, rest, strict=True)
+        ):
+            return True
+    return False
+
 
 _AUTH_VERB = "POST"  # the one non-GET request; see rule 2 above
 
@@ -62,7 +141,9 @@ class GraphCredentials:
     tenant_id: str
     client_id: str
     thumbprint: str  # SHA-1, hex, as shown in the Entra portal
-    private_key_pem: bytes
+    #: Never in repr(): a traceback, log line or debugger print of these
+    #: credentials must not carry the private key.
+    private_key_pem: bytes = field(repr=False)
 
     @classmethod
     def from_files(
@@ -70,6 +151,11 @@ class GraphCredentials:
     ) -> GraphCredentials:
         if not key_file.is_file():
             raise FileNotFoundError(f"Microsoft 365 private key not found at {key_file}")
+        # The same check as the Google key: refused if others can read it, or if
+        # that cannot be verified (a host share is checked on the host instead).
+        from icp.security.credentials import _check_file_permissions
+
+        _check_file_permissions(key_file)
         return cls(
             tenant_id=tenant_id.strip(),
             client_id=client_id.strip(),
@@ -100,10 +186,18 @@ def check_request(method: str, url: str, *, token_url: str) -> None:
         raise WriteAttemptBlocked(f"Blocked {verb} to {parts.netloc}{parts.path}. This tool is read-only.")
     if parts.netloc != GRAPH_HOST:
         raise WriteAttemptBlocked(f"Blocked request to unexpected host {parts.netloc}")
-    segments = {s.lower() for s in parts.path.split("/") if s}
-    if segments & _CONTENT_SEGMENTS:
+    segments = _canonical_segments(parts.path)
+    # Checked on the decoded path, and on every segment's name before any
+    # `:` path addressing (root:/file.docx:/content) or `(...)` function call.
+    names = {s.lower() for s in segments} | {s.lower().split(":")[0].split("(")[0] for s in segments}
+    if names & _CONTENT_SEGMENTS:
         raise WriteAttemptBlocked(
             f"Blocked request for file content at {parts.path}. The tool reads sharing metadata, never file contents."
+        )
+    if not _is_reviewed(segments):
+        raise WriteAttemptBlocked(
+            f"Blocked GET to {parts.path}: not an endpoint this tool reads. A new collector adds "
+            "its endpoint to _ENDPOINTS in graph_readonly.py, in review."
         )
 
 

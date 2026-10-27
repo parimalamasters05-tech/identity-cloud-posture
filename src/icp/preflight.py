@@ -238,7 +238,14 @@ def check_configuration(settings: Settings) -> list[ProbeResult]:
         else:
             try:
                 _check_file_permissions(path)
-                record("Credential file", True, f"{path} (0600)")
+                mode = path.stat().st_mode & 0o777
+                record(
+                    "Credential file",
+                    True,
+                    f"{path} ({mode:04o})"
+                    if mode <= 0o600
+                    else f"{path} (shared from the host: access is checked there, by run-all.ps1)",
+                )
             except Exception as exc:
                 record("Credential file", False, str(exc))
     else:
