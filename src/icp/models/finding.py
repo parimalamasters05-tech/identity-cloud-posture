@@ -9,7 +9,7 @@ so it is enforced by `tests/rules/test_finding_id_stability.py`.
 from __future__ import annotations
 
 import hashlib
-from datetime import UTC, datetime
+from datetime import UTC, date, datetime
 
 from pydantic import BaseModel, ConfigDict, Field
 
@@ -25,6 +25,28 @@ from icp.models.enums import (
 #: v2: IDs no longer depend on the affected-entity set. Findings files record
 #: this, and the delta refuses to compare across versions.
 ID_NAMESPACE = "icp.finding.v2"
+
+
+class AcceptedException(BaseModel):
+    """A reviewed decision to accept one observation, for a stated time.
+
+    Heuristics are sometimes right to fire and still wrong for this client: an
+    emergency-access account that is meant to sit unused, a backup app that
+    needs broad access. The client decides that, not the tool, and the report
+    keeps the observation visible with the decision beside it.
+    """
+
+    model_config = ConfigDict(frozen=True)
+
+    rule_id: str
+    #: The affected entity's stable ID (AffectedEntity.id), or "*" for the
+    #: finding as a whole (an administrator-count threshold, say).
+    entity: str
+    owner: str
+    rationale: str
+    compensating_control: str
+    approved_on: date
+    expires: date
 
 
 class AffectedEntity(BaseModel):
@@ -87,10 +109,23 @@ class Finding(BaseModel):
     first_seen: datetime = Field(default_factory=lambda: datetime.now(UTC))
     last_seen: datetime = Field(default_factory=lambda: datetime.now(UTC))
     status: FindingStatus | None = None
+    #: Accepted exceptions that apply to this finding (see icp.rules.exceptions).
+    #: The finding and its evidence stay as found; these say what was accepted.
+    exceptions: tuple[AcceptedException, ...] = ()
 
     @property
     def entity_count(self) -> int:
         return len(self.affected_entities)
+
+    @property
+    def excepted_ids(self) -> frozenset[str]:
+        return frozenset(x.entity for x in self.exceptions)
+
+    @property
+    def fully_excepted(self) -> bool:
+        """Every affected item (or the finding as a whole) is an accepted exception."""
+        ids = self.excepted_ids
+        return bool(ids) and ("*" in ids or all(e.id in ids for e in self.affected_entities))
 
     @property
     def privileged_entity_count(self) -> int:

@@ -14,12 +14,14 @@ from dataclasses import dataclass, field
 from datetime import UTC, datetime
 from typing import Any
 
-from icp.models.enums import Assessability, CheckFamily, Confidence, Severity
-from icp.models.finding import AffectedEntity, Evidence, Finding, build_finding_id
+from icp.models.enums import Assessability, CheckFamily, Confidence, RuleOutcome, Severity
+from icp.models.finding import AcceptedException, AffectedEntity, Evidence, Finding, build_finding_id
 from icp.normalizers.base import NormalizedTenant
 from icp.risk import scoring
 from icp.risk.severity import RiskMatrix
 from icp.rules.base import Rule, RuleContext, RuleNotAssessable, all_rules
+from icp.rules.exceptions import ExceptionsReport
+from icp.rules.exceptions import apply as apply_exceptions
 
 logger = logging.getLogger(__name__)
 
@@ -32,7 +34,16 @@ class AssessmentResult:
     unassessable: dict[str, str] = field(default_factory=dict)
     #: Families that ran on incomplete data (gap key -> reason).
     partial_coverage: dict[str, str] = field(default_factory=dict)
+    #: rule_id -> what happened to it, for every rule of the tenant's platform.
+    #: The report's clean areas are built from this, so a rule that crashed or
+    #: never ran can never be shown as passed.
+    outcomes: dict[str, RuleOutcome] = field(default_factory=dict)
+    #: What the engagement's reviewed exceptions did (see icp.rules.exceptions).
+    exceptions: ExceptionsReport = field(default_factory=ExceptionsReport)
     generated_at: datetime = field(default_factory=lambda: datetime.now(UTC))
+
+    def rules_with(self, outcome: RuleOutcome) -> list[str]:
+        return sorted(r for r, o in self.outcomes.items() if o == outcome)
 
     def by_family(self) -> dict[CheckFamily, list[Finding]]:
         grouped: dict[CheckFamily, list[Finding]] = {}
@@ -53,6 +64,7 @@ def assess(
     matrix: RiskMatrix | None = None,
     thresholds: dict[str, Any] | None = None,
     now: datetime | None = None,
+    exceptions: list[AcceptedException] | None = None,
 ) -> AssessmentResult:
     matrix = matrix or RiskMatrix.load_default()
     ctx = RuleContext(
@@ -65,6 +77,8 @@ def assess(
     raw: list[Finding] = []
     collector_errors = {e.collector: e for e in tenant.snapshot.errors}
 
+    partial_families = {f for gap in tenant.coverage_gaps for f in gap.families}
+
     for rule_cls in all_rules():
         rule: Rule = rule_cls()
 
@@ -72,27 +86,44 @@ def assess(
             continue
 
         if not tenant.is_assessable(rule.check_family):
+            result.outcomes[rule.rule_id] = RuleOutcome.UNAVAILABLE
             continue
 
         missing = [c for c in rule.requires_collectors if c in collector_errors]
         if missing:
             error = collector_errors[missing[0]]
             raw.append(_rule_not_assessed(tenant, ctx, result, rule, error.assessability, error.message))
+            result.outcomes[rule.rule_id] = RuleOutcome.UNAVAILABLE
             continue
 
         try:
             produced = rule.evaluate(tenant, ctx)
             raw.extend(produced)
             result.rules_run += 1
+            if produced:
+                result.outcomes[rule.rule_id] = RuleOutcome.FINDING
+            elif rule.check_family in partial_families:
+                result.outcomes[rule.rule_id] = RuleOutcome.PARTIAL
+            else:
+                result.outcomes[rule.rule_id] = RuleOutcome.PASSED
         except RuleNotAssessable as exc:
             raw.append(_rule_not_assessed(tenant, ctx, result, rule, exc.assessability, exc.reason))
+            result.outcomes[rule.rule_id] = RuleOutcome.UNAVAILABLE
         except Exception as exc:
             logger.exception("Rule %s raised", rule.rule_id)
-            result.rules_failed.append((rule.rule_id, f"{type(exc).__name__}: {exc}"))
+            error_text = f"{type(exc).__name__}: {exc}"
+            result.rules_failed.append((rule.rule_id, error_text))
+            result.outcomes[rule.rule_id] = RuleOutcome.FAILED
+            # Said in the report, not only in a log line: a check that crashed must
+            # never read as one that passed (review, 27 Oct 2026).
+            raw.append(_rule_failed(tenant, ctx, rule, error_text))
 
     raw.extend(_unassessable_findings(tenant, ctx, result))
     raw.extend(_partial_coverage_findings(tenant, ctx, result))
     result.findings = scoring.apply(raw, matrix)
+    # After scoring: an exception changes what is acted on, not what was found.
+    if exceptions:
+        result.findings, result.exceptions = apply_exceptions(result.findings, exceptions, ctx.now)
     return result
 
 
@@ -189,6 +220,42 @@ def _rule_not_assessed(
         remediation_key="coverage.restore_access",
         effort_hours=0.5,
         assessability=assessability,
+        first_seen=ctx.now,
+        last_seen=ctx.now,
+    )
+
+
+def _rule_failed(tenant: NormalizedTenant, ctx: RuleContext, rule: Rule, error: str) -> Finding:
+    """A coverage note for one rule that raised: it says nothing either way."""
+    entity = AffectedEntity(id=rule.rule_id, kind="rule", label=rule.title)
+    return Finding(
+        finding_id=build_finding_id(
+            platform=tenant.platform,
+            rule_id="ICP-COVERAGE-004",
+            discriminator=rule.rule_id,
+        ),
+        rule_id="ICP-COVERAGE-004",
+        platform=tenant.platform,
+        check_family=rule.check_family,
+        title=f"Check failed: {rule.title[0].lower()}{rule.title[1:]}",
+        severity=Severity.INFO,
+        confidence=Confidence.CONFIRMED,
+        affected_entities=(entity,),
+        evidence=(
+            Evidence(
+                collector="icp.coverage",
+                pointer="/rules_failed",
+                summary=(
+                    "This check stopped with an error in the assessment tool, so nothing is known about "
+                    "what it covers. Its absence from the findings list is not a pass, and its area is "
+                    f"not listed as clean. Error: {error}"
+                ),
+                observed_values={"rule_id": rule.rule_id},
+            ),
+        ),
+        remediation_key="coverage.rule_failed",
+        effort_hours=0.5,
+        assessability=Assessability.ASSESSED,
         first_seen=ctx.now,
         last_seen=ctx.now,
     )

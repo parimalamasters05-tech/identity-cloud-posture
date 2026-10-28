@@ -113,6 +113,21 @@ _SCOPE_TIER_WEIGHT = {
 }
 
 
+class RuleOutcome(StrEnum):
+    """What happened to one rule in one assessment. Every rule gets exactly one."""
+
+    #: Ran on complete data and found nothing.
+    PASSED = "passed"
+    #: Ran and found something.
+    FINDING = "finding"
+    #: Ran and found nothing, but on incomplete data: not proof of a pass.
+    PARTIAL = "partial"
+    #: Could not run: its data was not available (permission, licence, outage).
+    UNAVAILABLE = "unavailable"
+    #: Raised an error. Nothing is known about what it checks.
+    FAILED = "failed"
+
+
 class FindingStatus(StrEnum):
     """Only meaningful in a delta report."""
 

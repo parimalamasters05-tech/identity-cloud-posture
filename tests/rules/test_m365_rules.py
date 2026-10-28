@@ -700,3 +700,38 @@ def test_the_collector_keeps_what_the_evaluation_needs():
     assert policy["authentication_strength"] == {"id": "s1", "displayName": "Phishing-resistant"}
     assert policy["locations"] == {"excludeLocations": ["AllTrusted"]}
     assert policy["sign_in_risk_levels"] == ["high"]
+
+
+# -- application secrets: only an active one is current exposure (review, 27 Oct 2026) --
+
+
+@pytest.mark.parametrize(
+    ("start", "end", "flagged"),
+    [
+        ("2026-10-01T00:00:00Z", "2028-10-01T00:00:00Z", True),  # active, two years
+        ("2023-01-01T00:00:00Z", "2025-12-31T00:00:00Z", False),  # long-lived but expired
+        ("2027-01-01T00:00:00Z", "2029-01-01T00:00:00Z", False),  # long-lived, not yet valid
+        ("2026-10-01T00:00:00Z", "2027-03-01T00:00:00Z", False),  # active, short-lived
+    ],
+    ids=["active", "expired", "not-yet-valid", "short"],
+)
+def test_only_an_active_long_lived_secret_is_flagged(start, end, flagged):
+    artifacts = deepcopy(_artifacts())
+    artifacts["m365.applications"][0]["secrets"] = [{"startDateTime": start, "endDateTime": end}]
+    _, _, by_rule = _run(artifacts)
+    assert ("M365-SVC-002" in by_rule) is flagged
+    if flagged:
+        assert "still in use for another" in by_rule["M365-SVC-002"][0].evidence[0].summary
+
+
+def test_credential_states_are_read_at_the_assessment_time():
+    from datetime import UTC, datetime
+
+    from icp.normalizers.base import AppCredential
+
+    at = datetime(2026, 10, 6, tzinfo=UTC)
+    cred = AppCredential(
+        "a", "A", "secret", datetime(2026, 1, 1, tzinfo=UTC), datetime(2026, 10, 6, tzinfo=UTC)
+    )
+    assert cred.state(at) == "expired"  # the end instant is no longer valid
+    assert AppCredential("a", "A", "secret", None, None).state(at) == "active"  # unbounded: cautious

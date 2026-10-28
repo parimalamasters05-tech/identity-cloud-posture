@@ -43,6 +43,18 @@
         {% endif %}
       </ul>
 
+      {% if f.exceptions %}
+      {# Partly excepted: the finding stands, and the accepted items are named beside it. #}
+      <h4>Accepted exceptions</h4>
+      <ul class="steps">
+        {% for x in f.exceptions %}
+        <li><strong>{{ excepted_label(f, x) }}</strong>: accepted by {{ x.owner }} until {{ x.expires.strftime('%d %B %Y') }}.
+          {{ x.rationale }} <span class="meta">Compensating control: {{ x.compensating_control }}</span></li>
+        {% endfor %}
+      </ul>
+      <p class="meta">These items stay in this finding as observed; the fix below applies to the rest.</p>
+      {% endif %}
+
       {% if entry.related %}
       <h4>Also flagged for this application</h4>
       <p class="meta">These are further reasons to act on the same application, not separate

@@ -133,7 +133,7 @@ def test_findings_file_round_trips(tmp_path: Path, result, matrix):
     path = store.save(result, tenant_id="dev-icp", snapshot_id="snap-1", matrix=matrix)
     document = json.loads(path.read_text("utf-8"))
 
-    assert document["schema_version"] == "2.0"
+    assert document["schema_version"] == "2.2"
     assert document["id_scheme"] == "icp.finding.v2"
     assert "partial_coverage" in document["summary"]
     assert document["summary"]["total"] == len(result.findings)

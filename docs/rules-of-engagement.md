@@ -20,16 +20,41 @@ Nothing starts before the signed letter is in hand.
 
 ## Client prerequisites
 
-Before the collection window:
+Before the collection window, for each platform in scope (only those named in
+section 1 of the signed authorization letter):
 
-1. A Google Cloud project with the Admin SDK and Drive APIs enabled.
-2. A dedicated service account, with a key issued to the assessor over an agreed
+**All platforms**
+
+1. A signed authorization letter naming the platform, and these rules of
+   engagement agreed.
+2. A named technical contact reachable during the collection window.
+
+**Google Workspace**
+
+3. A Google Cloud project with the Admin SDK and Drive APIs enabled.
+4. A dedicated service account, with a key issued to the assessor over an agreed
    secure channel — not email.
-3. Domain-wide delegation granted for exactly the scopes the assessor supplies
+5. Domain-wide delegation granted for exactly the scopes the assessor supplies
    (`icp verify-scopes` output; also Schedule A of the authorization letter).
-4. A named super-administrator for the tool to impersonate. This account is
+6. A named super-administrator for the tool to impersonate. This account is
    never signed into.
-5. A named technical contact reachable during the collection window.
+
+**Microsoft 365**
+
+7. A dedicated application registered in the client's own tenant, single-tenant.
+8. The certificate the assessor supplies (public key only) uploaded to it. The
+   private key never leaves the assessor; no client secret is created.
+9. Administrator consent granted for exactly the permissions in Schedule B of
+   the authorization letter, and the tenant ID, application ID and certificate
+   thumbprint given to the assessor.
+
+**Amazon Web Services**
+
+10. A dedicated role in the client's account holding only the SecurityAudit and
+    ViewOnlyAccess policies (Schedule C of the authorization letter).
+11. Its trust policy allowing only the assessor's named AWS identity, and only
+    with the external ID agreed for this engagement.
+12. The role's ARN given to the assessor.
 
 ## What happens during collection
 

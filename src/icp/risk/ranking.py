@@ -105,11 +105,27 @@ def posture_rating(findings: list[Finding]) -> tuple[str, str]:
     """
     critical = sum(1 for f in findings if f.severity == Severity.CRITICAL)
     high = sum(1 for f in findings if f.severity == Severity.HIGH)
+    # Checks that crashed (the engine's "Check failed" notes). With any of them
+    # the rating cannot be a clean one: nothing is known about what they cover.
+    failed = sum(1 for f in findings if f.rule_id == "ICP-COVERAGE-004")
+    caveat = (
+        f" {failed} check{'s' if failed != 1 else ''} did not run, so this is not a complete result."
+        if failed
+        else ""
+    )
 
     if critical >= 1:
-        return ("Action required", "One or more critical gaps need attention now.")
+        return ("Action required", "One or more critical gaps need attention now." + caveat)
     if high >= 5:
-        return ("Weak", "Several high-severity gaps compound each other.")
+        return ("Weak", "Several high-severity gaps compound each other." + caveat)
     if high >= 1:
-        return ("Needs improvement", "No critical gaps, but meaningful high-severity issues remain.")
+        return (
+            "Needs improvement",
+            "No critical gaps, but meaningful high-severity issues remain." + caveat,
+        )
+    if failed:
+        return (
+            "Incomplete",
+            "No critical or high-severity gaps were found in the checks that ran." + caveat,
+        )
     return ("Reasonable", "No critical or high-severity gaps found in the areas assessed.")

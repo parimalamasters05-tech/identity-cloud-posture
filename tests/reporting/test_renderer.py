@@ -231,13 +231,18 @@ def test_one_entry_per_application_without_losing_any_result(renderer, tenant, r
 
 def test_a_clean_area_is_reported_as_checked(renderer, tenant, result):
     """A family with no findings must read as "looked, fine", not be invisible."""
-    from icp.models.enums import CheckFamily
+    from icp.models.enums import CheckFamily, RuleOutcome
+    from icp.rules.base import rules_for
 
+    # Clean areas come from recorded outcomes: the simulated clean family's
+    # rules are recorded as passed, as the engine would record them.
+    logging_rules = {r.rule_id for r in rules_for(CheckFamily.LOGGING_READINESS)}
     clean = type(result)(
         findings=[f for f in result.findings if f.check_family != CheckFamily.LOGGING_READINESS],
         rules_run=result.rules_run,
         rules_failed=result.rules_failed,
         unassessable=result.unassessable,
+        outcomes={r: RuleOutcome.PASSED if r in logging_rules else o for r, o in result.outcomes.items()},
     )
     context = renderer.build_context(tenant, clean, client_name="X", assessor="Y")
     titles = [a["title"] for a in context["passed_areas"]]

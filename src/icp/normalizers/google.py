@@ -256,6 +256,7 @@ def _normalize_grants(snapshot: Snapshot, taxonomy: ScopeTaxonomy) -> list[OAuth
                 scope=s,
                 tier=taxonomy.tier_for(s),
                 description=taxonomy.description_for(s),
+                reach=taxonomy.reach_for(s),
             )
             for s in scope_strings
         )

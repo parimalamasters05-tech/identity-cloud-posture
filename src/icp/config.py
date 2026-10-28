@@ -65,6 +65,9 @@ class Settings:
     output_dir: Path = Path("output")
     fixture_dir: Path = Path("fixtures")
     config_dir: Path = Path("config")
+    #: This engagement's reviewed exceptions (icp.rules.exceptions). Client data:
+    #: kept with the engagement, never in the repository. None: no exceptions.
+    exceptions_file: Path | None = None
 
     # --- behaviour -------------------------------------------------------------
     encrypt_at_rest: bool = True
@@ -96,6 +99,9 @@ class Settings:
             output_dir=Path(os.environ.get("ICP_OUTPUT_DIR", "output")),
             fixture_dir=Path(os.environ.get("ICP_FIXTURE_DIR", "fixtures")),
             config_dir=Path(os.environ.get("ICP_CONFIG_DIR", "config")),
+            exceptions_file=Path(os.environ["ICP_EXCEPTIONS_FILE"])
+            if os.environ.get("ICP_EXCEPTIONS_FILE")
+            else None,
             encrypt_at_rest=_env_bool("ICP_ENCRYPT_AT_REST", True),
             test_environment=_env_bool("ICP_TEST_ENVIRONMENT", False),
             retention_days=_env_int("ICP_RETENTION_DAYS", DEFAULT_RETENTION_DAYS),

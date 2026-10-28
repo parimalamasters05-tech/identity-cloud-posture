@@ -25,7 +25,7 @@ from typing import Any
 
 from jinja2 import Environment, FileSystemLoader, StrictUndefined, select_autoescape
 
-from icp.models.enums import CheckFamily, Platform, ScopeTier, Severity
+from icp.models.enums import CheckFamily, Platform, RuleOutcome, ScopeTier, Severity
 from icp.models.finding import Finding
 from icp.normalizers.base import Application, NormalizedTenant
 from icp.reporting import plain
@@ -38,7 +38,7 @@ from icp.reporting.remediation import RemediationLibrary, load_framework
 from icp.risk import scoring
 from icp.risk.ranking import rank
 from icp.risk.severity import RiskMatrix
-from icp.rules.base import rules_for
+from icp.rules.base import all_rules, rules_for
 from icp.rules.engine import AssessmentResult
 from icp.rules.microsoft import readable_kinds
 from icp.security.scopes import optional_scopes, sorted_scopes
@@ -93,6 +93,8 @@ class ReportRenderer:
         self.env.globals["app_kind"] = _app_kind
         self.env.globals["access"] = _access
         self.env.globals["platform_name"] = lambda finding: for_platform(finding.platform).name
+        self.env.globals["excepted_label"] = _excepted_label
+        self.env.globals["rule_title"] = _rule_title
         #: A deliberately misconfigured lab, said on the cover and in the summary
         #: so its findings are never read as a real organization's.
         self.env.globals["test_environment"] = test_environment
@@ -109,7 +111,9 @@ class ReportRenderer:
         engagement_ref: str = "",
         progress: list[dict[str, Any]] | None = None,
     ) -> dict[str, Any]:
-        actionable = [f for f in result.findings if f.severity != Severity.INFO]
+        # A finding wholly covered by reviewed exceptions is listed under "Accepted
+        # exceptions", not acted on: out of the action plan, counts and rating.
+        actionable = [f for f in result.findings if f.severity != Severity.INFO and not f.fully_excepted]
         coverage_notes = [f for f in result.findings if f.severity == Severity.INFO]
 
         self._assert_content_complete(result.findings)
@@ -131,7 +135,10 @@ class ReportRenderer:
             by_family.setdefault(self._family_title(entry.finding), []).append(context)
 
         appendix_by_family: dict[str, list[dict[str, Any]]] = {}
-        for finding in sorted(actionable, key=lambda f: (-f.risk_score, f.finding_id)):
+        # Excepted findings too: the appendix is the evidence record, and an
+        # accepted observation keeps its evidence.
+        observed = [f for f in result.findings if f.severity != Severity.INFO]
+        for finding in sorted(observed, key=lambda f: (-f.risk_score, f.finding_id)):
             context = self._finding_context(finding)
             context["shown_under"] = folded_into.get(finding.finding_id)
             appendix_by_family.setdefault(self._family_title(finding), []).append(context)
@@ -192,6 +199,8 @@ class ReportRenderer:
                 if c not in _COVER_ONLY_COLLECTORS
             ],
             "rules_failed": result.rules_failed,
+            "failed_checks": _failed_checks(result),
+            "exceptions": _exceptions_context([result]),
             # A single-platform report is a combined report with one part: the
             # same templates render both, so their wording cannot drift apart.
             "combined": False,
@@ -242,7 +251,7 @@ class ReportRenderer:
         text = combined_text([t.platform for t in tenants])
 
         findings = [f for _, r in assessed for f in r.findings]
-        actionable = [f for f in findings if f.severity != Severity.INFO]
+        actionable = [f for f in findings if f.severity != Severity.INFO and not f.fully_excepted]
         coverage_notes = [f for f in findings if f.severity == Severity.INFO]
         self._assert_content_complete(findings)
 
@@ -260,7 +269,8 @@ class ReportRenderer:
             by_family.setdefault(title, []).append(context)
 
         appendix_by_family: dict[str, list[dict[str, Any]]] = {}
-        for finding in sorted(actionable, key=lambda f: (-f.risk_score, f.finding_id)):
+        observed = [f for f in findings if f.severity != Severity.INFO]  # excepted ones keep their evidence
+        for finding in sorted(observed, key=lambda f: (-f.risk_score, f.finding_id)):
             context = self._finding_context(finding)
             context["shown_under"] = folded_into.get(finding.finding_id)
             title = _family_title(finding.check_family, text.family_titles)
@@ -346,6 +356,12 @@ class ReportRenderer:
             "degraded": [c for t in tenants for c in t.snapshot.degraded_collectors()],
             "degraded_areas": degraded_areas,
             "rules_failed": [x for _, r in assessed for x in r.rules_failed],
+            "exceptions": _exceptions_context([r for _, r in assessed]),
+            "failed_checks": [
+                f"{for_platform(t.platform).name}: {title}"
+                for t, r in assessed
+                for title in _failed_checks(r)
+            ],
             "combined": True,
             # Before-and-after, when the run was given an earlier snapshot.
             "progress": progress or [],
@@ -429,11 +445,14 @@ class ReportRenderer:
                 continue
             # This platform's checks only: listing both platforms' rules once put
             # Microsoft check names in a Google report's clean areas.
-            checks = [
-                r.title
-                for r in rules_for(family)
-                if tenant.platform in r.platforms and r.rule_id not in result.unassessable
-            ]
+            rules = [r for r in rules_for(family) if tenant.platform in r.platforms]
+            # From each rule's recorded outcome, never by elimination: a rule that
+            # crashed was once listed here as passed, because it was neither
+            # "not assessed" nor a finding (review, 27 Oct 2026). An area with a
+            # failed check is not clean, whatever its other checks found.
+            if any(result.outcomes.get(r.rule_id) == RuleOutcome.FAILED for r in rules):
+                continue
+            checks = [r.title for r in rules if result.outcomes.get(r.rule_id) == RuleOutcome.PASSED]
             if checks:
                 title = _family_title(family, for_platform(tenant.platform).family_titles)
                 # A clean age check means something only if the dates were there.
@@ -600,7 +619,7 @@ _COLLECTOR_AREAS = {
 _COVER_ONLY_COLLECTORS = frozenset({"google.customer"})
 
 _TIER_LABELS = {
-    ScopeTier.ADMIN_EQUIVALENT: "Administrator-level",
+    ScopeTier.ADMIN_EQUIVALENT: "Administrator-level permissions",
     ScopeTier.FULL_DATA_WRITE: "Read and change all data",
     ScopeTier.FULL_DATA_READ: "Read all data",
     ScopeTier.SCOPED_DATA: "Limited to its own files",
@@ -674,6 +693,38 @@ _CONTENT_CAVEAT = (
     " Every permission used can only read, but one could in principle open file contents; "
     "the tool reads only who each file is shared with, and blocks any request for them."
 )
+
+
+def _exceptions_context(results: list[AssessmentResult]) -> dict[str, Any]:
+    """Wholly excepted findings, one row per exception, and the stale exceptions."""
+    return {
+        "accepted": [
+            {"finding": f, "exception": x}
+            for r in results
+            for x, f in r.exceptions.applied
+            if f.fully_excepted
+        ],
+        "expired": [x for r in results for x in r.exceptions.expired],
+        "unused": [x for r in results for x in r.exceptions.unused],
+        "not_yet_valid": [x for r in results for x in r.exceptions.not_yet_valid],
+    }
+
+
+def _excepted_label(finding: Finding, exception: Any) -> str:
+    """What an exception covers, by the name the report uses for it."""
+    if exception.entity == "*":
+        return "The finding as a whole"
+    return next((e.label for e in finding.affected_entities if e.id == exception.entity), exception.entity)
+
+
+def _rule_title(rule_id: str) -> str:
+    return next((r.title for r in all_rules() if r.rule_id == rule_id), rule_id)
+
+
+def _failed_checks(result: AssessmentResult) -> list[str]:
+    """Titles of the checks that crashed, for the cover."""
+    titles = {r.rule_id: r.title for r in all_rules()}
+    return [titles.get(rule_id, rule_id) for rule_id in result.rules_with(RuleOutcome.FAILED)]
 
 
 def _requests_statement(platforms: list[Platform]) -> str:

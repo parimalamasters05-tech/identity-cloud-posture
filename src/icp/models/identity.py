@@ -76,6 +76,11 @@ class OAuthScope(BaseModel):
     scope: str
     tier: ScopeTier = ScopeTier.UNKNOWN
     description: str | None = None
+    #: For an administrator-level scope, what its reach depends on: "workspace_admin"
+    #: (an admin role, which this tool reads), "cloud_iam" (Google Cloud roles, which
+    #: it does not), "own_groups". The scope is a requested capability; this says
+    #: what would make it effective.
+    reach: str = ""
 
     @property
     def weight(self) -> int:

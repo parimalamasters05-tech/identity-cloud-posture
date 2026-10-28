@@ -100,6 +100,82 @@ def read_refusals(log_path: Path) -> dict[str, dict[str, Any]]:
     return dict(sorted(refused.items()))
 
 
+#: Prowler 5.45 (lib/check/check.py): a check that crashed logs "<check> -- Error[line]: ..."
+#: (or "<check> - ..."), one that does not exist "Check '<check>' was not found ...".
+_CHECK_CRASHED = re.compile(r"\b([a-z0-9_]+) --? [A-Za-z_]+\[\d+\]: ")
+_CHECK_MISSING = re.compile(r"Check '([a-z0-9_]+)' was not found")
+
+
+def _log_entries(log_path: Path) -> list[tuple[str, str, str]]:
+    """(level, module, message) for each line of Prowler's log.
+
+    Prowler writes JSON lines; a plain-text line is kept whole, its level read
+    from the text, so a change of format degrades to "error seen", not to nothing.
+    """
+    entries = []
+    for line in Path(log_path).read_text("utf-8", errors="replace").splitlines():
+        if not line.strip():
+            continue
+        try:
+            item = json.loads(line)
+        except json.JSONDecodeError:
+            item = None
+        if isinstance(item, dict):
+            entries.append(
+                (
+                    str(item.get("level", "")).upper(),
+                    str(item.get("module", "")),
+                    str(item.get("message", "")),
+                )
+            )
+        else:
+            level = next((lv for lv in ("CRITICAL", "ERROR", "WARNING", "INFO") if lv in line), "")
+            entries.append((level, "", line))
+    return entries
+
+
+def read_scan_errors(log_path: Path, checks: set[str]) -> dict[str, Any]:
+    """Every error in Prowler's log, by what it affects -- not only refused reads.
+
+    Prowler emits nothing for a check that found nothing to check, and nothing
+    for one that crashed or does not exist: the two look the same in its
+    results. Only the log tells them apart. Returns:
+      checks    check -> error, for a mapped check that crashed or was not found
+      services  service -> {"regions", "messages"}, for an error collecting a
+                service's data other than a refused read (those are in aws.denied)
+      other     any other error, kept as a record
+    """
+    found: dict[str, Any] = {"checks": {}, "services": {}, "other": []}
+    for level, module, message in _log_entries(log_path):
+        if level not in ("ERROR", "CRITICAL"):
+            continue
+        if _REFUSED.search(message):
+            continue  # a refused read: read_refusals records it, with its regions
+        # Searched anywhere in the line, so a plain-text log is read as well as JSON.
+        crashed = next(
+            (
+                m
+                for m in (*_CHECK_CRASHED.finditer(message), *_CHECK_MISSING.finditer(message))
+                if m.group(1) in checks
+            ),
+            None,
+        )
+        if crashed and crashed.group(1) in checks:
+            found["checks"][crashed.group(1)] = message[:300]
+        elif module.endswith("_service"):
+            entry = found["services"].setdefault(
+                module.removesuffix("_service"), {"regions": [], "messages": []}
+            )
+            region = _REGION.search(message)
+            if region and region.group(1) not in entry["regions"]:
+                entry["regions"] = sorted([*entry["regions"], region.group(1)])
+            if len(entry["messages"]) < 5:
+                entry["messages"].append(message[:300])
+        else:
+            found["other"].append(message[:300])
+    return found
+
+
 #: Check-map service -> the prefix AWS uses for its actions.
 _ACTION_PREFIX = {"accessanalyzer": "access-analyzer"}
 
@@ -183,6 +259,9 @@ def import_prowler(
     # A service with no result for any of its checks was not read: Prowler
     # logs an access-denied error and simply emits nothing for it.
     denied = read_refusals(log_path) if log_path else None
+    # None without the log: then a check that returned nothing cannot be told
+    # from one that crashed, and the rules say so.
+    scan_errors = read_scan_errors(log_path, wanted) if log_path else None
     errors = []
     seen = {r["check_id"] for r in rows}
     for service, checks in check_map.services.items():
@@ -217,6 +296,7 @@ def import_prowler(
             # None when no Prowler log was given: refusals are then unknown,
             # not absent, and the report cannot claim either way.
             "aws.denied": denied,
+            "aws.scan_errors": scan_errors,
         },
         errors=tuple(errors),
     )

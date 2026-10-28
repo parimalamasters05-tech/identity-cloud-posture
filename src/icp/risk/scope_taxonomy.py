@@ -56,6 +56,8 @@ class ScopeTaxonomy:
                 "tier": ScopeTier(entry.get("tier", "unknown")),
                 "description": entry.get("description", ""),
                 "label": entry.get("label", ""),
+                # What an administrator-level scope's reach depends on (see the file's header).
+                "reach": entry.get("reach", ""),
             }
             if entry.get("match") == "prefix":
                 prefixes.append((entry["scope"], record))
@@ -130,6 +132,11 @@ class ScopeTaxonomy:
 
     def is_classified(self, scope: str) -> bool:
         return self._lookup(scope) is not None
+
+    def reach_for(self, scope: str) -> str:
+        """ "workspace_admin", "cloud_iam", "own_groups", or "" (not administrator-level)."""
+        record = self._lookup(scope)
+        return str(record.get("reach") or "") if record else ""
 
     def label_for(self, scope: str) -> str:
         record = self._lookup(scope)

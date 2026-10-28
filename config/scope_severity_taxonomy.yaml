@@ -4,8 +4,18 @@
 # and tedious and there is no shortcut; it is also the reason the OAuth findings
 # are defensible rather than hand-wavy.
 #
+# `reach` (administrator-level scopes): what the scope's reach depends on. A
+# scope is a request for a capability; what an app can actually do with it
+# depends on the person who granted it (review, 27 Oct 2026):
+#   workspace_admin  works only through an account holding a Workspace
+#                    administrator role, which this tool reads
+#   cloud_iam        reaches what the person's Google Cloud IAM roles allow,
+#                    which this tool does not read
+#   own_groups       the groups the person can already manage
+#
 # Tiers, highest blast radius first:
-#   admin_equivalent  the app can administer the tenant, or act as any user
+#   admin_equivalent  the app could administer the tenant or act as any user,
+#                     to the extent the granting account holds those rights
 #   full_data_write   the app can modify all of a user's mail, files or calendar
 #                     -- or act as them (send mail, run code)
 #   full_data_read    the app can read all of a user's mail, files or calendar
@@ -35,46 +45,55 @@ scopes:
   # --- admin equivalent -----------------------------------------------------
   - scope: https://www.googleapis.com/auth/admin.directory.user
     tier: admin_equivalent
+    reach: workspace_admin
     label: Manage all users
     description: Create, modify, suspend and delete any account in the organization.
 
   - scope: https://www.googleapis.com/auth/admin.directory.group
     tier: admin_equivalent
+    reach: workspace_admin
     label: Manage all groups
     description: Change group membership, including groups that control access.
 
   - scope: https://www.googleapis.com/auth/admin.directory.rolemanagement
     tier: admin_equivalent
+    reach: workspace_admin
     label: Manage admin roles
     description: Grant or revoke administrator privileges, including super-admin.
 
   - scope: https://www.googleapis.com/auth/admin.datatransfer
     tier: admin_equivalent
+    reach: workspace_admin
     label: Transfer user data
     description: Move any user's data to another account.
 
   - scope: https://www.googleapis.com/auth/cloud-platform
     tier: admin_equivalent
+    reach: cloud_iam
     label: Full Google Cloud access
-    description: Full control of the linked Google Cloud project and its resources.
+    description: Act in Google Cloud with every permission the person holds there; full control of any project where they have broad roles.
 
   - scope: https://www.googleapis.com/auth/apps.groups.settings
     tier: admin_equivalent
+    reach: workspace_admin
     label: Manage group settings
     description: Change who can post to and read organization mailing lists.
 
   - scope: https://www.googleapis.com/auth/ediscovery
     tier: admin_equivalent
+    reach: workspace_admin
     label: Google Vault
-    description: Search, hold and export any user's mail and files across the organization.
+    description: Through an account with Vault rights, search, hold and export any user's mail and files.
 
   - scope: https://www.googleapis.com/auth/cloud-identity.groups
     tier: admin_equivalent
+    reach: own_groups
     label: Manage groups (Cloud Identity)
     description: Change group membership, including groups that control access.
 
   - scope: https://www.googleapis.com/auth/cloud-identity.policies
     tier: admin_equivalent
+    reach: workspace_admin
     label: Manage Workspace settings
     description: Change organization-wide security and sharing settings.
 

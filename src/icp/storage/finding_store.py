@@ -23,7 +23,9 @@ from icp.storage.paths import component, file_in
 #: 1.1 added summary.partial_coverage (additive).
 #: 2.0 finding IDs no longer hash the affected accounts (`id_scheme`). Not
 #:     additive: a 1.x file's IDs cannot be matched against a 2.x file's.
-FINDINGS_SCHEMA_VERSION = "2.0"
+#: 2.1 added summary.rule_outcomes, one per rule (additive).
+#: 2.2 added findings[].exceptions and summary.exceptions (additive).
+FINDINGS_SCHEMA_VERSION = "2.2"
 
 
 class IncompatibleFindings(Exception):
@@ -67,6 +69,19 @@ class FindingStore:
                 "rules_failed": [{"rule_id": r, "error": e} for r, e in result.rules_failed],
                 "unassessable": result.unassessable,
                 "partial_coverage": result.partial_coverage,
+                # What happened to every rule: passed, finding, partial, unavailable, failed.
+                "rule_outcomes": {rule: str(outcome) for rule, outcome in sorted(result.outcomes.items())},
+                # Reviewed exceptions: applied (per finding, under findings[].exceptions),
+                # and those that expired or matched nothing, so stale ones surface.
+                "exceptions": {
+                    "applied": len(result.exceptions.applied),
+                    "fully_excepted_findings": sorted(
+                        f.finding_id for f in result.findings if f.fully_excepted
+                    ),
+                    "expired": [x.model_dump(mode="json") for x in result.exceptions.expired],
+                    "not_yet_valid": [x.model_dump(mode="json") for x in result.exceptions.not_yet_valid],
+                    "unused": [x.model_dump(mode="json") for x in result.exceptions.unused],
+                },
             },
             "findings": [
                 {

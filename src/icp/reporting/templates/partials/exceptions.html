@@ -1,0 +1,55 @@
+{# Shown only when the engagement has reviewed exceptions. Nothing excepted is
+   hidden: wholly excepted findings are listed here instead of in the action
+   plan, and expired or unmatched exceptions are listed so they get reviewed. #}
+{% if exceptions.accepted or exceptions.expired or exceptions.unused or exceptions.not_yet_valid %}
+<section class="page-break">
+  <h2>Accepted exceptions</h2>
+  <p>
+    Some checks fire on things that can be legitimate for your organization: an emergency-access
+    account meant to sit unused, an application that needs broad access to do its job. Where you
+    have reviewed such an observation and accepted it, for a stated period and with a compensating
+    control, it is listed here. Accepted observations are still reported; they are left out of the
+    action plan and the overall rating while the exception is in force.
+  </p>
+
+  {% if exceptions.accepted %}
+  <table>
+    <thead>
+      <tr><th style="width:24%;">Observation</th><th style="width:16%;">Accepted</th><th style="width:16%;">Owner and expiry</th><th>Reason and compensating control</th></tr>
+    </thead>
+    <tbody>
+      {% for row in exceptions.accepted %}
+      <tr class="avoid-break">
+        <td><span class="sev sev-{{ row.finding.severity }}">{{ row.finding.severity | severity_label }}</span>
+          {% if combined %}<span class="meta">{{ platform_name(row.finding) }}:</span> {% endif %}{{ row.finding.title }}
+          <br><span class="meta mono">{{ row.finding.finding_id }}</span></td>
+        <td>{{ excepted_label(row.finding, row.exception) }}</td>
+        <td>{{ row.exception.owner }}<br><span class="meta">until {{ row.exception.expires.strftime('%d %B %Y') }}</span></td>
+        <td>{{ row.exception.rationale }}<br><span class="meta">Compensating control: {{ row.exception.compensating_control }}</span></td>
+      </tr>
+      {% endfor %}
+    </tbody>
+  </table>
+  {% endif %}
+
+  {% if exceptions.expired %}
+  <h3>Expired exceptions</h3>
+  <p class="meta">Past their expiry, so no longer applied: what they covered is reported as a finding
+    again. Renew them after review, or act on the findings.</p>
+  <ul class="steps">
+    {% for x in exceptions.expired %}<li>{{ rule_title(x.rule_id) }}: {{ x.entity if x.entity != '*' else 'the finding as a whole' }}, owner {{ x.owner }}, expired {{ x.expires.strftime('%d %B %Y') }}.</li>{% endfor %}
+  </ul>
+  {% endif %}
+
+  {% if exceptions.unused or exceptions.not_yet_valid %}
+  <h3>Exceptions that matched nothing</h3>
+  <p class="meta">In force, or approved for a later date, but no finding in this review matched them.
+    The observation may have been fixed, or the exception names the wrong item; review and remove
+    it if it is no longer needed.</p>
+  <ul class="steps">
+    {% for x in exceptions.unused %}<li>{{ rule_title(x.rule_id) }}: {{ x.entity if x.entity != '*' else 'the finding as a whole' }}, owner {{ x.owner }}, until {{ x.expires.strftime('%d %B %Y') }}.</li>{% endfor %}
+    {% for x in exceptions.not_yet_valid %}<li>{{ rule_title(x.rule_id) }}: {{ x.entity if x.entity != '*' else 'the finding as a whole' }}, owner {{ x.owner }}, from {{ x.approved_on.strftime('%d %B %Y') }} (not yet in force).</li>{% endfor %}
+  </ul>
+  {% endif %}
+</section>
+{% endif %}

@@ -155,3 +155,28 @@ def test_the_documents_do_not_promise_zero_effect(path):
     text = re.sub(r"\s+", " ", (REPO_ROOT / path).read_text("utf-8"))
     for claim in (*ABSOLUTE_CLAIMS, r"No impact on service availability"):
         assert not re.search(claim, text, re.IGNORECASE), (path, claim)
+
+
+def test_the_authorization_letter_names_every_platform_and_permission_the_tool_uses():
+    """It once named Google Workspace only, though the tool also reads Microsoft
+    365 and AWS: a client could sign it and still not have authorized those."""
+    from icp.collectors.aws import ROLE_POLICIES
+    from icp.collectors.microsoft import PERMISSIONS_USED
+
+    letter = (REPO_ROOT / "docs" / "authorization-letter.md").read_text("utf-8")
+    scope, _, _ = letter.partition("## 2.")
+    for platform in ("Google Workspace", "Microsoft 365", "Amazon Web Services"):
+        assert platform in scope, f"section 1 does not name {platform}"
+    schedule_b = letter.split("## Schedule B", 1)[1].split("## Schedule C", 1)[0]
+    assert [p for p in PERMISSIONS_USED if p not in schedule_b] == []
+    assert "Sites.Read.All" in schedule_b and "contents" in schedule_b
+    schedule_c = letter.split("## Schedule C", 1)[1]
+    assert all(policy in schedule_c for policy in ROLE_POLICIES)
+    assert "external ID" in letter
+
+
+def test_the_client_prerequisites_cover_every_platform():
+    rules = (REPO_ROOT / "docs" / "rules-of-engagement.md").read_text("utf-8")
+    prerequisites = rules.split("## Client prerequisites", 1)[1].split("\n## ", 1)[0]
+    for platform in ("Google Workspace", "Microsoft 365", "Amazon Web Services"):
+        assert platform in prerequisites

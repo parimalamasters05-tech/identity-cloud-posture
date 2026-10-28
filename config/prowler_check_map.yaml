@@ -25,8 +25,13 @@
 #              A refused action makes the rule "not assessed"; for a per-region
 #              rule, only the refused regions are left out, with a coverage note.
 #   if_empty   Reason the rule is "not assessed" when Prowler returned no result
-#              for its checks although the service was read. Without it, no
-#              result means nothing of that kind exists (no trails, no buckets).
+#              for its checks although they ran. Without it, a check that
+#              returned nothing counts as "ran, nothing of that kind to check"
+#              (no trails, no buckets) -- but only when Prowler's log, imported
+#              with the results, shows no error for that check or its service.
+#              A check that crashed, was not found (renamed in an upgrade), or
+#              whose service hit an error is "not assessed"; without the log,
+#              any rule with a check that returned nothing is "not assessed".
 #   except_failing  Leave out a resource that fails one of these checks: another
 #              finding already covers it (a public bucket is not also "shared
 #              with another account").

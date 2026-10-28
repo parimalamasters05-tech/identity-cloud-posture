@@ -53,6 +53,32 @@ def _refused_regions(snapshot: Snapshot, rows: list[dict[str, Any]]) -> list[Cov
                 ),
             )
         )
+    return gaps + _errored_regions(snapshot, rows)
+
+
+def _errored_regions(snapshot: Snapshot, rows: list[dict[str, Any]]) -> list[CoverageGap]:
+    """The same, for regions where Prowler hit an error reading a service's data
+    (other than a refused read): those regions are left out too, and said."""
+    scan = snapshot.artifacts.get("aws.scan_errors")
+    if not isinstance(scan, dict):
+        return []
+    gaps = []
+    for rule in load_map().rules:
+        regions = sorted(((scan.get("services") or {}).get(rule.service) or {}).get("regions") or [])
+        checked = sorted({r["region"] for r in rows if r["check_id"] in rule.checks} - set(regions))
+        if rule.collapse != "region" or not regions or not checked:
+            continue  # all or nothing: the rule itself is "not assessed"
+        gaps.append(
+            CoverageGap(
+                key=f"aws-errored-{rule.rule_id.lower()}",
+                families=(rule.family,),
+                reason=(
+                    f"Prowler hit an error reading {rule.service} in {len(regions)} "
+                    f"region{'s' if len(regions) != 1 else ''} ({', '.join(regions)}). Those regions were "
+                    f"not checked and are left out; the result covers {', '.join(checked)} only."
+                ),
+            )
+        )
     return gaps
 
 

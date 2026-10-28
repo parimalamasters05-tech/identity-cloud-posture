@@ -61,30 +61,75 @@ class AdminEquivalentApplications(Rule):
                 )
                 for g in grants
             ]
+            # A scope is a requested capability; what the app can actually do
+            # depends on who granted it (review, 27 Oct 2026). Admin-console
+            # scopes work only through an administrator's account, which this
+            # tool can see; Google Cloud reach depends on Cloud IAM roles, which
+            # it cannot. Only the first is ever stated as confirmed.
+            reaches = {s.reach for g in grants for s in g.scopes if s.tier == ScopeTier.ADMIN_EQUIVALENT}
+            admin_grantors = sum(1 for e in entities if e.is_privileged)
+            confirmed = "workspace_admin" in reaches and admin_grantors > 0
+
+            holds = f"'{app_name}' holds {plural(len(scopes), 'administrator-level permission')}"
+            granted = f"{holds}, granted by {plural(len(grants), 'person', 'people')}"
+            if confirmed:
+                title = f"'{app_name}' holds administrator access through {plural(admin_grantors, 'administrator')}"
+                by_whom = (
+                    f"granted by {plural(admin_grantors, 'administrator')}"
+                    if admin_grantors == len(grants)
+                    else f"granted by {plural(len(grants), 'person', 'people')}, {admin_grantors} of them "
+                    f"{'an administrator' if admin_grantors == 1 else 'administrators'}"
+                )
+                through = (
+                    "that administrator's account"
+                    if admin_grantors == 1
+                    else "those administrators' accounts"
+                )
+                summary = (
+                    f"{holds}, {by_whom}. Through {through} it can use administrator rights across the "
+                    "organization without anyone signing in again."
+                )
+            elif "workspace_admin" in reaches:
+                title = f"'{app_name}' was given administrator-level permissions"
+                summary = (
+                    f"{granted}. None of them is an administrator, so these permissions give the "
+                    "application no administrator rights today; it gains them as soon as any of these "
+                    "people becomes an administrator."
+                )
+            else:
+                title = f"'{app_name}' was given administrator-level permissions"
+                summary = f"{granted}."
+            if "cloud_iam" in reaches:
+                summary += (
+                    " It can also act in Google Cloud with whatever roles those people hold there. "
+                    "This review does not read Google Cloud roles, so how far that reaches is not confirmed."
+                )
 
             findings.append(
                 self.make_finding(
                     tenant,
                     ctx,
-                    title=f"'{app_name}' holds administrator-equivalent access",
+                    title=title,
                     entities=entities,
                     discriminator=client_id,
                     evidence=[
                         Evidence(
                             collector="google.oauth_tokens",
                             pointer=f"/google.oauth_tokens/grants[clientId={client_id}]",
-                            summary=(
-                                f"'{app_name}' holds {plural(len(scopes), 'administrator-level permission')}, "
-                                f"granted by {plural(len(grants), 'person', 'people')}. With these it "
-                                "can act across the whole organization without asking anyone again."
-                            ),
+                            summary=summary,
                             observed_values={
                                 "client_id": client_id,
                                 "users_affected": len(grants),
+                                "administrator_grantors": admin_grantors,
+                                "admin_rights_confirmed": confirmed,
                                 "admin_scopes": ", ".join(scopes[:4]),
                             },
                         )
                     ],
+                    # The capability is certain; the reach is confirmed only through
+                    # an administrator. Unconfirmed, it is scored as less exposed.
+                    exposure=None if confirmed else 2,
+                    confidence=Confidence.CONFIRMED if confirmed else Confidence.HIGH,
                 )
             )
         return findings

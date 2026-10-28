@@ -57,6 +57,17 @@
     <p style="margin-bottom:0;">{{ scope_statement.method }}</p>
   </div>
 
+  {% if failed_checks %}
+  <div class="callout" style="border-width:1.5pt;">
+    <h4 style="margin-top:0;">Checks that did not run</h4>
+    <p style="margin-bottom:0;">
+      {# A fault in the assessment tool, not the client's configuration. Never a pass. #}
+      These checks stopped with an error in the assessment tool, so this report says nothing about
+      what they cover, and their areas are not listed as clean: {{ failed_checks | join('; ') }}.
+    </p>
+  </div>
+  {% endif %}
+
   {% if degraded_areas %}
   <div class="callout">
     <h4 style="margin-top:0;">Incomplete coverage</h4>

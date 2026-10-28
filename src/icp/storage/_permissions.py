@@ -41,7 +41,7 @@ def restrict(path: Path, mode: int) -> None:
         return
     try:
         path.chmod(mode)
-    except PermissionError:
+    except OSError:  # not ours (EPERM), or a read-only mount (EROFS): same answer
         _warn_once(
             path,
             "Could not restrict permissions in %s: it is not owned by this user, typically a "

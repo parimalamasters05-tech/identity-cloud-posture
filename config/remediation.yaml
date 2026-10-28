@@ -303,6 +303,18 @@ remediations:
     verification: "At the next assessment, this area appears in the findings or in 'areas checked with no issues found', not in the coverage notes."
     owner_hint: IT administrator with the assessor
 
+  coverage.rule_failed:
+    title: Re-run the check that failed
+    impact: >
+      One check stopped with an error in the assessment tool, so this report
+      says nothing about what it covers, either way. This is a fault in the
+      assessment, not in your configuration, and not a clean result.
+    steps:
+      - "The assessor corrects the fault and re-runs the assessment from the same snapshot; nothing needs to be collected again."
+      - "Until then, treat the area named in this note as not assessed."
+    verification: "In the re-run report this note is gone, and the check appears in the findings or in 'areas checked with no issues found'."
+    owner_hint: The assessor
+
   # -- Microsoft 365 (week 5) -------------------------------------------------
   # Paths are the Microsoft Entra admin center (entra.microsoft.com), the
   # Microsoft 365 admin center (admin.microsoft.com) and the SharePoint admin

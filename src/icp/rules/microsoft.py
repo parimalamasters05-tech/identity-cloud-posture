@@ -634,10 +634,16 @@ class M365LongLivedAppSecrets(M365Rule):
 
     def evaluate(self, tenant: NormalizedTenant, ctx: RuleContext) -> list[Finding]:
         limit = int(ctx.threshold("app_secret_max_days", 365))
+        # Active secrets only, as of the assessment: an expired one cannot sign in,
+        # and one not yet valid cannot either, yet. Both used to be flagged when
+        # their total lifetime was long (review, 27 Oct 2026).
         affected = [
             c
             for c in tenant.app_credentials
-            if c.kind == "secret" and not c.is_assessor and (c.lifetime_days or 0) > limit
+            if c.kind == "secret"
+            and not c.is_assessor
+            and (c.lifetime_days or 0) > limit
+            and c.state(ctx.now) == "active"
         ]
         if not affected:
             return []
@@ -653,10 +659,19 @@ class M365LongLivedAppSecrets(M365Rule):
                         pointer=f"/m365.applications[appId={c.app_id}]/secrets",
                         summary=(
                             f"'{c.app_name}' has a secret valid for {c.lifetime_days} days, until "
-                            f"{_day(c.expires)}. A secret is a password for the application; a long-lived "
-                            "one that leaks keeps working for years."
+                            f"{_day(c.expires)}"
+                            + (
+                                f", and still in use for another {(c.expires - ctx.now).days} days"
+                                if c.expires
+                                else ""
+                            )
+                            + ". A secret is a password for the application; a long-lived one that leaks "
+                            "keeps working until it expires."
                         ),
-                        observed_values={"lifetime_days": c.lifetime_days or 0},
+                        observed_values={
+                            "lifetime_days": c.lifetime_days or 0,
+                            "days_remaining": (c.expires - ctx.now).days if c.expires else -1,
+                        },
                     )
                     for c in affected
                 ],

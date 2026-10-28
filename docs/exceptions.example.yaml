@@ -1,0 +1,45 @@
+# Reviewed exceptions for one engagement -- an example with made-up IDs.
+#
+# Copy to the engagement's snapshots folder as exceptions.yaml and set, in .env:
+#     ICP_EXCEPTIONS_FILE=/work/snapshots/exceptions.yaml
+# The real file names the client's accounts and applications: it is client
+# data, kept with the engagement and never committed.
+#
+# Every field is required. An exception without an owner, a reason, a
+# compensating control or an end date is refused, and the run stops.
+#
+#   rule                  the rule ID, as printed beside each finding
+#   entity                the affected item's stable ID: the user, application or
+#                         resource ID shown in the evidence appendix and the
+#                         findings file (affected_entities[].id). "*" covers the
+#                         finding as a whole, e.g. an administrator-count threshold.
+#   owner                 who at the client accepted it
+#   rationale             why it is legitimate here
+#   compensating_control  what limits the risk instead
+#   approved_on, expires  dates (YYYY-MM-DD). The expiry date is the last day it
+#                         applies; after it, the finding is reported again and the
+#                         exception is listed as expired. Judged as of the
+#                         snapshot's collection date.
+#
+# Accepted observations stay visible: listed under "Accepted exceptions" in the
+# report and kept in the findings file and the evidence appendix. They leave
+# only the action plan, the counts and the overall rating.
+
+exceptions:
+  # An emergency-access ("break-glass") account, meant to sit unused.
+  - rule: M365-ADM-002
+    entity: 00000000-0000-4000-8000-0000000000aa
+    owner: Jane Example, IT lead
+    rationale: Emergency-access account per Microsoft guidance; used only if every administrator is locked out.
+    compensating_control: Long random password in the office safe, phishing-resistant key, sign-in alert to two people.
+    approved_on: 2026-10-27
+    expires: 2027-04-27
+
+  # Three Global Administrators where the threshold is two.
+  - rule: M365-ADM-001
+    entity: "*"
+    owner: Jane Example, IT lead
+    rationale: A third Global Administrator covers the outsourced IT provider during staff leave.
+    compensating_control: All three use phishing-resistant sign-in; role reviewed monthly.
+    approved_on: 2026-10-27
+    expires: 2027-01-31

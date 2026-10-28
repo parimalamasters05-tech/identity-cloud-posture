@@ -21,8 +21,10 @@ from icp.models.finding import Finding
 #: Coverage notes: not problems, but the record of what an assessment could not see.
 _NOT_ASSESSED_FAMILY = "ICP-COVERAGE-001"
 _NOT_ASSESSED_RULE = "ICP-COVERAGE-002"
+#: A rule that crashed: as unknown as one that could not run.
+_RULE_FAILED = "ICP-COVERAGE-004"
 _PARTLY_ASSESSED = "ICP-COVERAGE-003"
-_COVERAGE = (_NOT_ASSESSED_FAMILY, _NOT_ASSESSED_RULE, _PARTLY_ASSESSED)
+_COVERAGE = (_NOT_ASSESSED_FAMILY, _NOT_ASSESSED_RULE, _PARTLY_ASSESSED, _RULE_FAILED)
 
 
 @dataclass(frozen=True)
@@ -47,7 +49,7 @@ class Visibility:
         for f in findings:
             if f.rule_id == _NOT_ASSESSED_FAMILY:
                 families.add(str(f.check_family))
-            elif f.rule_id == _NOT_ASSESSED_RULE:
+            elif f.rule_id in (_NOT_ASSESSED_RULE, _RULE_FAILED):
                 rules |= {e.id for e in f.affected_entities}
             elif f.rule_id == _PARTLY_ASSESSED:
                 observed = f.evidence[0].observed_values if f.evidence else {}

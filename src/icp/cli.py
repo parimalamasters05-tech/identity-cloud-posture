@@ -34,6 +34,21 @@ def _fail(message: str) -> None:
     sys.exit(1)
 
 
+def _exceptions(settings: Settings) -> list | None:  # type: ignore[type-arg]
+    """This engagement's reviewed exceptions, or None. A bad file stops the run."""
+    if settings.exceptions_file is None:
+        return None
+    from icp.rules.exceptions import ExceptionsError
+    from icp.rules.exceptions import load as load_exceptions
+
+    try:
+        loaded = load_exceptions(settings.exceptions_file)
+    except ExceptionsError as exc:
+        _fail(str(exc))
+    click.echo(f"Exceptions: {len(loaded)} reviewed exception(s) from {settings.exceptions_file.name}")
+    return loaded
+
+
 def _encrypt_live(settings: Settings, no_encrypt: bool) -> bool:
     """Whether a live snapshot is encrypted. Always, unless this is a test tenant.
 
@@ -170,7 +185,7 @@ def assess(ctx: click.Context, snapshot_path: Path | None, tenant: str | None) -
     # Judged as of collection, not as of today: re-assessing a months-old
     # snapshot must give the findings it gave then ("dormant 90 days" is 90
     # days before the snapshot), or a delta against it compares two clocks.
-    result = run_rules(tenant_view, now=snapshot.collected_at)
+    result = run_rules(tenant_view, now=snapshot.collected_at, exceptions=_exceptions(settings))
 
     findings_path = FindingStore(settings.output_dir).save(
         result, tenant_id=snapshot.tenant_id, snapshot_id=snapshot.snapshot_id
@@ -310,7 +325,14 @@ def report(
         view = normalize(snapshot)
         # As of collection, like `assess`: a report written weeks later must
         # show the findings the snapshot had, not ones aged by today's date.
-        return view, run_rules(view, now=snapshot.collected_at)
+        result = run_rules(view, now=snapshot.collected_at, exceptions=_exceptions(settings))
+        for rule_id, error in result.rules_failed:
+            click.secho(
+                f"  check {rule_id} failed ({error}); the report says so and does not count it as passed",
+                fg="red",
+                err=True,
+            )
+        return view, result
 
     def progress_for(pairs: list) -> list:  # type: ignore[type-arg]
         """Each earlier snapshot, compared with this report's snapshot of the
@@ -587,6 +609,14 @@ def collect_aws(
     )
     for error in snapshot.errors:
         click.secho(f"  not assessed: {error.collector}: {error.message}", fg="yellow")
+    scan_errors = snapshot.artifacts.get("aws.scan_errors") or {}
+    for check, message in (scan_errors.get("checks") or {}).items():
+        click.secho(f"  check {check} did not run properly: {message}", fg="red")
+    for service, info in (scan_errors.get("services") or {}).items():
+        where = f" in {', '.join(info['regions'])}" if info.get("regions") else ""
+        click.secho(f"  Prowler could not fully read {service}{where}: {info['messages'][0]}", fg="red")
+    for message in (scan_errors.get("other") or [])[:3]:
+        click.secho(f"  Prowler reported an error: {message}", fg="yellow")
     for action, info in (snapshot.artifacts.get("aws.denied") or {}).items():
         why = (
             " by an organization policy (service control policy)" if info["by_organization_policy"] else ""

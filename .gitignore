@@ -22,6 +22,10 @@ prowler-output/*
 *__findings.json
 delta.json
 *__delta.json
+# Reviewed exceptions name the client's accounts and apps (client data).
+exceptions.yaml
+*exceptions*.yaml
+!docs/exceptions.example.yaml
 deletion-attestation-*.json
 /*.html
 /*.pdf

@@ -93,6 +93,7 @@
 {% include "partials/action_plan.html" %}
 {% include "partials/progress.html" %}
 {% include "partials/findings.html" %}
+{% include "partials/exceptions.html" %}
 {# Per platform: what "connected" means, and what is recorded about it, differs. #}
 {% for part in parts %}{% with applications = part.applications, token_log = part.token_log, platform = part.platform %}{% include "partials/applications.html" %}{% endwith %}{% endfor %}
 {% include "partials/framework_mapping.html" %}

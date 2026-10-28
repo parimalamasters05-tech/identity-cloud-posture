@@ -249,7 +249,9 @@ def test_week4_every_remediation_gives_an_admin_console_path(library: Remediatio
     without_path = [
         key
         for key, entry in library.entries.items()
-        if key != "coverage.restore_access"
+        # Coverage notes are the assessor's to act on (restore access, re-run a
+        # failed check), not a client console setting.
+        if not key.startswith("coverage.")
         and not any(
             marker in step
             for step in entry.steps

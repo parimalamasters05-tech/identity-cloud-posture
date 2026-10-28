@@ -97,6 +97,19 @@ class AppCredential:
             return (self.expires - self.starts).days
         return None
 
+    def state(self, now: datetime) -> str:
+        """ "active", "expired" or "not_yet_valid" at `now` (the assessment time).
+
+        Only an active credential can be used to sign in, so only an active one
+        is current exposure (review, 27 Oct 2026). A missing date is read as
+        unbounded on that side, the cautious reading.
+        """
+        if self.expires and self.expires <= now:
+            return "expired"
+        if self.starts and self.starts > now:
+            return "not_yet_valid"
+        return "active"
+
 
 @dataclass(frozen=True)
 class CoverageGap:

@@ -119,6 +119,7 @@ class ProwlerRule(Rule):
         some regions but not all.
         """
         m = self.mapped
+        skip_regions: set[str] = set()
         if m.needs:
             denied = tenant.snapshot.artifacts.get("aws.denied")
             if not isinstance(denied, dict):
@@ -131,21 +132,54 @@ class ProwlerRule(Rule):
                 regions = {r for a in refused for r in denied[a].get("regions", [])}
                 checked = {r["region"] for r in rows if r["check_id"] in m.checks} - regions
                 if m.collapse == "region" and regions and checked:
-                    return regions
-                by_policy = any(denied[a].get("by_organization_policy") for a in refused)
-                raise RuleNotAssessable(
-                    f"AWS refused a read these checks depend on ({', '.join(refused)})"
-                    + (
-                        ", because of a policy set by the organization that manages this account "
-                        "(a service control policy), whatever rights the assessment role has"
-                        if by_policy
-                        else ""
+                    skip_regions |= regions
+                else:
+                    by_policy = any(denied[a].get("by_organization_policy") for a in refused)
+                    raise RuleNotAssessable(
+                        f"AWS refused a read these checks depend on ({', '.join(refused)})"
+                        + (
+                            ", because of a policy set by the organization that manages this account "
+                            "(a service control policy), whatever rights the assessment role has"
+                            if by_policy
+                            else ""
+                        )
+                        + ". Prowler reports a pass when that happens, so its result was not used."
                     )
-                    + ". Prowler reports a pass when that happens, so its result was not used."
+        # Prowler emits nothing for a check that found nothing to check, and
+        # nothing for one that crashed or does not exist. Only its log tells the
+        # two apart (review, 27 Oct 2026): a check that returned nothing counts as
+        # "ran, nothing applicable" only when the log shows no error for it or
+        # for its service.
+        scan = tenant.snapshot.artifacts.get("aws.scan_errors")
+        returned = {r["check_id"] for r in rows if r["check_id"] in m.checks}
+        if not isinstance(scan, dict):
+            if set(m.checks) - returned:
+                raise RuleNotAssessable(
+                    "Prowler's log was not imported with its results, so a check that returned "
+                    "nothing cannot be told apart from one that failed to run."
                 )
-        if m.if_empty and not any(r["check_id"] in m.checks for r in rows):
+        else:
+            failed = {c: e for c, e in (scan.get("checks") or {}).items() if c in m.checks}
+            if failed:
+                raise RuleNotAssessable(
+                    f"Prowler's check {', '.join(sorted(failed))} did not run properly, so its result is "
+                    f"unknown, not clean. Prowler logged: {next(iter(failed.values()))}"
+                )
+            service_error = (scan.get("services") or {}).get(m.service)
+            if service_error:
+                regions = set(service_error.get("regions") or [])
+                checked = {r["region"] for r in rows if r["check_id"] in m.checks} - regions - skip_regions
+                if m.collapse == "region" and regions and checked:
+                    skip_regions |= regions
+                else:
+                    raise RuleNotAssessable(
+                        f"Prowler could not fully read the {m.service} data these checks use"
+                        + (f" (in {', '.join(sorted(regions))})" if regions else "")
+                        + f", so a missing result is not a pass. Prowler logged: {service_error['messages'][0]}"
+                    )
+        if m.if_empty and not returned:
             raise RuleNotAssessable(m.if_empty)
-        return set()
+        return skip_regions
 
 
 def _build(mapped: MappedRule) -> type[ProwlerRule]:

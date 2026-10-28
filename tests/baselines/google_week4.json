@@ -694,7 +694,7 @@
       "confidence": "confirmed",
       "effort_hours": 2.0,
       "evidence": [
-        "'LegacySync Connector' holds 1 administrator-level permission, granted by 1 person. With these it can act across the whole organization without asking anyone again."
+        "'LegacySync Connector' holds 1 administrator-level permission, granted by 1 administrator. Through that administrator's account it can use administrator rights across the organization without anyone signing in again."
       ],
       "finding_id": "62d51e848ac70210",
       "framework_refs": [
@@ -705,7 +705,7 @@
       "risk_score": 64.0,
       "rule_id": "GWS-SVC-001",
       "severity": "critical",
-      "title": "'LegacySync Connector' holds administrator-equivalent access"
+      "title": "'LegacySync Connector' holds administrator access through 1 administrator"
     },
     {
       "affected": [

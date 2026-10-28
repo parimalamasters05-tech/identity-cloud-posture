@@ -235,6 +235,23 @@ Stages are separate on purpose. Once `collect` has run, you can iterate on
 analysis and report wording all week without going near the client's
 environment again.
 
+### Accepted exceptions
+
+Some checks fire on things that can be legitimate for a given client: an
+emergency-access account meant to sit unused, more administrators than the
+threshold, a backup app that needs broad access, a file public on purpose. The
+client decides that, not the tool. Record each decision in the engagement's
+exceptions file (`ICP_EXCEPTIONS_FILE`; format and fields in
+`docs/exceptions.example.yaml`): rule, the item's stable ID (or `*`), owner,
+rationale, compensating control, approval date and expiry. All are required.
+
+Nothing excepted is hidden. A finding wholly covered by exceptions leaves the
+action plan, the counts and the rating, and is listed under "Accepted
+exceptions" with every detail; a partly covered one stays, its excepted items
+named. Evidence, the findings file and the progress comparison keep the
+observation as found. Expired exceptions, and ones that matched nothing, are
+listed so they get reviewed.
+
 ### 5. Quarterly re-run
 
 ```bash
